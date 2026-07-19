@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { journeyMeta, makeJourney, primaryJourneyDomains, shockPresets, type JourneyDomain } from "@/lib/journeys";
 import type { ContextLens, Decision, DecisionOption } from "@/lib/schema";
 
@@ -14,13 +14,25 @@ type Props = {
   initialStep?: number;
 };
 
-const steps = ["Your world", "The futures", "What matters", "Perspectives", "Reality check", "Plot twist"];
+const steps = ["The futures", "What matters", "Reality check", "Plot twist"];
+const stepActions = ["Set what matters", "Ground these futures", "Stress-test the plan", "Visit my futures"];
 export function DecisionStudio({ decision, open, running, onClose, onChange, onRun, initialStep = 0 }: Props) {
   const [step, setStep] = useState(initialStep);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    window.requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0 }));
+  }, [open]);
+
+  function moveTo(nextStep: number) {
+    setStep(nextStep);
+    window.requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }));
+  }
 
   function chooseDomain(domain: JourneyDomain) {
     onChange(makeJourney(domain));
-    setStep(1);
+    moveTo(0);
   }
 
   function setOption(index: number, patch: Partial<DecisionOption>) {
@@ -79,16 +91,16 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
   return (
     <aside className={`studio journey ${open ? "open" : ""}`} aria-hidden={!open}>
       <header>
-        <div><span>ELSEWHERE / {step + 1} OF {steps.length}</span><strong>{steps[step]}</strong></div>
+        <div><span>ELSEWHERE / {step < 0 ? "START" : `${step + 1} OF ${steps.length}`}</span><strong>{step < 0 ? "Your world" : steps[step]}</strong></div>
         <button onClick={onClose} aria-label="Close decision room">×</button>
       </header>
 
-      <div className="journey-progress" aria-hidden="true">
+      <div className={`journey-progress ${step < 0 ? "start" : ""}`} aria-hidden="true">
         {steps.map((label, index) => <i key={label} className={index <= step ? "done" : ""} />)}
       </div>
 
-      <div className="studio-scroll journey-scroll">
-        {step === 0 && (
+      <div className="studio-scroll journey-scroll" ref={scrollRef}>
+        {step < 0 && (
           <section className="journey-screen intro-step">
             <p className="journey-kicker">WHAT KIND OF ELSEWHERE?</p>
             <h2>What’s taking up space in your head?</h2>
@@ -106,12 +118,12 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
           </section>
         )}
 
-        {step === 1 && (
+        {step === 0 && (
           <section className="journey-screen">
             <p className="journey-kicker">SAY IT LIKE YOU’D TEXT A FRIEND</p>
             <h2>What are you actually deciding?</h2>
             <label className="hero-field"><span>THE QUESTION</span><textarea aria-label="The decision question" value={decision.question} onChange={(event) => onChange({ ...decision, question: event.target.value })} /></label>
-            <div className="option-intro"><span>THE FOUR LIVES TO OPEN</span><small>Four defensible futures reveal the hidden doors between them.</small></div>
+            <div className="option-intro"><span>THE FOUR LIVES TO OPEN</span><small>These are editable starting points—not four answers you need to invent.</small></div>
             <div className="journey-options">
               {decision.options.map((option, index) => (
                 <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
@@ -125,7 +137,7 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
           </section>
         )}
 
-        {step === 2 && (
+        {step === 1 && (
           <section className="journey-screen priorities-step">
             <p className="journey-kicker">NO “RIGHT” ANSWER—ONLY YOUR WEIGHTS</p>
             <h2>What deserves more volume right now?</h2>
@@ -143,31 +155,29 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
                 </label>
               ))}
             </div>
+            <details className="optional-perspectives">
+              <summary><span>OPTIONAL</span> Add a perspective you are already carrying <b>+</b></summary>
+              <div className="optional-perspectives-copy">
+                <p>This is your model of a perspective—not a prediction of a real person. It stays optional because the core decision should work without it.</p>
+                <div className="perspective-stack">
+                  {decision.contextLenses.map((lens, index) => (
+                    <article className="perspective-card" key={lens.id}>
+                      <div className="perspective-card-head"><span>USER-AUTHORED PERSPECTIVE</span><button onClick={() => removeContextLens(index)} aria-label={`Remove ${lens.label}`}>Remove</button></div>
+                      <label><span>NAME THIS PERSPECTIVE</span><input aria-label="Perspective name" value={lens.label} onChange={(event) => setContextLens(index, { label: event.target.value })} /></label>
+                      <label><span>WHAT IT PROTECTS</span><input aria-label="Values this perspective protects" value={lens.protectedValues.join(", ")} onChange={(event) => setContextLens(index, { protectedValues: event.target.value.split(",").map((value) => value.trim()).filter(Boolean).slice(0, 4) })} /></label>
+                      <label><span>WHAT I THINK I KNOW</span><textarea aria-label="Known concern" value={lens.knownConcern} onChange={(event) => setContextLens(index, { knownConcern: event.target.value })} /></label>
+                      <label><span>WHAT I DO NOT KNOW YET</span><textarea aria-label="Unknown concern" value={lens.unknown} onChange={(event) => setContextLens(index, { unknown: event.target.value })} /></label>
+                    </article>
+                  ))}
+                </div>
+                {decision.contextLenses.length < 2 && <button className="add-perspective" onClick={addContextLens}>+ Add a perspective</button>}
+                <small className="perspective-note">Stored in this browser. If you run live witnesses, selected text is sent to OpenAI for qualitative interpretation with response storage disabled. Never pass it off as someone else’s actual view.</small>
+              </div>
+            </details>
           </section>
         )}
 
-        {step === 3 && (
-          <section className="journey-screen perspectives-step">
-            <p className="journey-kicker">THE PEOPLE IN THE ROOM</p>
-            <h2>Add the concern you are already carrying.</h2>
-            <p>This is your model of a perspective—not a prediction of a real person. Name what it protects, what you know, and what you still need to ask.</p>
-            <div className="perspective-stack">
-              {decision.contextLenses.map((lens, index) => (
-                <article className="perspective-card" key={lens.id}>
-                  <div className="perspective-card-head"><span>USER-AUTHORED PERSPECTIVE</span><button onClick={() => removeContextLens(index)} aria-label={`Remove ${lens.label}`}>Remove</button></div>
-                  <label><span>NAME THIS PERSPECTIVE</span><input aria-label="Perspective name" value={lens.label} onChange={(event) => setContextLens(index, { label: event.target.value })} /></label>
-                  <label><span>WHAT IT PROTECTS</span><input aria-label="Values this perspective protects" value={lens.protectedValues.join(", ")} onChange={(event) => setContextLens(index, { protectedValues: event.target.value.split(",").map((value) => value.trim()).filter(Boolean).slice(0, 4) })} /></label>
-                  <label><span>WHAT I THINK I KNOW</span><textarea aria-label="Known concern" value={lens.knownConcern} onChange={(event) => setContextLens(index, { knownConcern: event.target.value })} /></label>
-                  <label><span>WHAT I DO NOT KNOW YET</span><textarea aria-label="Unknown concern" value={lens.unknown} onChange={(event) => setContextLens(index, { unknown: event.target.value })} /></label>
-                </article>
-              ))}
-            </div>
-            {decision.contextLenses.length < 2 && <button className="add-perspective" onClick={addContextLens}>+ Add a perspective</button>}
-            <small className="perspective-note">Stored in this browser. If you run live witnesses, selected text is sent to OpenAI for qualitative interpretation with response storage disabled. Try: “my model of Mum’s protective concern,” “a cofounder’s risk lens,” or “future me’s freedom.” Never pass it off as someone else’s actual view.</small>
-          </section>
-        )}
-
-        {step === 4 && (
+        {step === 2 && (
           <section className="journey-screen">
             <p className="journey-kicker">GROUND THE VIBE</p>
             <h2>{decision.domain === "relationships" ? "How would each future feel?" : "Give the futures real gravity."}</h2>
@@ -199,7 +209,7 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
           </section>
         )}
 
-        {step === 5 && (
+        {step === 3 && (
           <section className="journey-screen shock-step">
             <p className="journey-kicker">NOW BREAK THE PERFECT PLAN</p>
             <h2>What could change the weights?</h2>
@@ -223,12 +233,12 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
         )}
       </div>
 
-      {step > 0 && (
+      {step >= 0 && (
         <footer className="journey-footer">
-          <button className="back" onClick={() => setStep(step - 1)}>← Back</button>
+          <button className="back" onClick={() => moveTo(step - 1)}>← {step === 0 ? "Change decision" : "Back"}</button>
           {step < steps.length - 1
-            ? <button className="next" onClick={() => setStep(step + 1)}>Keep going <b>↗</b></button>
-            : <button className="next" onClick={finish} disabled={running}>{running ? "Opening…" : "Visit my futures"}<b>↘</b></button>}
+            ? <button className="next" onClick={() => moveTo(step + 1)}>{stepActions[step]}<b>↗</b></button>
+            : <button className="next" onClick={finish} disabled={running}>{running ? "Opening…" : stepActions[step]}<b>↘</b></button>}
         </footer>
       )}
     </aside>

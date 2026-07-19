@@ -30,7 +30,7 @@ export default function Home() {
   const [shock, setShock] = useState(false);
   const [opened, setOpened] = useState(false);
   const [studioOpen, setStudioOpen] = useState(false);
-  const [studioStartStep, setStudioStartStep] = useState(0);
+  const [studioStartStep, setStudioStartStep] = useState(-1);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [agentState, setAgentState] = useState<AgentState>("idle");
   const futures = shock ? simulation.shocked : simulation.baseline;
@@ -43,7 +43,7 @@ export default function Home() {
 
   function openJourney(domain?: JourneyDomain) {
     if (domain) setDecision(makeJourney(domain));
-    setStudioStartStep(domain ? 1 : 0);
+    setStudioStartStep(domain ? 0 : -1);
     setStudioOpen(true);
   }
 
@@ -190,6 +190,7 @@ export default function Home() {
             <strong>{agentState === "running" ? "Four protected values are checking it in parallel" : witnessReceipt === "deterministic-only" ? "Deterministic fallback active" : `RECEIPT ${witnessReceipt}`}</strong>
             <small>{agentState === "complete" && witnessReceipt !== "deterministic-only" ? "Same evidence supplied to every lens" : "The record remains usable without AI interpretation"}</small>
           </div>
+          {agentState === "running" && <div className="matrix-live-status" role="status" aria-live="polite"><span />Four lenses are reading the same record. Their cells will land here as each interpretation returns.</div>}
           <div className="matrix-scroll" tabIndex={0} aria-label="Swipe to compare all four futures">
             <div className={`disagreement-matrix ${shock ? "shocked" : "baseline"} ${agentState === "running" ? "is-pending" : ""}`} role="table" aria-label="Disagreement matrix by protected value and future">
               <div className="matrix-head matrix-lens">PROTECTED VALUE</div>
@@ -208,7 +209,7 @@ export default function Home() {
               ))}
             </div>
           </div>
-          <p className="matrix-caption">Toggle the shock to see the same witness assessments re-read against the shocked world state.</p>
+          <p className="matrix-caption">{agentState === "running" ? "The deterministic futures are ready now. AI interpretation is arriving separately." : "Toggle the shock to see the same witness assessments re-read against the shocked world state."}</p>
         </section>
 
         <div className={`divergence ${shock ? "is-visible" : ""}`}>
