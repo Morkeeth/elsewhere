@@ -277,15 +277,19 @@ function auditTrace(baseline: Future[], shocked: Future[], divergence: { baselin
   };
 }
 
-const fallbackWitnesses: Array<Pick<Witness, "lens" | "protectedValue">> = [
+export const coreWitnessLenses: Array<Pick<Witness, "lens" | "protectedValue">> = [
   { lens: "financial-resilience", protectedValue: "Financial resilience" },
   { lens: "belonging", protectedValue: "Belonging and relationships" },
   { lens: "reversibility", protectedValue: "Reversibility and optionality" },
   { lens: "adversarial-regret", protectedValue: "Adversarial failure and regret" },
 ];
 
-export function createFallbackWitnesses(futures: Future[], ledgerHash = "deterministic-only"): Witness[] {
-  return fallbackWitnesses.map((witness) => ({
+export function createFallbackWitnesses(
+  futures: Future[],
+  ledgerHash = "deterministic-only",
+  additionalLenses: Array<Pick<Witness, "lens" | "protectedValue">> = [],
+): Witness[] {
+  return [...coreWitnessLenses, ...additionalLenses].map((witness) => ({
     ...witness,
     ledgerHash,
     observations: futures.map((future) => ({ optionId: future.optionId, baselineAssessment: "trades-off", shockedAssessment: "trades-off", focus: "exit-flexibility" })),
@@ -349,7 +353,11 @@ export function runSimulation(input: Decision = sampleDecision): Simulation {
     decision,
     baseline,
     shocked,
-    witnesses: createFallbackWitnesses(baseline),
+    witnesses: createFallbackWitnesses(
+      baseline,
+      "deterministic-only",
+      decision.contextLenses.map((context) => ({ lens: `context:${context.id}`, protectedValue: context.label })),
+    ),
     divergence: {
       ...divergence,
       explanation: shockedDivergence > baselineDivergence

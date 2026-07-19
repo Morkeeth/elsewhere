@@ -14,6 +14,8 @@ Most decision tools collapse uncertainty into advice. Elsewhere preserves disagr
 4. A configurable shock reruns every life from the selected month.
 5. The product returns a reversible experiment, not a verdict.
 
+Optional private context layers can add up to two further **user-authored perspectives**—for example, “my model of Mum’s protective concern.” They record what the user believes that perspective protects, what is known, and what remains unknown. They are not contact imports, person simulations, or claims about what somebody else thinks.
+
 The disagreement matrix is model-generated; deterministic code deliberately owns the experiment constraints and every outcome number. Remove the witnesses and the value-based disagreement disappears. Remove the deterministic record and the evidence contract disappears.
 
 ## Full product surface
