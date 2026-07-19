@@ -54,6 +54,14 @@ export const decisionSchema = z.object({
     belongingPenalty: z.number().min(0).max(100),
     label: z.string().trim().min(3).max(160),
   }),
+  contextLenses: z.array(z.object({
+    id: z.string().trim().min(1).max(64),
+    label: z.string().trim().min(3).max(96),
+    protectedValues: z.array(z.string().trim().min(1).max(48)).min(1).max(4),
+    knownConcern: z.string().trim().min(3).max(320),
+    unknown: z.string().trim().min(3).max(320),
+    provenanceLabel: z.literal("user-authored perspective"),
+  })).max(2).default([]),
   // The submitted experience, witness architecture, and comparison UI are
   // deliberately designed around four futures: safe, ambitious, negotiated,
   // and nonlinear. Keep that contract explicit instead of implying a dynamic
@@ -105,14 +113,14 @@ export const futureSchema = z.object({
   })),
 });
 
-export const witnessLensSchema = z.enum(["financial-resilience", "belonging", "reversibility", "adversarial-regret"]);
+export const witnessLensSchema = z.string().regex(/^(financial-resilience|belonging|reversibility|adversarial-regret|context:[a-zA-Z0-9_-]+)$/);
 export const qualitativeAssessmentSchema = z.enum(["protects", "strains", "trades-off"]);
 export const qualitativeFocusSchema = z.enum(["financial-runway", "daily-belonging", "exit-flexibility", "downside-exposure"]);
 export const uncertaintySchema = z.enum(["daily-rhythm", "support-network", "reversal-cost", "downside-tolerance"]);
 export const signalSchema = z.enum(["energy-pattern", "support-seeking", "commitment-resistance", "recovery-time"]);
 export const witnessSchema = z.object({
   lens: witnessLensSchema,
-  protectedValue: z.enum(["Financial resilience", "Belonging and relationships", "Reversibility and optionality", "Adversarial failure and regret"]),
+  protectedValue: z.string().trim().min(3).max(96),
   ledgerHash: z.string(),
   observations: z.array(z.object({
     optionId: z.string(),
@@ -139,7 +147,7 @@ export const simulationSchema = z.object({
   decision: decisionSchema,
   baseline: z.array(futureSchema),
   shocked: z.array(futureSchema),
-  witnesses: z.array(witnessSchema).length(4),
+  witnesses: z.array(witnessSchema).min(4).max(6),
   divergence: z.object({
     baseline: z.number(),
     shocked: z.number(),
@@ -178,3 +186,6 @@ export type Future = z.infer<typeof futureSchema>;
 export type Witness = z.infer<typeof witnessSchema>;
 export type Simulation = z.infer<typeof simulationSchema>;
 export type Uncertainty = z.infer<typeof uncertaintySchema>;
+export type ContextLens = z.infer<typeof decisionSchema>[
+  "contextLenses"
+][number];

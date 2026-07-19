@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { journeyMeta, makeJourney, primaryJourneyDomains, shockPresets, type JourneyDomain } from "@/lib/journeys";
-import type { Decision, DecisionOption } from "@/lib/schema";
+import type { ContextLens, Decision, DecisionOption } from "@/lib/schema";
 
 type Props = {
   decision: Decision;
@@ -14,7 +14,7 @@ type Props = {
   initialStep?: number;
 };
 
-const steps = ["Your world", "The futures", "What matters", "Reality check", "Plot twist"];
+const steps = ["Your world", "The futures", "What matters", "Perspectives", "Reality check", "Plot twist"];
 export function DecisionStudio({ decision, open, running, onClose, onChange, onRun, initialStep = 0 }: Props) {
   const [step, setStep] = useState(initialStep);
 
@@ -35,6 +35,32 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
 
   function setPriority(key: keyof Decision["priorities"], value: number) {
     onChange({ ...decision, priorities: { ...decision.priorities, [key]: value } });
+  }
+
+  function addContextLens() {
+    if (decision.contextLenses.length >= 2) return;
+    const next = structuredClone(decision);
+    next.contextLenses.push({
+      id: `perspective-${Date.now()}`,
+      label: "My model of Mum’s protective concern",
+      protectedValues: ["proximity", "support"],
+      knownConcern: "She may worry about how easily I can show up when life becomes difficult.",
+      unknown: "I have not asked her how she sees this exact decision.",
+      provenanceLabel: "user-authored perspective",
+    });
+    onChange(next);
+  }
+
+  function setContextLens(index: number, patch: Partial<ContextLens>) {
+    const next = structuredClone(decision);
+    next.contextLenses[index] = { ...next.contextLenses[index], ...patch };
+    onChange(next);
+  }
+
+  function removeContextLens(index: number) {
+    const next = structuredClone(decision);
+    next.contextLenses.splice(index, 1);
+    onChange(next);
   }
 
   function chooseShock(preset: (typeof shockPresets)[JourneyDomain][number]) {
@@ -121,6 +147,27 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
         )}
 
         {step === 3 && (
+          <section className="journey-screen perspectives-step">
+            <p className="journey-kicker">THE PEOPLE IN THE ROOM</p>
+            <h2>Add the concern you are already carrying.</h2>
+            <p>This is your model of a perspective—not a prediction of a real person. Name what it protects, what you know, and what you still need to ask.</p>
+            <div className="perspective-stack">
+              {decision.contextLenses.map((lens, index) => (
+                <article className="perspective-card" key={lens.id}>
+                  <div className="perspective-card-head"><span>USER-AUTHORED PERSPECTIVE</span><button onClick={() => removeContextLens(index)} aria-label={`Remove ${lens.label}`}>Remove</button></div>
+                  <label><span>NAME THIS PERSPECTIVE</span><input aria-label="Perspective name" value={lens.label} onChange={(event) => setContextLens(index, { label: event.target.value })} /></label>
+                  <label><span>WHAT IT PROTECTS</span><input aria-label="Values this perspective protects" value={lens.protectedValues.join(", ")} onChange={(event) => setContextLens(index, { protectedValues: event.target.value.split(",").map((value) => value.trim()).filter(Boolean).slice(0, 4) })} /></label>
+                  <label><span>WHAT I THINK I KNOW</span><textarea aria-label="Known concern" value={lens.knownConcern} onChange={(event) => setContextLens(index, { knownConcern: event.target.value })} /></label>
+                  <label><span>WHAT I DO NOT KNOW YET</span><textarea aria-label="Unknown concern" value={lens.unknown} onChange={(event) => setContextLens(index, { unknown: event.target.value })} /></label>
+                </article>
+              ))}
+            </div>
+            {decision.contextLenses.length < 2 && <button className="add-perspective" onClick={addContextLens}>+ Add a perspective</button>}
+            <small className="perspective-note">Try: “my model of Mum’s protective concern,” “a cofounder’s risk lens,” or “future me’s freedom.” Never pass it off as someone else’s actual view.</small>
+          </section>
+        )}
+
+        {step === 4 && (
           <section className="journey-screen">
             <p className="journey-kicker">GROUND THE VIBE</p>
             <h2>{decision.domain === "relationships" ? "How would each future feel?" : "Give the futures real gravity."}</h2>
@@ -152,7 +199,7 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
           </section>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <section className="journey-screen shock-step">
             <p className="journey-kicker">NOW BREAK THE PERFECT PLAN</p>
             <h2>What could change the weights?</h2>

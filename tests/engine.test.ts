@@ -72,6 +72,28 @@ test("every live witness job receives the identical immutable ledger payload", (
   assert.equal(new Set(jobs.map((job) => job.lens.lens)).size, 4);
 });
 
+test("a user-authored perspective adds a value lens without changing the shared evidence", () => {
+  const decision = structuredClone(sampleDecision);
+  decision.contextLenses = [{
+    id: "mum-protective-concern",
+    label: "My model of Mum’s protective concern",
+    protectedValues: ["proximity", "support"],
+    knownConcern: "She may worry about how easily I can show up when life becomes difficult.",
+    unknown: "I have not asked her how she sees this exact decision.",
+    provenanceLabel: "user-authored perspective",
+  }];
+  const result = runSimulation(decision);
+  const jobs = buildWitnessJobs(decision, result.baseline, result.shocked);
+  assert.equal(jobs.length, 5);
+  assert.equal(new Set(jobs.map((job) => job.input)).size, 1);
+  assert.equal(new Set(jobs.map((job) => job.hash)).size, 1);
+  assert.equal(jobs.at(-1)?.lens.lens, "context:mum-protective-concern");
+  assert.equal(jobs.at(-1)?.lens.protectedValue, "My model of Mum’s protective concern");
+  assert.equal(jobs.at(-1)?.lens.context?.provenanceLabel, "user-authored perspective");
+  assert.equal(result.witnesses.length, 5);
+  assert.equal(result.witnesses.at(-1)?.ledgerHash, "deterministic-only");
+});
+
 test("shock preset changes the causal world state and every fallback witness receives one ledger receipt", () => {
   const decision = structuredClone(sampleDecision);
   decision.shock = shockPresets.career[2];

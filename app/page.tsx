@@ -5,17 +5,21 @@ import { DecisionStudio } from "@/components/decision-studio";
 import { Timeline } from "@/components/timeline";
 import { runSimulation, sampleDecision } from "@/lib/engine";
 import { journeyMeta, makeJourney, primaryJourneyDomains, type JourneyDomain } from "@/lib/journeys";
-import { decisionSchema, simulationSchema, type Decision, type Simulation } from "@/lib/schema";
+import { decisionSchema, simulationSchema, type Decision, type Simulation, type Witness } from "@/lib/schema";
 import { uncertaintyCopyForUi, witnessObservationCopy } from "@/lib/interpretation";
 
 type AgentState = "idle" | "running" | "complete" | "unavailable";
 
-const pendingWitnesses = [
+const corePendingWitnesses = [
   { lens: "financial-resilience", protectedValue: "Financial resilience" },
   { lens: "belonging", protectedValue: "Belonging and relationships" },
   { lens: "reversibility", protectedValue: "Reversibility and optionality" },
   { lens: "adversarial-regret", protectedValue: "Adversarial failure and regret" },
 ] as const;
+
+function isResolvedWitness(witness: Witness | { lens: string; protectedValue: string }): witness is Witness {
+  return "observations" in witness;
+}
 
 export default function Home() {
   const initialSimulation = useMemo(() => runSimulation(sampleDecision), []);
@@ -30,6 +34,10 @@ export default function Home() {
   const futures = shock ? simulation.shocked : simulation.baseline;
   const domainMeta = journeyMeta[decision.domain];
   const witnessReceipt = simulation.witnesses[0]?.ledgerHash;
+  const pendingWitnesses = [
+    ...corePendingWitnesses,
+    ...decision.contextLenses.map((context) => ({ lens: `context:${context.id}`, protectedValue: context.label })),
+  ];
 
   function openJourney(domain?: JourneyDomain) {
     if (domain) setDecision(makeJourney(domain));
@@ -120,7 +128,7 @@ export default function Home() {
       <section className={`observatory ${opened ? "revealed" : ""}`} aria-hidden={!opened}>
         <div className={`engine-status ${agentState}`}>
           <span />
-          {agentState === "running" && "Four GPT-5.6 witnesses are stress-testing the paths in parallel"}
+          {agentState === "running" && `${pendingWitnesses.length} GPT-5.6 witnesses are stress-testing the paths in parallel`}
           {agentState === "complete" && (simulation.witnesses.some((witness) => witness.fallback)
             ? "AI interpretation was unavailable · verified deterministic ledger remains complete"
             : `${simulation.witnesses.length} controlled witnesses${simulation.generatedBy.synthesisReturned ? " + 1 synthesis" : ""} returned in ${((simulation.generatedBy.durationMs ?? 0) / 1000).toFixed(1)}s`)}
@@ -157,7 +165,7 @@ export default function Home() {
               <div className="matrix-row" key={witness.lens} role="row">
                 <div className="matrix-lens" role="rowheader">{witness.protectedValue}</div>
                 {simulation.baseline.map((future, columnIndex) => {
-                  const observation = "observations" in witness ? witness.observations.find((item) => item.optionId === future.optionId) : undefined;
+                  const observation = isResolvedWitness(witness) ? witness.observations.find((item) => item.optionId === future.optionId) : undefined;
                   const assessment = observation ? (shock ? observation.shockedAssessment : observation.baselineAssessment) : "pending";
                   return <div key={future.optionId} role="cell" className={`matrix-cell ${assessment}`} style={{ "--delay": `${(rowIndex + columnIndex) * 85}ms` } as React.CSSProperties} aria-label={observation ? `${witness.protectedValue}: ${witnessObservationCopy(observation, shock)}` : `${witness.protectedValue}: pending`}>
                     <span>{assessment === "pending" ? "·" : assessment.replace("-", " ")}</span>
@@ -219,5 +227,8 @@ export default function Home() {
 
 function buildMarkdown(simulation: Simulation) {
   const rows = simulation.shocked.map((future) => `| ${future.title} | €${future.metrics.yearEndSavingsEur.toLocaleString()} | ${future.metrics.averageEnergy} | ${future.metrics.averageBelonging} | ${future.irreversibleAt.label} |`).join("\n");
-  return `# Elsewhere decision brief\n\n## ${simulation.decision.question}\n\nGenerated with ${simulation.generatedBy.model ?? "the deterministic ledger"}.\n\n| Future | Year-end savings | Energy | Belonging | Commitment assumption |\n| --- | ---: | ---: | ---: | --- |\n${rows}\n\n## Shock\n\n${simulation.decision.shock.label}, month ${simulation.decision.shock.month}.\n\n## Fourteen-day experiment\n\n**${simulation.experiment.title}**\n\n${simulation.experiment.hypothesis}\n\nFirst step: ${simulation.experiment.firstStep}\n\n## Evidence\n\nTrace coverage: ${Math.round(simulation.audit.sourceCoverage * 100)}%.\n\n${simulation.sources.map((source) => `- [${source.label}](${source.url}) — ${source.note}`).join("\n")}\n`;
+  const perspectives = simulation.decision.contextLenses.length
+    ? `\n## User-authored perspectives\n\n${simulation.decision.contextLenses.map((lens) => `### ${lens.label}\n\n- Protects: ${lens.protectedValues.join(", ")}\n- What I think I know: ${lens.knownConcern}\n- What I do not know yet: ${lens.unknown}\n- Provenance: ${lens.provenanceLabel}; this is not that person’s actual view.`).join("\n\n")}\n`
+    : "";
+  return `# Elsewhere decision brief\n\n## ${simulation.decision.question}\n\nGenerated with ${simulation.generatedBy.model ?? "the deterministic ledger"}.\n\n| Future | Year-end savings | Energy | Belonging | Commitment assumption |\n| --- | ---: | ---: | ---: | --- |\n${rows}${perspectives}\n## Shock\n\n${simulation.decision.shock.label}, month ${simulation.decision.shock.month}.\n\n## Fourteen-day experiment\n\n**${simulation.experiment.title}**\n\n${simulation.experiment.hypothesis}\n\nFirst step: ${simulation.experiment.firstStep}\n\n## Evidence\n\nTrace coverage: ${Math.round(simulation.audit.sourceCoverage * 100)}%.\n\n${simulation.sources.map((source) => `- [${source.label}](${source.url}) — ${source.note}`).join("\n")}\n`;
 }
