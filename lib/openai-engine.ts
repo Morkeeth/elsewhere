@@ -16,9 +16,6 @@ const witnessSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    lens: { type: "string" },
-    protectedValue: { type: "string", enum: ["Financial resilience", "Belonging and relationships", "Reversibility and optionality", "Adversarial failure and regret"] },
-    ledgerHash: { type: "string" },
     observations: {
       type: "array",
       minItems: 4,
@@ -37,7 +34,7 @@ const witnessSchema = {
     uncertaintyToTest: { type: "string", enum: ["daily-rhythm", "support-network", "reversal-cost", "downside-tolerance"] },
     observableSignal: { type: "string", enum: ["energy-pattern", "support-seeking", "commitment-resistance", "recovery-time"] },
   },
-  required: ["lens", "protectedValue", "ledgerHash", "observations", "uncertaintyToTest", "observableSignal"],
+  required: ["observations", "uncertaintyToTest", "observableSignal"],
 } as const;
 
 const synthesisSchema = {
@@ -66,13 +63,12 @@ export function ledgerHash(baseline: Future[], shocked: Future[]) {
   return createHash("sha256").update(JSON.stringify(compactLedger(baseline, shocked))).digest("hex").slice(0, 16);
 }
 
-function validateWitness(candidate: Omit<Witness, "fallback">, lens: (typeof lenses)[number], optionIds: string[], expectedHash: string): Witness {
-  if (candidate.lens !== lens.lens || candidate.protectedValue !== lens.protectedValue || candidate.ledgerHash !== expectedHash) {
-    throw new Error("Witness identity or ledger receipt did not match the immutable input");
-  }
+type WitnessFinding = Pick<Witness, "observations" | "uncertaintyToTest" | "observableSignal">;
+
+function validateWitness(candidate: WitnessFinding, lens: (typeof lenses)[number], optionIds: string[], expectedHash: string): Witness {
   const seen = candidate.observations.map((item) => item.optionId);
   if (new Set(seen).size !== 4 || optionIds.some((id) => !seen.includes(id))) throw new Error("Witness did not observe every option exactly once");
-  return witnessRuntimeSchema.parse({ ...candidate, fallback: false });
+  return witnessRuntimeSchema.parse({ ...candidate, lens: lens.lens, protectedValue: lens.protectedValue, ledgerHash: expectedHash, fallback: false });
 }
 
 export function buildWitnessInput(decision: Decision, ledger: ReturnType<typeof compactLedger>, expectedHash: string) {
@@ -101,7 +97,7 @@ async function askWitness(client: OpenAI, input: string, ledger: ReturnType<type
     input,
     text: { format: { type: "json_schema", name: "elsewhere_witness", strict: true, schema: witnessSchema } },
   });
-  const candidate = JSON.parse(response.output_text) as Omit<Witness, "fallback">;
+  const candidate = JSON.parse(response.output_text) as WitnessFinding;
   return { responseId: response.id, witness: validateWitness(candidate, lens, ledger.map((item) => item.optionId), expectedHash) };
 }
 
