@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { DecisionStudio } from "@/components/decision-studio";
-import { CalibrationReturn } from "@/components/calibration-return";
+import { CalibrationReturn, type CalibrationSubmission } from "@/components/calibration-return";
+import { ReversalMap } from "@/components/reversal-map";
 import { Timeline } from "@/components/timeline";
-import { runSimulation, sampleDecision } from "@/lib/engine";
+import { applyAssumption, auditTrace, buildBreakpointAnalysis, runSimulation, sampleDecision } from "@/lib/engine";
 import { journeyMeta, makeJourney, primaryJourneyDomains, type JourneyDomain } from "@/lib/journeys";
-import { decisionSchema, simulationSchema, type CalibrationRecord, type Decision, type Simulation, type Witness } from "@/lib/schema";
+import { decisionSchema, simulationSchema, type AssumptionCalibration, type Decision, type Simulation, type Witness } from "@/lib/schema";
 import { uncertaintyCopyForUi, witnessObservationCopy } from "@/lib/interpretation";
 
 type AgentState = "idle" | "running" | "complete" | "unavailable";
@@ -91,12 +92,29 @@ export default function Home() {
     }
   }
 
-  function applyCalibration(record: CalibrationRecord) {
-    const next = structuredClone(decision);
-    next.priorities[record.revisedPriority] = record.nextValue;
+  function applyCalibration(submission: CalibrationSubmission) {
+    const before = simulation.breakpoint;
+    const scenario = applyAssumption(decision, submission.assumptionId, submission.observedValue);
+    const nextAnalysis = buildBreakpointAnalysis(scenario, before.assumption.uncertainty);
+    const record: AssumptionCalibration = {
+      id: `calibration-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      experimentTitle: simulation.experiment.title,
+      observedSignals: submission.observedSignals,
+      kind: "assumption-observation",
+      assumptionId: submission.assumptionId,
+      previousValue: before.referenceValue,
+      observedValue: submission.observedValue,
+      unit: before.assumption.unit,
+      provenance: "user-observed",
+      breakpoints: before.futures.map((future) => ({ optionId: future.optionId, before: future.breakpointValue, after: nextAnalysis.futures.find((item) => item.optionId === future.optionId)?.breakpointValue ?? null })),
+      note: submission.note,
+    };
+    const next = structuredClone(scenario);
     next.calibrations = [...next.calibrations, record].slice(-12);
     setDecision(next);
-    setSimulation(runSimulation(next));
+    const recalculated = runSimulation(next);
+    setSimulation({ ...recalculated, breakpoint: nextAnalysis, audit: auditTrace(recalculated.baseline, recalculated.shocked, recalculated.divergence, recalculated.experiment, nextAnalysis) });
     setOpened(true);
     setShock(true);
     setAgentState("idle");
@@ -199,6 +217,8 @@ export default function Home() {
           <div className="divergence-bar"><span style={{ width: `${Math.min(100, (shock ? simulation.divergence.shocked : simulation.divergence.baseline) * 2)}%` }} /></div>
           <p>{shock ? simulation.divergence.explanation : "The paths look comparable until reality changes the weights."}</p>
         </div>
+
+        {shock && <ReversalMap analysis={simulation.breakpoint} futures={simulation.shocked} />}
       </section>
 
       <section className={`experiment ${opened && shock ? "revealed" : ""}`}>
@@ -222,7 +242,7 @@ export default function Home() {
         </div>
       </section>
 
-      {opened && shock && <CalibrationReturn decision={decision} simulation={simulation} onApply={applyCalibration} />}
+      {opened && shock && <CalibrationReturn decision={decision} simulation={simulation} analysis={simulation.breakpoint} onApply={applyCalibration} />}
 
       <aside className={`evidence-drawer ${evidenceOpen ? "open" : ""}`}>
         <button onClick={() => setEvidenceOpen(false)} aria-label="Close evidence">×</button>

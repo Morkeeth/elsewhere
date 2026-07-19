@@ -2,7 +2,7 @@
 
 **Don’t ask AI what to choose. Visit the futures first.**
 
-Elsewhere is an open-source, mobile-first decision instrument for consequential career and location choices. It unfolds four grounded twelve-month paths, introduces a real-world shock with explicit causal effects, exposes the point at which each path becomes expensive to reverse, and ends with one low-cost fourteen-day experiment.
+Elsewhere is an open-source Personal Decision Lab for consequential career and location choices. It unfolds four grounded twelve-month paths, introduces a real-world shock with explicit causal effects, finds the assumption each future depends on, and ends with one low-cost fourteen-day experiment.
 
 ## Why it is different
 
@@ -12,7 +12,8 @@ Most decision tools collapse uncertainty into advice. Elsewhere preserves disagr
 2. Four GPT-5.6 witnesses receive the same immutable four-future ledger, then interpret it through distinct lenses: financial resilience, human belonging, reversibility, and adversarial failure.
 3. A fifth GPT-5.6 response synthesizes the disagreement but cannot change a ledger value or experiment constraint.
 4. A configurable shock reruns every life from the selected month.
-5. The product returns a reversible experiment, not a verdict.
+5. A deterministic Assumption Breakpoint sweep shows where each future becomes fragile under the user's own weights.
+6. The product returns a reversible experiment, then recalculates breakpoints from one user-observed assumption—not a verdict.
 
 Optional context layers can add up to two further **user-authored perspectives**—for example, “my model of Mum’s protective concern.” They record what the user believes that perspective protects, what is known, and what remains unknown. They are stored locally in the browser; when live witnesses run, selected text is sent to OpenAI for qualitative interpretation with `store: false`. They are not contact imports, person simulations, or claims about what somebody else thinks.
 
@@ -28,9 +29,10 @@ The disagreement matrix is model-generated; deterministic code deliberately owns
 - Twelve-month baseline and shocked world states
 - Four concurrent core GPT witnesses over the same ledger plus a constrained uncertainty synthesis; optional context perspectives add one isolated lens each
 - SVG optionality timelines, shock propagation, commitment markers, and divergence score
+- Assumption register, deterministic sensitivity sweeps, and a Reversal Map showing robust, sensitive, and fragile regions
 - Evidence drawer with formula and source provenance
 - Local decision persistence
-- Local experiment-return calibration: record observed signals, revise one explicit priority, and rerun without another AI call
+- Local experiment-return calibration: record observed signals, update the tested causal assumption, and rerun breakpoints without another AI call
 - Markdown and JSON exports
 - Health endpoint, deterministic regression suite, scenario eval harness, security guidance, and Vercel configuration
 
@@ -83,7 +85,7 @@ Accurate language: **“Four independent GPT-5.6 witnesses receive the same immu
 
 ## Data contract
 
-Every decision-outcome number comes from inputs and formulas. Financial inputs use dated public figures where available; energy, belonging, optionality, and commitment timing are transparent scenario assumptions, not validated predictions. GPT returns only bounded qualitative categories; the application renders its own interpretation text and never displays model-authored numeric or prescriptive prose. The evidence audit compares a complete rendered-outcome manifest—including timeline data—against independent trace records. The "Commitment assumption" marker is editable user input, not a discovered fact.
+Every decision-outcome number comes from inputs and formulas. Financial inputs use dated public figures where available; energy, belonging, optionality, commitment timing, and all Reversal Map sweeps are transparent scenario assumptions, not validated predictions. “Personal fit” is a user-weighted calculation, not a recommendation or objective outcome. GPT returns only bounded qualitative categories; the application renders its own interpretation text and never displays model-authored numeric or prescriptive prose. The evidence audit compares a complete rendered-outcome manifest—including timeline data and breakpoint sweep values—against independent trace records. The "Commitment assumption" marker is editable user input, not a discovered fact.
 
 ## How we used GPT-5.6 and Codex
 

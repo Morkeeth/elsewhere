@@ -2,13 +2,13 @@
 
 ## One line
 
-Elsewhere lets four AI witnesses inhabit grounded versions of your future, breaks each life with the same shock, and gives you one reversible experiment instead of a verdict.
+Elsewhere is a Personal Decision Lab: four AI witnesses expose what is contested, deterministic code finds the assumption each future depends on, and one reversible experiment tests it before commitment.
 
 ## Short description
 
 Consequential decisions are not single questions. They are competing futures with different failure modes. Elsewhere turns four career or location paths into inspectable twelve-month world states grounded in tax rules, rent, income, costs, and explicit personal assumptions. Four GPT-5.6 witnesses receive that same immutable ledger concurrently through financial, belonging, reversibility, and adversarial lenses. A fifth response synthesizes the disagreement without being allowed to change a ledger value, experiment constraint, or recommend a future.
 
-Then the user introduces a real shock—caregiving, job loss, health, visa, or any custom event—and every future reruns from the selected month. The product reveals where the lives diverge, when each door becomes expensive to reopen, and the smallest fourteen-day experiment that can replace imagination with evidence.
+Then the user introduces a real shock—caregiving, job loss, health, visa, or any custom event—and every future reruns from the selected month. Elsewhere sweeps the load-bearing scenario assumption and shows where each future becomes robust, sensitive, or fragile under the user's own weights. The final fourteen-day experiment produces one observation; returning with that observation recalculates the breakpoints without pretending to select a life.
 
 ## What makes it technically distinctive
 
@@ -16,15 +16,16 @@ Then the user introduces a real shock—caregiving, job loss, health, visa, or a
 - A deterministic simulation engine owns every ledger metric; GPT returns bounded qualitative categories and the application renders safe interpretation text.
 - A provenance audit traces every rendered decision-outcome field, including timeline values, to formulas and dated sources.
 - The shock engine recomputes the full causal timeline rather than adding narrative commentary.
+- AI selects only a bounded uncertainty category. Deterministic code maps it to an approved assumption, calculates the sensitivity sweep, and owns every displayed breakpoint threshold.
 
 ## Judge test
 
 1. Open **Career** or **Moving** and inspect the four editable futures.
 2. Run the futures and verify that the deterministic ledger appears immediately while witnesses work.
 3. Compare the four AI interpretation matrix rows: same ledger, different protected values.
-4. Toggle one explicit shock and inspect the divergence and editable commitment assumptions.
-5. Open **Evidence** and follow one official source.
-6. Export the Markdown brief and JSON world states.
+4. Toggle one explicit shock and inspect the Assumption Breakpoint Reversal Map.
+5. Record one observed assumption and watch the deterministic breakpoint move.
+6. Open **Evidence** and follow one official source.
 
 ## Built with
 
