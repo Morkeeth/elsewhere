@@ -224,11 +224,13 @@ h1 {
 .witness-receipt small { color: var(--muted); font-size: inherit; }
 .witness-receipt.running strong { animation: receiptPulse 1.1s ease-in-out infinite; }
 .disagreement-matrix { display: grid; grid-template-columns: minmax(150px, 1.25fr) repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.matrix-scroll { overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-color: var(--acid) #1a1b17; scrollbar-width: thin; }
 .matrix-head, .matrix-lens, .matrix-cell { min-height: 58px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .matrix-head { display: flex; align-items: flex-end; padding: 11px; color: var(--muted); font: 8px "DM Mono", monospace; letter-spacing: .08em; text-transform: uppercase; }
 .matrix-head.matrix-lens { color: var(--acid); }
 .matrix-row { display: contents; }
-.matrix-lens { display: flex; align-items: center; padding: 11px; font: 9px/1.35 "DM Mono", monospace; letter-spacing: .04em; text-transform: uppercase; }
+.matrix-lens { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; padding: 11px; font: 9px/1.35 "DM Mono", monospace; letter-spacing: .04em; text-transform: uppercase; background: #151612; }
+.matrix-lens small { color: #a9c5ff; font: 7px "DM Mono", monospace; letter-spacing: .08em; }
 .matrix-cell { display: grid; place-items: center; padding: 8px; transition: background .45s ease, color .45s ease; }
 .matrix-cell span { font: 8px "DM Mono", monospace; letter-spacing: .07em; text-transform: uppercase; }
 .matrix-cell.protects { background: rgba(201,255,100,.2); color: var(--acid); }
@@ -252,6 +254,22 @@ h1 {
 .experiment { padding: 120px 7vw 140px; background: var(--acid); color: #10110e; clip-path: inset(100% 0 0 0); transition: clip-path 1s cubic-bezier(.2,.8,.2,1); }
 .experiment.revealed { clip-path: inset(0); }
 .experiment .section-number { color: #4e622d; display: block; margin-bottom: 65px; }
+.calibration-return { padding: 110px 7vw; background: #12130f; display: grid; grid-template-columns: 1fr auto; gap: 45px; border-top: 1px solid var(--line); }
+.calibration-return h2 { font-size: clamp(38px, 5vw, 68px); font-weight: 300; line-height: .95; letter-spacing: -.055em; margin: 18px 0; max-width: 620px; }
+.calibration-return p { max-width: 560px; color: var(--muted); font-size: 13px; line-height: 1.65; }
+.calibration-open { align-self: start; border: 1px solid var(--acid); background: transparent; color: var(--acid); padding: 15px 18px; cursor: pointer; font: 10px "DM Mono", monospace; text-transform: uppercase; letter-spacing: .08em; }
+.calibration-form { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; max-width: 920px; }
+.calibration-form > label, .signal-picker { display: grid; gap: 9px; padding: 16px; border: 1px solid var(--line); background: #171814; }
+.calibration-form span, .signal-picker > span { color: var(--muted); font: 8px "DM Mono", monospace; letter-spacing: .09em; }
+.calibration-form span i { font-style: normal; color: #777a6f; }
+.calibration-form select, .calibration-form textarea { background: #10110e; border: 1px solid #30332a; color: var(--ink); padding: 10px; font: 12px "DM Mono", monospace; }
+.calibration-form textarea { min-height: 82px; resize: vertical; }
+.signal-picker { grid-row: span 2; }
+.signal-picker button { border: 1px solid #30332a; background: #10110e; color: var(--muted); padding: 10px; text-align: left; cursor: pointer; font: 10px/1.4 "DM Mono", monospace; }
+.signal-picker button.selected { border-color: var(--acid); color: var(--ink); background: rgba(201,255,100,.08); }
+.calibration-slider input { accent-color: var(--acid); }
+.calibration-apply { border: 0; background: var(--acid); color: #10110e; padding: 16px; cursor: pointer; font: 10px "DM Mono", monospace; text-transform: uppercase; letter-spacing: .08em; }
+.calibration-history { grid-column: 1 / -1; color: var(--muted); font: 9px "DM Mono", monospace; text-transform: uppercase; }
 .experiment-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 9vw; }
 .experiment h2 { font-size: clamp(58px, 7vw, 118px); }
 .kicker { color: #405322; margin: 0 0 14px; }
@@ -386,6 +404,7 @@ h1 {
 .perspective-card textarea { min-height: 70px; resize: vertical; }
 .add-perspective { margin-top: 14px; width: 100%; border: 1px dashed #5c77a8; background: rgba(142,181,255,.06); color: #b8ccff; padding: 17px; cursor: pointer; font: 10px "DM Mono", monospace; text-transform: uppercase; letter-spacing: .09em; }
 .perspective-note { display: block; color: var(--muted); font-size: 10px; line-height: 1.55; margin-top: 16px; }
+.transmission-note { margin: 18px 0 0; border-left: 2px solid #a9c5ff; padding: 10px 12px; color: #c6d4f7; background: rgba(142,181,255,.07); font: 10px/1.55 "DM Mono", monospace; }
 .shock-ideas { display: grid; gap: 8px; margin: 32px 0; }
 .shock-ideas button { display: flex; justify-content: space-between; text-align: left; border: 1px solid var(--line); background: #171814; color: var(--ink); padding: 16px 18px; cursor: pointer; }
 .shock-ideas button span { color: var(--acid); }
@@ -408,6 +427,9 @@ h1 {
   .divergence { grid-template-columns: 50px 180px 1fr; }
   .divergence > p { grid-column: 2 / -1; }
   .experiment-grid { grid-template-columns: 1fr; }
+  .calibration-return { grid-template-columns: 1fr; padding: 80px 24px; }
+  .calibration-form { grid-template-columns: 1fr; }
+  .signal-picker { grid-row: auto; }
 }
 
 @media (max-width: 680px) {
@@ -426,11 +448,14 @@ h1 {
   .section-head { align-items: flex-start; flex-direction: column; gap: 32px; }
   .shock-control > div { text-align: left; }
   .future-grid { grid-template-columns: 1fr; }
-  .witness-panel { overflow-x: auto; }
-  .witness-receipt { min-width: 520px; }
+  .witness-panel { overflow: hidden; }
+  .witness-receipt { min-width: 0; flex-wrap: wrap; }
+  .matrix-scroll { margin-right: -20px; padding-right: 20px; }
   .disagreement-matrix { min-width: 520px; grid-template-columns: 130px repeat(4, minmax(92px, 1fr)); }
+  .matrix-head.matrix-lens, .matrix-row .matrix-lens { position: sticky; left: 0; z-index: 2; box-shadow: 8px 0 14px rgba(16,17,14,.45); }
+  .matrix-head.matrix-lens { background: #151612; z-index: 3; }
   .matrix-head, .matrix-lens, .matrix-cell { min-height: 54px; }
-  .matrix-caption { min-width: 520px; }
+  .matrix-caption { min-width: 0; }
   .divergence { grid-template-columns: 45px 1fr; }
   .divergence-bar, .divergence > p { grid-column: 2; }
   .experiment { padding: 80px 24px; }

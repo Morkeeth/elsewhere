@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { DecisionStudio } from "@/components/decision-studio";
+import { CalibrationReturn } from "@/components/calibration-return";
 import { Timeline } from "@/components/timeline";
 import { runSimulation, sampleDecision } from "@/lib/engine";
 import { journeyMeta, makeJourney, primaryJourneyDomains, type JourneyDomain } from "@/lib/journeys";
-import { decisionSchema, simulationSchema, type Decision, type Simulation, type Witness } from "@/lib/schema";
+import { decisionSchema, simulationSchema, type CalibrationRecord, type Decision, type Simulation, type Witness } from "@/lib/schema";
 import { uncertaintyCopyForUi, witnessObservationCopy } from "@/lib/interpretation";
 
 type AgentState = "idle" | "running" | "complete" | "unavailable";
@@ -68,6 +69,7 @@ export default function Home() {
 
   async function runDecision() {
     const validated = decisionSchema.parse(decision);
+    if (validated.contextLenses.length > 0 && !window.confirm("Selected user-authored perspective text will be sent to OpenAI to generate qualitative interpretations. It remains stored in this browser. Continue?")) return;
     setOpened(true);
     setStudioOpen(false);
     setShock(false);
@@ -87,6 +89,18 @@ export default function Home() {
     } catch {
       setAgentState("unavailable");
     }
+  }
+
+  function applyCalibration(record: CalibrationRecord) {
+    const next = structuredClone(decision);
+    next.priorities[record.revisedPriority] = record.nextValue;
+    next.calibrations = [...next.calibrations, record].slice(-12);
+    setDecision(next);
+    setSimulation(runSimulation(next));
+    setOpened(true);
+    setShock(true);
+    setAgentState("idle");
+    window.setTimeout(() => document.querySelector(".observatory")?.scrollIntoView({ behavior: "smooth" }), 100);
   }
 
   function exportFile(kind: "json" | "markdown") {
@@ -158,21 +172,23 @@ export default function Home() {
             <strong>{agentState === "running" ? "Four protected values are checking it in parallel" : witnessReceipt === "deterministic-only" ? "Deterministic fallback active" : `RECEIPT ${witnessReceipt}`}</strong>
             <small>{agentState === "complete" && witnessReceipt !== "deterministic-only" ? "Same evidence supplied to every lens" : "The record remains usable without AI interpretation"}</small>
           </div>
-          <div className={`disagreement-matrix ${shock ? "shocked" : "baseline"} ${agentState === "running" ? "is-pending" : ""}`} role="table" aria-label="Disagreement matrix by protected value and future">
-            <div className="matrix-head matrix-lens">PROTECTED VALUE</div>
-            {simulation.baseline.map((future) => <div className="matrix-head" key={future.optionId}>{future.title}</div>)}
-            {(agentState === "running" ? pendingWitnesses : simulation.witnesses).map((witness, rowIndex) => (
-              <div className="matrix-row" key={witness.lens} role="row">
-                <div className="matrix-lens" role="rowheader">{witness.protectedValue}</div>
-                {simulation.baseline.map((future, columnIndex) => {
-                  const observation = isResolvedWitness(witness) ? witness.observations.find((item) => item.optionId === future.optionId) : undefined;
-                  const assessment = observation ? (shock ? observation.shockedAssessment : observation.baselineAssessment) : "pending";
-                  return <div key={future.optionId} role="cell" className={`matrix-cell ${assessment}`} style={{ "--delay": `${(rowIndex + columnIndex) * 85}ms` } as React.CSSProperties} aria-label={observation ? `${witness.protectedValue}: ${witnessObservationCopy(observation, shock)}` : `${witness.protectedValue}: pending`}>
-                    <span>{assessment === "pending" ? "·" : assessment.replace("-", " ")}</span>
-                  </div>;
-                })}
-              </div>
-            ))}
+          <div className="matrix-scroll" tabIndex={0} aria-label="Swipe to compare all four futures">
+            <div className={`disagreement-matrix ${shock ? "shocked" : "baseline"} ${agentState === "running" ? "is-pending" : ""}`} role="table" aria-label="Disagreement matrix by protected value and future">
+              <div className="matrix-head matrix-lens">PROTECTED VALUE</div>
+              {simulation.baseline.map((future) => <div className="matrix-head" key={future.optionId}>{future.title}</div>)}
+              {(agentState === "running" ? pendingWitnesses : simulation.witnesses).map((witness, rowIndex) => (
+                <div className="matrix-row" key={witness.lens} role="row">
+                  <div className="matrix-lens" role="rowheader"><span>{witness.protectedValue}</span>{witness.lens.startsWith("context:") && <small>USER-AUTHORED</small>}</div>
+                  {simulation.baseline.map((future, columnIndex) => {
+                    const observation = isResolvedWitness(witness) ? witness.observations.find((item) => item.optionId === future.optionId) : undefined;
+                    const assessment = observation ? (shock ? observation.shockedAssessment : observation.baselineAssessment) : "pending";
+                    return <div key={future.optionId} role="cell" className={`matrix-cell ${assessment}`} style={{ "--delay": `${(rowIndex + columnIndex) * 85}ms` } as React.CSSProperties} aria-label={observation ? `${witness.protectedValue}: ${witnessObservationCopy(observation, shock)}` : `${witness.protectedValue}: pending`}>
+                      <span>{assessment === "pending" ? "·" : assessment.replace("-", " ")}</span>
+                    </div>;
+                  })}
+                </div>
+              ))}
+            </div>
           </div>
           <p className="matrix-caption">Toggle the shock to see the same witness assessments re-read against the shocked world state.</p>
         </section>
@@ -206,12 +222,14 @@ export default function Home() {
         </div>
       </section>
 
+      {opened && shock && <CalibrationReturn decision={decision} simulation={simulation} onApply={applyCalibration} />}
+
       <aside className={`evidence-drawer ${evidenceOpen ? "open" : ""}`}>
         <button onClick={() => setEvidenceOpen(false)} aria-label="Close evidence">×</button>
         <span className="section-number">EVIDENCE LEDGER</span>
         <h2>Ledger numbers are formula-owned.</h2>
         <div className="audit-score"><strong>{Math.round(simulation.audit.sourceCoverage * 100)}%</strong><span>trace coverage</span><i>{simulation.audit.untracedNumericFields} untraced fields</i></div>
-        <p>Inputs are explicit assumptions or dated public figures. Outcomes are recomputed from visible formulas. GPT‑5.6 adds qualitative interpretation; it cannot edit ledger values.</p>
+        <p>Financial inputs are dated public figures or explicit assumptions. Energy, belonging, optionality, and commitment timing are transparent scenario assumptions—not predictions. Outcomes are recomputed from visible formulas. GPT‑5.6 adds qualitative interpretation; it cannot edit ledger values.</p>
         {simulation.sources.map((source) => (
           <a href={source.url} target="_blank" rel="noreferrer" key={source.id}>
             <span>{source.kind}</span><strong>{source.label}</strong><small>{source.note}</small>

@@ -1,6 +1,6 @@
 # Decision Twin Build Plan
 
-## Milestone 1 — Context Layers (first build)
+## Milestone 1 — Context Layers (complete)
 
 **Goal:** add one user-authored perspective without touching contact integrations.
 
@@ -20,7 +20,17 @@
 - Free-form simulated conversation
 - Relationship prediction
 
-## Milestone 2 — Research Archive
+## Milestone 2 — Calibration Loop (complete)
+
+Shipped locally in the decision record:
+
+- return after a fourteen-day experiment;
+- record up to three observed signals;
+- revise one named priority assumption;
+- preserve a local calibration record; and
+- rerun deterministic futures without another model call.
+
+## Milestone 3 — Research Archive
 
 **Goal:** make journals and decision logs useful as selected evidence.
 
@@ -30,7 +40,7 @@
 - Artifact-to-assumption links in the evidence drawer
 - Local-first storage before any cloud sync
 
-## Milestone 3 — Calibration Loop
+## Milestone 4 — Calibration expansion
 
 **Goal:** let a decision become smarter after reality answers back.
 
@@ -40,7 +50,7 @@
 - Assumption revisions
 - A timeline of what the user learned across decisions
 
-## Milestone 4 — Scenario Graph
+## Milestone 5 — Scenario Graph
 
 **Goal:** replace one shock with competing, typed counterfactual branches.
 

@@ -55,13 +55,23 @@ export const decisionSchema = z.object({
     label: z.string().trim().min(3).max(160),
   }),
   contextLenses: z.array(z.object({
-    id: z.string().trim().min(1).max(64),
+    id: z.string().trim().regex(/^[a-zA-Z0-9_-]+$/, "Use letters, numbers, hyphens, or underscores only.").min(1).max(64),
     label: z.string().trim().min(3).max(96),
     protectedValues: z.array(z.string().trim().min(1).max(48)).min(1).max(4),
     knownConcern: z.string().trim().min(3).max(320),
     unknown: z.string().trim().min(3).max(320),
     provenanceLabel: z.literal("user-authored perspective"),
   })).max(2).default([]),
+  calibrations: z.array(z.object({
+    id: z.string().trim().regex(/^[a-zA-Z0-9_-]+$/).min(1).max(80),
+    createdAt: z.string().datetime(),
+    experimentTitle: z.string().trim().min(1).max(160),
+    observedSignals: z.array(z.string().trim().min(1).max(180)).max(3),
+    revisedPriority: z.enum(["security", "energy", "belonging", "optionality"]),
+    previousValue: z.number().min(0).max(100),
+    nextValue: z.number().min(0).max(100),
+    note: z.string().trim().max(320),
+  })).max(12).default([]),
   // The submitted experience, witness architecture, and comparison UI are
   // deliberately designed around four futures: safe, ambitious, negotiated,
   // and nonlinear. Keep that contract explicit instead of implying a dynamic
@@ -189,3 +199,4 @@ export type Uncertainty = z.infer<typeof uncertaintySchema>;
 export type ContextLens = z.infer<typeof decisionSchema>[
   "contextLenses"
 ][number];
+export type CalibrationRecord = z.infer<typeof decisionSchema>["calibrations"][number];
