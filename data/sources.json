@@ -1,0 +1,72 @@
+[
+  {
+    "id": "user-scenario",
+    "label": "Editable decision assumptions",
+    "url": "https://openai.devpost.com/",
+    "accessed": "2026-07-18",
+    "note": "Salary offers, living costs, relocation costs and personal value scores are explicit user inputs. They are never inferred silently.",
+    "kind": "user-input"
+  },
+  {
+    "id": "formula-budget",
+    "label": "Elsewhere deterministic world-state model",
+    "url": "https://github.com/",
+    "accessed": "2026-07-18",
+    "note": "Monthly savings, shock costs, divergence and decision scores are computed in TypeScript and covered by tests.",
+    "kind": "formula"
+  },
+  {
+    "id": "fr-tax-2026",
+    "label": "France 2026 progressive income-tax bands",
+    "url": "https://www.economie.gouv.fr/particuliers/impots-et-fiscalite/gerer-mon-impot-sur-le-revenu/comment-calculer-votre-impot-dapres-le-bareme-de-limpot-sur-le-revenu",
+    "accessed": "2026-07-18",
+    "note": "Official 2026 bands: 0% to €11,600; 11% to €29,579; 30% to €84,577; 41% to €181,917; 45% above. Demo assumes one tax part.",
+    "kind": "official"
+  },
+  {
+    "id": "uk-tax-2026",
+    "label": "UK 2026–27 Income Tax rates and allowances",
+    "url": "https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past",
+    "accessed": "2026-07-18",
+    "note": "Official personal allowance and England/Wales/Northern Ireland tax bands, including allowance taper above £100,000.",
+    "kind": "official"
+  },
+  {
+    "id": "uk-ni-2026",
+    "label": "UK 2026–27 employee National Insurance",
+    "url": "https://www.gov.uk/national-insurance/how-much-you-pay",
+    "accessed": "2026-07-18",
+    "note": "Category A employee rate: 8% between annualized primary and upper thresholds and 2% above.",
+    "kind": "official"
+  },
+  {
+    "id": "ecb-gbp-2026-07-16",
+    "label": "ECB EUR/GBP reference rate",
+    "url": "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/eurofxref-graph-gbp.en.html",
+    "accessed": "2026-07-18",
+    "note": "16 July 2026 reference: €1 = £0.84873. Used only to normalize the comparison into euros.",
+    "kind": "official",
+    "value": 0.84873,
+    "unit": "GBP per EUR"
+  },
+  {
+    "id": "london-rent-2026",
+    "label": "ONS average London private rent, May 2026",
+    "url": "https://www.ons.gov.uk/visualisations/housingpriceslocal/E09000028/",
+    "accessed": "2026-07-18",
+    "note": "Across London, average monthly private rent was £2,294 in May 2026.",
+    "kind": "official",
+    "value": 2294,
+    "unit": "GBP/month"
+  },
+  {
+    "id": "paris-rent-2025",
+    "label": "APUR/OLAP average Paris private rent",
+    "url": "https://www.apur.org/fr/nos-travaux/impact-encadrement-loyers-paris-2025",
+    "accessed": "2026-07-18",
+    "note": "Average private-sector rent in Paris was €1,307 per month at 1 January 2025; new movers averaged €28.30/m².",
+    "kind": "research",
+    "value": 1307,
+    "unit": "EUR/month"
+  }
+]
