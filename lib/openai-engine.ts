@@ -108,10 +108,12 @@ async function askWitness(client: OpenAI, input: string, ledger: ReturnType<type
 async function safeWitness(client: OpenAI, input: string, ledger: ReturnType<typeof compactLedger>, expectedHash: string, lens: (typeof lenses)[number]) {
   try {
     return await askWitness(client, input, ledger, expectedHash, lens);
-  } catch {
+  } catch (error) {
+    console.error(`[Elsewhere] ${lens.lens} witness rejected:`, error instanceof Error ? error.message : "unknown error");
     try {
       return await askWitness(client, input, ledger, expectedHash, lens, true);
-    } catch {
+    } catch (retryError) {
+      console.error(`[Elsewhere] ${lens.lens} witness retry rejected:`, retryError instanceof Error ? retryError.message : "unknown error");
       return null;
     }
   }
@@ -129,7 +131,8 @@ async function synthesize(client: OpenAI, witnesses: Witness[]) {
     const result = JSON.parse(response.output_text) as { uncertainty: Witness["uncertaintyToTest"] };
     const uncertainty = witnessRuntimeSchema.shape.uncertaintyToTest.parse(result.uncertainty);
     return { responseId: response.id, uncertainty };
-  } catch {
+  } catch (error) {
+    console.error("[Elsewhere] synthesis rejected:", error instanceof Error ? error.message : "unknown error");
     return null;
   }
 }
