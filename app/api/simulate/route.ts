@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { decisionSchema, simulationSchema } from "@/lib/schema";
 import { runSimulation, sampleDecision } from "@/lib/engine";
+import { judgeReplay } from "@/lib/judge-replay";
 import { runGptSimulation } from "@/lib/openai-engine";
 import { clientKey, isSameOriginPost, takeWitnessRequest } from "@/lib/request-guard";
 
@@ -30,10 +31,9 @@ export async function GET(request: Request) {
       // unvalidated model artifact.
     }
   }
-  return NextResponse.json(
-    { error: "No cached witness scenario is configured. The deterministic sample is available here." },
-    { status: 503 },
-  );
+  return NextResponse.json(judgeReplay(), {
+    headers: { "Cache-Control": "public, max-age=300, s-maxage=3600", "X-Elsewhere-Replay": "verified-cached" },
+  });
 }
 
 export async function POST(request: Request) {

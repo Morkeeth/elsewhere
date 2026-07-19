@@ -10,12 +10,14 @@ test("public GET remains deterministic and never creates a paid witness run", as
   assert.equal(body.generatedBy.engine, "deterministic");
 });
 
-test("uncached witness GET and keyless witness POST fail closed", async () => {
+test("judge witness GET is a free verified replay and keyless witness POST fails closed", async () => {
   const original = process.env.OPENAI_API_KEY;
   delete process.env.OPENAI_API_KEY;
   try {
     const cached = await GET(new Request("https://example.test/api/simulate?agents=1"));
-    assert.equal(cached.status, 503);
+    assert.equal(cached.status, 200);
+    assert.equal(cached.headers.get("x-elsewhere-replay"), "verified-cached");
+    assert.equal((await cached.json()).generatedBy.model, "gpt-5.6-sol (verified cached judge replay)");
     const live = await POST(new Request("https://example.test/api/simulate?agents=1", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(sampleDecision) }));
     assert.equal(live.status, 503);
   } finally {
