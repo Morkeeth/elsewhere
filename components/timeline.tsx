@@ -1,4 +1,4 @@
-import type { Future } from "@/lib/schema";
+import type { Decision, Future } from "@/lib/schema";
 
 const formatMoney = (value: number) =>
   new Intl.NumberFormat("en", { notation: "compact", style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
@@ -12,7 +12,7 @@ function pathFor(future: Future) {
   }).join(" ");
 }
 
-export function Timeline({ future, active, shockMonth }: { future: Future; active: boolean; shockMonth: number }) {
+export function Timeline({ future, active, shockMonth, domain }: { future: Future; active: boolean; shockMonth: number; domain: Decision["domain"] }) {
   const end = future.months.at(-1)!;
   const irreversibleX = 10 + (future.irreversibleAt.month - 1) * (280 / 11);
   const shockX = 10 + (shockMonth - 1) * (280 / 11);
@@ -48,16 +48,16 @@ export function Timeline({ future, active, shockMonth }: { future: Future; activ
       </div>
 
       <div className="metric-row">
-        <div><span>year end</span><strong>{formatMoney(end.savingsEur)}</strong></div>
+        <div><span>{domain === "relationships" ? "freedom" : "year end"}</span><strong>{domain === "relationships" ? Math.round(future.metrics.optionality) : formatMoney(end.savingsEur)}</strong></div>
         <div><span>energy</span><strong>{Math.round(future.metrics.averageEnergy)}</strong></div>
         <div><span>belonging</span><strong>{Math.round(future.metrics.averageBelonging)}</strong></div>
       </div>
 
-      <div className="ledger-strip">
-        <span>net / yr <b>{formatMoney(future.metrics.annualNetIncomeEur)}</b></span>
-        <span>fixed / mo <b>{formatMoney(future.metrics.monthlyFixedCostEur)}</b></span>
-        <span>optionality <b>{Math.round(future.metrics.optionality)}</b></span>
-      </div>
+      {domain !== "relationships" && <div className="ledger-strip">
+          <span>net / yr <b>{formatMoney(future.metrics.annualNetIncomeEur)}</b></span>
+          <span>fixed / mo <b>{formatMoney(future.metrics.monthlyFixedCostEur)}</b></span>
+          <span>optionality <b>{Math.round(future.metrics.optionality)}</b></span>
+        </div>}
 
       <div className="irreversible">
         <span>Door narrows</span>

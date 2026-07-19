@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { journeyMeta, makeJourney, type JourneyDomain } from "@/lib/journeys";
 import type { Decision, DecisionOption } from "@/lib/schema";
 
 type Props = {
@@ -10,102 +11,169 @@ type Props = {
   onClose: () => void;
   onChange: (decision: Decision) => void;
   onRun: () => void;
+  initialStep?: number;
 };
 
-const numericKeys = new Set<keyof DecisionOption>([
-  "annualGross", "employeeContributionRate", "effectiveTaxRate", "monthlyRent", "monthlyLiving",
-  "relocation", "flexibility", "belonging", "growth", "risk", "shockTravelMultiplier",
-  "shockEnergySensitivity", "commitmentMonth",
-]);
+const steps = ["Your world", "The futures", "What matters", "Reality check", "Plot twist"];
+const shockIdeas: Record<JourneyDomain, string[]> = {
+  career: ["The manager I joined for leaves", "The market cools and hiring freezes", "My family needs more of my time"],
+  moving: ["Remote work rules change", "Someone close to me needs weekly help", "Housing costs jump unexpectedly"],
+  relationships: ["One of us gets an opportunity elsewhere", "Trust is tested by a hard conversation", "Our timelines stop matching"],
+  education: ["The job market cools before graduation", "The course takes twice the energy", "A paid opportunity arrives early"],
+  life: ["The thing I am assuming does not happen", "My available time is cut in half", "Someone important needs my help"],
+};
 
-export function DecisionStudio({ decision, open, running, onClose, onChange, onRun }: Props) {
-  const [tab, setTab] = useState<"decision" | "paths" | "shock">("decision");
+export function DecisionStudio({ decision, open, running, onClose, onChange, onRun, initialStep = 0 }: Props) {
+  const [step, setStep] = useState(initialStep);
 
-  function setOption(index: number, key: keyof DecisionOption, value: string) {
+  function chooseDomain(domain: JourneyDomain) {
+    onChange(makeJourney(domain));
+    setStep(1);
+  }
+
+  function setOption(index: number, patch: Partial<DecisionOption>) {
     const next = structuredClone(decision);
-    const option = next.options[index] as Record<string, unknown>;
-    option[key] = numericKeys.has(key) ? Number(value) : value;
-    if (key === "country") {
-      option.currency = value === "UK" ? "GBP" : "EUR";
-      option.taxProfile = value === "UK" ? "uk-2026" : value === "FR" ? "france-2026" : "effective";
+    next.options[index] = { ...next.options[index], ...patch };
+    if (patch.country) {
+      next.options[index].currency = patch.country === "UK" ? "GBP" : "EUR";
+      next.options[index].taxProfile = patch.country === "UK" ? "uk-2026" : patch.country === "FR" ? "france-2026" : "effective";
     }
     onChange(next);
   }
 
-  function setShock(key: keyof Decision["shock"], value: string) {
-    const next = structuredClone(decision);
-    const target = next.shock as Record<string, unknown>;
-    target[key] = key === "label" ? value : Number(value);
-    onChange(next);
+  function setPriority(key: keyof Decision["priorities"], value: number) {
+    onChange({ ...decision, priorities: { ...decision.priorities, [key]: value } });
+  }
+
+  function finish() {
+    setStep(0);
+    onRun();
   }
 
   return (
-    <aside className={`studio ${open ? "open" : ""}`} aria-hidden={!open}>
+    <aside className={`studio journey ${open ? "open" : ""}`} aria-hidden={!open}>
       <header>
-        <div><span>DECISION ROOM</span><strong>Build the worlds</strong></div>
+        <div><span>ELSEWHERE / {step + 1} OF {steps.length}</span><strong>{steps[step]}</strong></div>
         <button onClick={onClose} aria-label="Close decision room">×</button>
       </header>
-      <div className="studio-tabs">
-        <button className={tab === "decision" ? "active" : ""} onClick={() => setTab("decision")}>01 Decision</button>
-        <button className={tab === "paths" ? "active" : ""} onClick={() => setTab("paths")}>02 Paths</button>
-        <button className={tab === "shock" ? "active" : ""} onClick={() => setTab("shock")}>03 Shock</button>
+
+      <div className="journey-progress" aria-hidden="true">
+        {steps.map((label, index) => <i key={label} className={index <= step ? "done" : ""} />)}
       </div>
 
-      <div className="studio-scroll">
-        {tab === "decision" && (
-          <div className="studio-section">
-            <label className="wide-field">
-              <span>THE QUESTION</span>
-              <textarea value={decision.question} onChange={(event) => onChange({ ...decision, question: event.target.value })} />
-            </label>
-            <label>
-              <span>STARTING SAVINGS</span>
-              <div className="money-input"><i>€</i><input type="number" value={decision.startingSavingsEur} onChange={(event) => onChange({ ...decision, startingSavingsEur: Number(event.target.value) })} /></div>
-            </label>
-            <p className="studio-note">Elsewhere treats every field here as an explicit assumption. GPT‑5.6 can interpret the ledger, but cannot change it.</p>
-          </div>
-        )}
-
-        {tab === "paths" && (
-          <div className="path-editors">
-            {decision.options.map((option, index) => (
-              <section className="path-editor" key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
-                <div className="path-editor-head"><span>0{index + 1}</span><input value={option.title} onChange={(event) => setOption(index, "title", event.target.value)} /></div>
-                <div className="field-grid">
-                  <label><span>PLACE</span><input value={option.location} onChange={(event) => setOption(index, "location", event.target.value)} /></label>
-                  <label><span>COUNTRY</span><select value={option.country} onChange={(event) => setOption(index, "country", event.target.value)}><option value="FR">France</option><option value="UK">United Kingdom</option><option value="OTHER">Other</option></select></label>
-                  <label><span>GROSS / YEAR ({option.currency})</span><input type="number" value={option.annualGross} onChange={(event) => setOption(index, "annualGross", event.target.value)} /></label>
-                  <label><span>RENT / MONTH</span><input type="number" value={option.monthlyRent} onChange={(event) => setOption(index, "monthlyRent", event.target.value)} /></label>
-                  <label><span>LIVING / MONTH</span><input type="number" value={option.monthlyLiving} onChange={(event) => setOption(index, "monthlyLiving", event.target.value)} /></label>
-                  <label><span>RELOCATION</span><input type="number" value={option.relocation} onChange={(event) => setOption(index, "relocation", event.target.value)} /></label>
-                </div>
-                <div className="sliders">
-                  {(["flexibility", "belonging", "growth", "risk"] as const).map((key) => (
-                    <label key={key}><span>{key} <b>{option[key]}</b></span><input type="range" min="0" max="100" value={option[key]} onChange={(event) => setOption(index, key, event.target.value)} /></label>
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
-        )}
-
-        {tab === "shock" && (
-          <div className="studio-section">
-            <label className="wide-field"><span>WHAT CHANGES?</span><textarea value={decision.shock.label} onChange={(event) => setShock("label", event.target.value)} /></label>
-            <div className="field-grid">
-              <label><span>ARRIVES IN MONTH</span><input type="number" min="1" max="12" value={decision.shock.month} onChange={(event) => setShock("month", event.target.value)} /></label>
-              <label><span>CARE COST / MONTH (€)</span><input type="number" value={decision.shock.monthlyCostEur} onChange={(event) => setShock("monthlyCostEur", event.target.value)} /></label>
-              <label><span>TRAVEL COST (€)</span><input type="number" value={decision.shock.travelCostEur} onChange={(event) => setShock("travelCostEur", event.target.value)} /></label>
-              <label><span>ENERGY IMPACT</span><input type="number" value={decision.shock.energyPenalty} onChange={(event) => setShock("energyPenalty", event.target.value)} /></label>
+      <div className="studio-scroll journey-scroll">
+        {step === 0 && (
+          <section className="journey-screen intro-step">
+            <p className="journey-kicker">WHAT KIND OF ELSEWHERE?</p>
+            <h2>What’s taking up space in your head?</h2>
+            <p>Pick the closest shape. You can rewrite every word next.</p>
+            <div className="domain-grid">
+              {(Object.entries(journeyMeta) as Array<[JourneyDomain, (typeof journeyMeta)[JourneyDomain]]>).map(([domain, meta]) => (
+                <button key={domain} onClick={() => chooseDomain(domain)}>
+                  <b>{meta.icon}</b><span>{meta.label}</span><small>{meta.line}</small><i>↗</i>
+                </button>
+              ))}
             </div>
-          </div>
+          </section>
+        )}
+
+        {step === 1 && (
+          <section className="journey-screen">
+            <p className="journey-kicker">SAY IT LIKE YOU’D TEXT A FRIEND</p>
+            <h2>What are you actually deciding?</h2>
+            <label className="hero-field"><span>THE QUESTION</span><textarea aria-label="The decision question" value={decision.question} onChange={(event) => onChange({ ...decision, question: event.target.value })} /></label>
+            <div className="option-intro"><span>THE LIVES TO OPEN</span><small>Two is enough. Four shows the hidden third door.</small></div>
+            <div className="journey-options">
+              {decision.options.map((option, index) => (
+                <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
+                  <span>0{index + 1}</span>
+                  <input aria-label={`Future ${index + 1} name`} value={option.title} onChange={(event) => setOption(index, { title: event.target.value })} />
+                  <input aria-label={`Future ${index + 1} meaning`} value={option.subtitle} onChange={(event) => setOption(index, { subtitle: event.target.value })} />
+                  <input aria-label={`Future ${index + 1} place`} value={option.location} onChange={(event) => setOption(index, { location: event.target.value })} />
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {step === 2 && (
+          <section className="journey-screen priorities-step">
+            <p className="journey-kicker">NO “RIGHT” ANSWER—ONLY YOUR WEIGHTS</p>
+            <h2>What deserves more volume right now?</h2>
+            <p>Move the sliders fast. Your first instinct is useful data.</p>
+            <div className="priority-stack">
+              {([
+                ["security", "Safety", "money, stability, predictability"],
+                ["energy", "Aliveness", "energy, curiosity, daily texture"],
+                ["belonging", "People", "love, community, being understood"],
+                ["optionality", "Freedom", "growth, escape routes, future doors"],
+              ] as const).map(([key, label, copy]) => (
+                <label key={key}>
+                  <div><b>{label}</b><small>{copy}</small><strong>{decision.priorities[key]}</strong></div>
+                  <input aria-label={label} type="range" min="0" max="100" value={decision.priorities[key]} onChange={(event) => setPriority(key, Number(event.target.value))} />
+                </label>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {step === 3 && (
+          <section className="journey-screen">
+            <p className="journey-kicker">GROUND THE VIBE</p>
+            <h2>{decision.domain === "relationships" ? "How would each future feel?" : "Give the futures real gravity."}</h2>
+            <p>{decision.domain === "relationships" ? "These are personal estimates, not scores about another person." : "Rough numbers are fine. Every assumption stays visible later."}</p>
+            {decision.domain !== "relationships" && (
+              <label className="savings-field"><span>YOUR CURRENT RUNWAY</span><div><i>€</i><input aria-label="Current savings" type="number" value={decision.startingSavingsEur} onChange={(event) => onChange({ ...decision, startingSavingsEur: Number(event.target.value) })} /></div></label>
+            )}
+            <div className="reality-cards">
+              {decision.options.map((option, index) => (
+                <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
+                  <header><span>0{index + 1}</span><strong>{option.title}</strong></header>
+                  {decision.domain === "relationships" ? (
+                    <div className="mini-sliders">
+                      <label><span>freedom <b>{option.flexibility}</b></span><input aria-label={`${option.title} freedom`} type="range" min="0" max="100" value={option.flexibility} onChange={(event) => setOption(index, { flexibility: Number(event.target.value) })} /></label>
+                      <label><span>belonging <b>{option.belonging}</b></span><input aria-label={`${option.title} belonging`} type="range" min="0" max="100" value={option.belonging} onChange={(event) => setOption(index, { belonging: Number(event.target.value) })} /></label>
+                      <label><span>growth <b>{option.growth}</b></span><input aria-label={`${option.title} growth`} type="range" min="0" max="100" value={option.growth} onChange={(event) => setOption(index, { growth: Number(event.target.value) })} /></label>
+                    </div>
+                  ) : (
+                    <div className="fact-grid">
+                      <label><span>COUNTRY</span><select aria-label={`${option.title} country`} value={option.country} onChange={(event) => setOption(index, { country: event.target.value as DecisionOption["country"] })}><option value="FR">France</option><option value="UK">UK</option><option value="OTHER">Other</option></select></label>
+                      <label><span>GROSS / YEAR</span><input aria-label={`${option.title} annual income`} type="number" value={option.annualGross} onChange={(event) => setOption(index, { annualGross: Number(event.target.value) })} /></label>
+                      <label><span>RENT / MONTH</span><input aria-label={`${option.title} monthly rent`} type="number" value={option.monthlyRent} onChange={(event) => setOption(index, { monthlyRent: Number(event.target.value) })} /></label>
+                      <label><span>LIVING / MONTH</span><input aria-label={`${option.title} monthly living costs`} type="number" value={option.monthlyLiving} onChange={(event) => setOption(index, { monthlyLiving: Number(event.target.value) })} /></label>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {step === 4 && (
+          <section className="journey-screen shock-step">
+            <p className="journey-kicker">NOW BREAK THE PERFECT PLAN</p>
+            <h2>What could change the weights?</h2>
+            <p>Pick a plot twist or write the one you don’t want to think about.</p>
+            <div className="shock-ideas">
+              {shockIdeas[decision.domain].map((idea) => <button key={idea} className={decision.shock.label === idea ? "selected" : ""} onClick={() => onChange({ ...decision, shock: { ...decision.shock, label: idea } })}>{idea}<span>+</span></button>)}
+            </div>
+            <label className="hero-field"><span>MY OWN PLOT TWIST</span><textarea aria-label="Custom plot twist" value={decision.shock.label} onChange={(event) => onChange({ ...decision, shock: { ...decision.shock, label: event.target.value } })} /></label>
+            <div className="shock-timing">
+              <label><span>WHEN?</span><strong>Month {decision.shock.month}</strong><input aria-label="Shock month" type="range" min="1" max="12" value={decision.shock.month} onChange={(event) => onChange({ ...decision, shock: { ...decision.shock, month: Number(event.target.value) } })} /></label>
+              <div><span>{decision.options.length}</span> futures <i /> <span>12</span> months <i /> <span>1</span> plot twist</div>
+            </div>
+          </section>
         )}
       </div>
 
-      <footer>
-        <div><span>{decision.options.length}</span> worlds <i /> <span>12</span> months</div>
-        <button onClick={onRun} disabled={running}>{running ? "Witnesses are living it…" : "Run the multiverse"}<b>↘</b></button>
-      </footer>
+      {step > 0 && (
+        <footer className="journey-footer">
+          <button className="back" onClick={() => setStep(step - 1)}>← Back</button>
+          {step < steps.length - 1
+            ? <button className="next" onClick={() => setStep(step + 1)}>Keep going <b>↗</b></button>
+            : <button className="next" onClick={finish} disabled={running}>{running ? "Opening…" : "Visit my futures"}<b>↘</b></button>}
+        </footer>
+      )}
     </aside>
   );
 }

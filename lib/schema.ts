@@ -37,8 +37,15 @@ export const decisionOptionSchema = z.object({
 });
 
 export const decisionSchema = z.object({
+  domain: z.enum(["career", "moving", "relationships", "education", "life"]).default("career"),
   question: z.string(),
   startingSavingsEur: z.number(),
+  priorities: z.object({
+    security: z.number().min(0).max(100),
+    energy: z.number().min(0).max(100),
+    belonging: z.number().min(0).max(100),
+    optionality: z.number().min(0).max(100),
+  }).default({ security: 28, energy: 24, belonging: 22, optionality: 26 }),
   shock: z.object({
     month: z.number().int().min(1).max(12),
     monthlyCostEur: z.number().nonnegative(),

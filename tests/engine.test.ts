@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { runSimulation, sampleDecision } from "../lib/engine";
 import { calculateFrancePayroll, calculateUkPayroll, nativeToEur } from "../lib/grounding";
+import { makeJourney } from "../lib/journeys";
 
 test("returns four independent, schema-valid futures", () => {
   const result = runSimulation(sampleDecision);
@@ -52,4 +53,21 @@ test("UK calculator applies allowance taper, progressive income tax, and NI", ()
 
 test("ECB conversion normalizes sterling inputs into euros", () => {
   assert.ok(Math.abs(nativeToEur(0.84873, "GBP") - 1) < 0.00001);
+});
+
+test("every guided journey produces four complete futures", () => {
+  for (const domain of ["career", "moving", "relationships", "education", "life"] as const) {
+    const result = runSimulation(makeJourney(domain));
+    assert.equal(result.decision.domain, domain);
+    assert.equal(result.baseline.length, 4);
+    assert.equal(result.audit.sourceCoverage, 1);
+  }
+});
+
+test("relationship journeys prioritize belonging without financial distortion", () => {
+  const decision = makeJourney("relationships");
+  assert.ok(decision.priorities.belonging > decision.priorities.security);
+  assert.equal(new Set(decision.options.map((option) => option.annualGross)).size, 1);
+  const result = runSimulation(decision);
+  assert.ok(result.baseline.every((future) => Number.isFinite(future.metrics.composite)));
 });

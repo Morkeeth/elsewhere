@@ -9,6 +9,7 @@ Elsewhere does not recommend a life. It lets the user inspect grounded futures, 
 | Slice | Product outcome | Status |
 | --- | --- | --- |
 | Decision studio | Edit the question, starting savings, 2–4 paths, tax jurisdiction, salary, costs, values, risk, and shock | Complete |
+| Guided journey | Mobile-first domain selection, futures, priorities, adaptive reality check, and plot twist | Complete |
 | Grounding engine | France and UK payroll, ECB currency normalization, cited rent benchmarks, deterministic monthly ledger | Complete |
 | Futures | Twelve-month baseline and shocked states, optionality paths, commitment points, divergence | Complete |
 | AI witnesses | Four concurrent GPT-5.6 lenses plus a structured synthesis that cannot mutate the ledger | Implemented; live credential check pending |

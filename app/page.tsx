@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DecisionStudio } from "@/components/decision-studio";
 import { Timeline } from "@/components/timeline";
 import { runSimulation, sampleDecision } from "@/lib/engine";
+import { journeyMeta, makeJourney, type JourneyDomain } from "@/lib/journeys";
 import { decisionSchema, simulationSchema, type Decision, type Simulation } from "@/lib/schema";
 
 type AgentState = "idle" | "running" | "complete" | "unavailable";
@@ -15,10 +16,18 @@ export default function Home() {
   const [shock, setShock] = useState(false);
   const [opened, setOpened] = useState(false);
   const [studioOpen, setStudioOpen] = useState(false);
+  const [studioStartStep, setStudioStartStep] = useState(0);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [agentState, setAgentState] = useState<AgentState>("idle");
   const [deliveryState, setDeliveryState] = useState<"idle" | "sending" | "sent" | "unavailable">("idle");
   const futures = shock ? simulation.shocked : simulation.baseline;
+  const domainMeta = journeyMeta[decision.domain];
+
+  function openJourney(domain?: JourneyDomain) {
+    if (domain) setDecision(makeJourney(domain));
+    setStudioStartStep(domain ? 1 : 0);
+    setStudioOpen(true);
+  }
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -96,17 +105,20 @@ export default function Home() {
         <a className="wordmark" href="#top" aria-label="Elsewhere home"><span>else</span>where<span className="mark">↗</span></a>
         <div className="nav-center">DECISION INSTRUMENT / 01</div>
         <div className="nav-actions">
-          <button className="text-button" onClick={() => setStudioOpen(true)}>Decision +</button>
+          <button className="text-button" onClick={() => openJourney()}>Decision +</button>
           <button className="text-button" onClick={() => setEvidenceOpen(!evidenceOpen)}>Evidence {evidenceOpen ? "×" : "+"}</button>
         </div>
       </nav>
 
       <section id="top" className={`hero ${opened ? "is-open" : ""}`}>
-        <div className="eyebrow"><span className="pulse" /> FOUR LIVES ARE WAITING</div>
-        <h1>Visit the futures<br />before you choose one.</h1>
-        <p className="hero-copy">Elsewhere does not tell you what to do. It lets grounded versions of your life unfold, then finds the smallest experiment that makes the decision less imaginary.</p>
+        <div className="eyebrow"><span className="pulse" /> YOUR NOTES APP, BUT WITH CONSEQUENCES</div>
+        <h1>Try on the lives<br />before you pick one.</h1>
+        <p className="hero-copy">For the decision you keep reopening at 1:14am. Elsewhere lets the possible lives unfold, stress-tests them, then gives you one tiny real-world move.</p>
+        <div className="hero-domains" aria-label="Decision types">
+          {(Object.entries(journeyMeta) as Array<[JourneyDomain, (typeof journeyMeta)[JourneyDomain]]>).map(([domain, meta]) => <button key={domain} onClick={() => openJourney(domain)}><span>{meta.icon}</span>{meta.label}</button>)}
+        </div>
         <div className="decision-line">
-          <span>THE DECISION</span>
+          <span>{domainMeta.icon} {domainMeta.label.toUpperCase()}</span>
           <p>{decision.question}</p>
           <button onClick={runDecision}>{agentState === "running" ? "Opening worlds…" : opened ? "Run it again" : "Open the futures"}<span>↘</span></button>
         </div>
@@ -133,7 +145,7 @@ export default function Home() {
         </div>
 
         <div className={`future-grid ${shock ? "has-shock" : ""}`}>
-          {futures.map((future) => <Timeline key={`${future.optionId}-${shock}-${future.witness?.lens ?? "ledger"}`} future={future} active={shock} shockMonth={simulation.decision.shock.month} />)}
+          {futures.map((future) => <Timeline key={`${future.optionId}-${shock}-${future.witness?.lens ?? "ledger"}`} future={future} active={shock} shockMonth={simulation.decision.shock.month} domain={simulation.decision.domain} />)}
         </div>
 
         <div className={`divergence ${shock ? "is-visible" : ""}`}>
@@ -179,7 +191,7 @@ export default function Home() {
         <div className="formula"><span>CORE FORMULA</span>net income ÷ 12<br />− rent − living − care − travel</div>
       </aside>
 
-      <DecisionStudio decision={decision} open={studioOpen} running={agentState === "running"} onClose={() => setStudioOpen(false)} onChange={setDecision} onRun={runDecision} />
+      <DecisionStudio key={`${studioOpen}-${studioStartStep}`} initialStep={studioStartStep} decision={decision} open={studioOpen} running={agentState === "running"} onClose={() => setStudioOpen(false)} onChange={setDecision} onRun={runDecision} />
     </main>
   );
 }

@@ -69,7 +69,13 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
   const averageBelonging = average("belonging");
   const optionality = average("optionality");
   const moneyScore = clamp(50 + yearEndSavingsEur / 1000);
-  const composite = moneyScore * 0.28 + averageEnergy * 0.24 + averageBelonging * 0.22 + optionality * 0.26;
+  const weightTotal = Object.values(decision.priorities).reduce((sum, value) => sum + value, 0) || 1;
+  const composite = (
+    moneyScore * decision.priorities.security +
+    averageEnergy * decision.priorities.energy +
+    averageBelonging * decision.priorities.belonging +
+    optionality * decision.priorities.optionality
+  ) / weightTotal;
   const sourceIds = [...new Set([...option.sourceIds, ...grounded.payroll.sourceIds, ...grounded.fxSourceIds, "formula-budget"])];
 
   return futureSchema.parse({
@@ -125,7 +131,7 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
       },
       {
         field: "composite",
-        formula: "28% money + 24% energy + 22% belonging + 26% optionality",
+        formula: `user weights: ${decision.priorities.security} security + ${decision.priorities.energy} energy + ${decision.priorities.belonging} belonging + ${decision.priorities.optionality} optionality`,
         sourceIds: ["formula-budget"],
         value: round(composite, 1),
         unit: "score/100",

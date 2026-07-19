@@ -2,7 +2,7 @@
 
 **Don’t ask AI what to choose. Visit the futures first.**
 
-Elsewhere is an open-source decision instrument for consequential life choices. It unfolds two to four grounded twelve-month paths, introduces a real-world shock, exposes the point at which each path becomes expensive to reverse, and ends with one low-cost fourteen-day experiment.
+Elsewhere is an open-source, mobile-first decision instrument for consequential life choices. Careers are the launch wedge, with adaptive journeys for moving, relationships, education, and decisions that do not fit a category. It unfolds two to four grounded twelve-month paths, introduces a real-world shock, exposes the point at which each path becomes expensive to reverse, and ends with one low-cost fourteen-day experiment.
 
 ## Why it is different
 
@@ -18,6 +18,9 @@ Remove concurrent witnesses and the central product experience—the visible dis
 
 ## Full product surface
 
+- Five guided journeys with one-question-at-a-time mobile input
+- Domain-specific language and weighting: financial grounding for careers/moving; belonging, freedom, and growth for relationships
+- Swipeable future cards, instinctive priority sliders, and selectable plot twists
 - Editable decisions, countries, salaries, costs, value scores, and shock conditions
 - France 2026 and UK 2026 progressive payroll calculators
 - ECB-normalized EUR/GBP comparisons
