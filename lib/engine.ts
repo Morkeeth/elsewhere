@@ -8,6 +8,9 @@ import {
   sourceSchema,
   type Decision,
   type DecisionOption,
+  type Assumption,
+  type AssumptionId,
+  type BreakpointAnalysis,
   type Future,
   type Simulation,
   type Uncertainty,
@@ -45,7 +48,8 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
       (shockActive ? decision.shock.belongingPenalty * option.shockTravelMultiplier : 0),
     );
     const runwayBoost = clamp(savings / 600, -20, 20);
-    const optionality = clamp(option.flexibility * 0.55 + option.growth * 0.3 - option.risk * 0.18 + runwayBoost);
+    const commitmentPressure = Math.max(0, 9 - option.commitmentMonth) * 0.9;
+    const optionality = clamp(option.flexibility * 0.55 + option.growth * 0.3 - option.risk * 0.18 + runwayBoost - commitmentPressure);
 
     let event: string | null = null;
     if (month === 1 && grounded.relocationEur > 0) event = "The first cost arrives before the first reward.";
@@ -154,7 +158,7 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
       {
         id: `${option.id}.optionality`,
         field: "optionality",
-        formula: "mean of twelve deterministic optionality states",
+        formula: "mean of twelve deterministic optionality states including editable commitment timing",
         sourceIds: ["user-scenario", "formula-budget"],
         value: round(optionality, 1),
         unit: "score/100",
@@ -208,7 +212,7 @@ export function validateDisplayManifest(displayManifest: Array<TraceRecord & { t
   return { tracedNumericFields: traced, untracedNumericFields: displayManifest.length - traced, sourceCoverage: displayManifest.length ? round(traced / displayManifest.length, 3) : 0 };
 }
 
-function auditTrace(baseline: Future[], shocked: Future[], divergence: { baseline: number; shocked: number; delta: number }, experiment: { durationDays: 14; costEur: number; evidence: string[] }) {
+export function auditTrace(baseline: Future[], shocked: Future[], divergence: { baseline: number; shocked: number; delta: number }, experiment: { durationDays: 14; costEur: number; evidence: string[] }, breakpoint: BreakpointAnalysis) {
   const entries = ([
     ["baseline", baseline],
     ["shocked", shocked],
@@ -241,7 +245,19 @@ function auditTrace(baseline: Future[], shocked: Future[], divergence: { baselin
     { id: "experiment.duration", value: experiment.durationDays, formula: "fixed reversible-experiment duration", sourceIds: ["formula-budget"], unit: "days" },
     { id: "experiment.cost", value: experiment.costEur, formula: "deterministic travel and relocation-derived experiment budget", sourceIds: ["user-scenario", "formula-budget"], unit: "EUR" },
     { id: "experiment.signals", value: experiment.evidence.length, formula: "fixed deterministic evidence checklist length", sourceIds: ["formula-budget"], unit: "signals" },
+    { id: `breakpoint.${breakpoint.assumption.id}.reference`, value: breakpoint.referenceValue, formula: "selected scenario assumption reference value", sourceIds: ["user-scenario", "formula-budget"], unit: breakpoint.assumption.unit },
   );
+  for (const [pointIndex, point] of breakpoint.points.entries()) {
+    for (const fit of point.fits) {
+      traceRecords.push({
+        id: `breakpoint.${breakpoint.assumption.id}.point-${pointIndex}.${fit.optionId}.fit`,
+        value: fit.fit,
+        formula: breakpoint.referenceFitFormula,
+        sourceIds: ["user-scenario", "formula-budget"],
+        unit: "fit/100",
+      });
+    }
+  }
   // This list deliberately starts from the fields rendered by Timeline and the
   // main screen, not from existing trace rows. A trace can now be absent while
   // the expected display field remains, making the audit fail.
@@ -263,6 +279,8 @@ function auditTrace(baseline: Future[], shocked: Future[], divergence: { baselin
     "experiment.duration",
     "experiment.cost",
     "experiment.signals",
+    `breakpoint.${breakpoint.assumption.id}.reference`,
+    ...breakpoint.points.flatMap((point, pointIndex) => point.fits.map((fit) => `breakpoint.${breakpoint.assumption.id}.point-${pointIndex}.${fit.optionId}.fit`)),
   ]).map((id) => {
     const trace = traceRecords.find((entry) => entry.id === id);
     // The expected field stays explicit even if its trace was removed.
@@ -337,13 +355,88 @@ export function buildExperiment(decision: Decision, baseline: Future[], uncertai
   };
 }
 
-export function runSimulation(input: Decision = sampleDecision): Simulation {
-  const decision = decisionSchema.parse(input);
+const uncertaintyAssumption: Record<Uncertainty, AssumptionId> = {
+  "daily-rhythm": "shock-energy",
+  "support-network": "travel-burden",
+  "reversal-cost": "commitment-timing",
+  "downside-tolerance": "shock-cost",
+};
+
+export function assumptionForUncertainty(uncertainty: Uncertainty) {
+  return uncertaintyAssumption[uncertainty];
+}
+
+export function assumptionRegister(decision: Decision): Assumption[] {
+  const commitmentAverage = round(decision.options.reduce((total, option) => total + option.commitmentMonth, 0) / decision.options.length);
+  const register: Assumption[] = [
+    { id: "shock-cost", label: "Recurring shock cost", provenance: "scenario-assumption", currentValue: decision.shock.monthlyCostEur, unit: "EUR/month", min: 0, max: Math.max(3_000, decision.shock.monthlyCostEur * 3), sweepPoints: [0, 500, 1_000, 1_500, 2_000, 2_500, 3_000], uncertainty: "downside-tolerance", affects: "monthly savings and optionality after the shock", adverseDirection: "higher" },
+    { id: "travel-burden", label: "Recurring travel burden", provenance: "scenario-assumption", currentValue: decision.shock.travelCostEur, unit: "EUR/month", min: 0, max: Math.max(2_000, decision.shock.travelCostEur * 3), sweepPoints: [0, 300, 600, 900, 1_200, 1_500, 1_800], uncertainty: "support-network", affects: "monthly savings, belonging, and paths with high travel sensitivity", adverseDirection: "higher" },
+    { id: "shock-energy", label: "Shock energy impact", provenance: "scenario-assumption", currentValue: decision.shock.energyPenalty, unit: "points", min: 0, max: 100, sweepPoints: [0, 15, 30, 45, 60, 75, 90], uncertainty: "daily-rhythm", affects: "monthly energy and the personal fit calculation after the shock", adverseDirection: "higher" },
+    { id: "shock-belonging", label: "Shock belonging impact", provenance: "scenario-assumption", currentValue: decision.shock.belongingPenalty, unit: "points", min: 0, max: 100, sweepPoints: [0, 15, 30, 45, 60, 75, 90], uncertainty: "support-network", affects: "monthly belonging after the shock", adverseDirection: "higher" },
+    { id: "starting-runway", label: "Starting runway", provenance: "user-estimate", currentValue: decision.startingSavingsEur, unit: "EUR", min: 0, max: Math.max(20_000, decision.startingSavingsEur * 2), sweepPoints: [0, 3_000, 6_000, 9_000, 12_000, 15_000, 18_000], uncertainty: "downside-tolerance", affects: "initial savings, year-end savings, and optionality", adverseDirection: "lower" },
+    { id: "commitment-timing", label: "Commitment timing", provenance: "user-estimate", currentValue: commitmentAverage, unit: "month", min: 1, max: 12, sweepPoints: [1, 3, 5, 7, 9, 11, 12], uncertainty: "reversal-cost", affects: "the editable commitment assumption shown for every future", adverseDirection: "lower" },
+  ];
+  return register.map((assumption) => ({ ...assumption, sweepPoints: [...new Set([...assumption.sweepPoints, assumption.currentValue])].filter((value) => value >= assumption.min && value <= assumption.max).sort((a, b) => a - b) }));
+}
+
+export function applyAssumption(decision: Decision, id: AssumptionId, value: number): Decision {
+  const next = structuredClone(decision);
+  if (id === "shock-cost") next.shock.monthlyCostEur = value;
+  if (id === "travel-burden") next.shock.travelCostEur = value;
+  if (id === "shock-energy") next.shock.energyPenalty = value;
+  if (id === "shock-belonging") next.shock.belongingPenalty = value;
+  if (id === "starting-runway") next.startingSavingsEur = value;
+  if (id === "commitment-timing") next.options = next.options.map((option) => ({ ...option, commitmentMonth: Math.max(1, Math.min(12, Math.round(value))) }));
+  return decisionSchema.parse(next);
+}
+
+function fitFor(future: Future) {
+  return future.metrics.composite;
+}
+
+export function buildBreakpointAnalysis(decision: Decision, uncertainty = defaultUncertainty(decision.options[0])): BreakpointAnalysis {
+  const assumption = assumptionRegister(decision).find((item) => item.id === assumptionForUncertainty(uncertainty))!;
+  const reference = runSimulationWorld(decision);
+  const referenceFits = new Map(reference.shocked.map((future) => [future.optionId, fitFor(future)]));
+  const points = assumption.sweepPoints.map((value) => {
+    const world = runSimulationWorld(applyAssumption(decision, assumption.id, value));
+    return {
+      value,
+      fits: world.shocked.map((future) => {
+        const referenceFit = referenceFits.get(future.optionId) ?? fitFor(future);
+        const decline = referenceFit - fitFor(future);
+        return { optionId: future.optionId, fit: fitFor(future), state: decline >= 3 ? "fragile" as const : decline >= 1 ? "sensitive" as const : "robust" as const };
+      }),
+    };
+  });
+  const adversePoints = [...points].sort((left, right) => assumption.adverseDirection === "higher" ? left.value - right.value : right.value - left.value);
+  return {
+    assumption,
+    referenceFitFormula: "personal fit = weighted mean of deterministic security, energy, belonging, and optionality metrics; sensitive when fit declines by 1 point and fragile when it declines by 3 points from the reference state",
+    referenceValue: assumption.currentValue,
+    points,
+    futures: reference.shocked.map((future) => {
+      const referenceFit = referenceFits.get(future.optionId) ?? fitFor(future);
+      const hit = adversePoints.find((point) => point.fits.find((fit) => fit.optionId === future.optionId)?.state === "fragile");
+      const breakpointFit = hit?.fits.find((fit) => fit.optionId === future.optionId)?.fit ?? null;
+      return { optionId: future.optionId, referenceFit, breakpointValue: hit?.value ?? null, breakpointFit };
+    }),
+  };
+}
+
+function runSimulationWorld(decision: Decision) {
   const baseline = decision.options.map((option) => simulateFuture(option, decision, false));
   const shocked = decision.options.map((option) => simulateFuture(option, decision, true));
+  return { baseline, shocked };
+}
+
+export function runSimulation(input: Decision = sampleDecision): Simulation {
+  const decision = decisionSchema.parse(input);
+  const { baseline, shocked } = runSimulationWorld(decision);
   const baselineDivergence = divergenceScore(baseline);
   const shockedDivergence = divergenceScore(shocked);
   const experiment = buildExperiment(decision, baseline);
+  const breakpoint = buildBreakpointAnalysis(decision, experiment.uncertainty);
   const divergence = {
     baseline: baselineDivergence,
     shocked: shockedDivergence,
@@ -365,8 +458,9 @@ export function runSimulation(input: Decision = sampleDecision): Simulation {
         : "The shock compresses the lives; their trade-offs become more alike.",
     },
     experiment,
+    breakpoint,
     sources: groundingSources,
     generatedBy: { engine: "deterministic", model: null, responseIds: [], durationMs: 0, synthesisReturned: false },
-    audit: auditTrace(baseline, shocked, divergence, experiment),
+    audit: auditTrace(baseline, shocked, divergence, experiment, breakpoint),
   });
 }

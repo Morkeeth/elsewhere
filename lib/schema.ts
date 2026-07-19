@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const assumptionIds = ["shock-cost", "travel-burden", "shock-energy", "shock-belonging", "starting-runway", "commitment-timing"] as const;
+
 export const sourceSchema = z.object({
   id: z.string(),
   label: z.string(),
@@ -62,7 +64,20 @@ export const decisionSchema = z.object({
     unknown: z.string().trim().min(3).max(320),
     provenanceLabel: z.literal("user-authored perspective"),
   })).max(2).default([]),
-  calibrations: z.array(z.object({
+  calibrations: z.array(z.union([z.object({
+    id: z.string().trim().regex(/^[a-zA-Z0-9_-]+$/).min(1).max(80),
+    createdAt: z.string().datetime(),
+    experimentTitle: z.string().trim().min(1).max(160),
+    observedSignals: z.array(z.string().trim().min(1).max(180)).min(1).max(3),
+    kind: z.literal("assumption-observation"),
+    assumptionId: z.enum(assumptionIds),
+    previousValue: z.number(),
+    observedValue: z.number(),
+    unit: z.string().min(1),
+    provenance: z.literal("user-observed"),
+    breakpoints: z.array(z.object({ optionId: z.string(), before: z.number().nullable(), after: z.number().nullable() })).length(4),
+    note: z.string().trim().max(320),
+  }).refine((record) => record.previousValue !== record.observedValue, "Observed evidence must change the tested assumption."), z.object({
     id: z.string().trim().regex(/^[a-zA-Z0-9_-]+$/).min(1).max(80),
     createdAt: z.string().datetime(),
     experimentTitle: z.string().trim().min(1).max(160),
@@ -71,7 +86,7 @@ export const decisionSchema = z.object({
     previousValue: z.number().min(0).max(100),
     nextValue: z.number().min(0).max(100),
     note: z.string().trim().max(320),
-  })).max(12).default([]),
+  })])).max(12).default([]),
   // The submitted experience, witness architecture, and comparison UI are
   // deliberately designed around four futures: safe, ambitious, negotiated,
   // and nonlinear. Keep that contract explicit instead of implying a dynamic
@@ -127,6 +142,8 @@ export const witnessLensSchema = z.string().regex(/^(financial-resilience|belong
 export const qualitativeAssessmentSchema = z.enum(["protects", "strains", "trades-off"]);
 export const qualitativeFocusSchema = z.enum(["financial-runway", "daily-belonging", "exit-flexibility", "downside-exposure"]);
 export const uncertaintySchema = z.enum(["daily-rhythm", "support-network", "reversal-cost", "downside-tolerance"]);
+export const assumptionIdSchema = z.enum(assumptionIds);
+export const assumptionProvenanceSchema = z.enum(["public-fact", "user-estimate", "scenario-assumption", "unknown", "user-observed"]);
 export const signalSchema = z.enum(["energy-pattern", "support-seeking", "commitment-resistance", "recovery-time"]);
 export const witnessSchema = z.object({
   lens: witnessLensSchema,
@@ -153,6 +170,36 @@ const traceRecordSchema = z.object({
 
 const displayFieldSchema = traceRecordSchema.extend({ traceId: z.string(), traceStatus: z.literal("traced") });
 
+const assumptionSchema = z.object({
+  id: assumptionIdSchema,
+  label: z.string(),
+  provenance: assumptionProvenanceSchema,
+  currentValue: z.number(),
+  unit: z.string(),
+  min: z.number(),
+  max: z.number(),
+  sweepPoints: z.array(z.number()).min(3),
+  uncertainty: uncertaintySchema,
+  affects: z.string(),
+  adverseDirection: z.enum(["lower", "higher"]),
+});
+
+const breakpointSchema = z.object({
+  assumption: assumptionSchema,
+  referenceFitFormula: z.string(),
+  referenceValue: z.number(),
+  points: z.array(z.object({
+    value: z.number(),
+    fits: z.array(z.object({ optionId: z.string(), fit: z.number(), state: z.enum(["robust", "sensitive", "fragile"]) })).length(4),
+  })).min(3),
+  futures: z.array(z.object({
+    optionId: z.string(),
+    referenceFit: z.number(),
+    breakpointValue: z.number().nullable(),
+    breakpointFit: z.number().nullable(),
+  })).length(4),
+});
+
 export const simulationSchema = z.object({
   decision: decisionSchema,
   baseline: z.array(futureSchema),
@@ -173,6 +220,7 @@ export const simulationSchema = z.object({
     evidence: z.array(z.string()),
     uncertainty: uncertaintySchema,
   }),
+  breakpoint: breakpointSchema,
   sources: z.array(sourceSchema),
   generatedBy: z.object({
     engine: z.enum(["deterministic", "gpt-5.6"]),
@@ -196,7 +244,11 @@ export type Future = z.infer<typeof futureSchema>;
 export type Witness = z.infer<typeof witnessSchema>;
 export type Simulation = z.infer<typeof simulationSchema>;
 export type Uncertainty = z.infer<typeof uncertaintySchema>;
+export type AssumptionId = z.infer<typeof assumptionIdSchema>;
+export type Assumption = z.infer<typeof assumptionSchema>;
+export type BreakpointAnalysis = z.infer<typeof breakpointSchema>;
 export type ContextLens = z.infer<typeof decisionSchema>[
   "contextLenses"
 ][number];
 export type CalibrationRecord = z.infer<typeof decisionSchema>["calibrations"][number];
+export type AssumptionCalibration = Extract<CalibrationRecord, { kind: "assumption-observation" }>;

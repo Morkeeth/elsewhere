@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import OpenAI from "openai";
-import { buildExperiment, coreWitnessLenses, createFallbackWitnesses, runSimulation } from "@/lib/engine";
+import { auditTrace, buildBreakpointAnalysis, buildExperiment, coreWitnessLenses, createFallbackWitnesses, runSimulation } from "@/lib/engine";
 import { decisionSchema, simulationSchema, witnessSchema as witnessRuntimeSchema, type ContextLens, type Decision, type Future, type Simulation, type Witness } from "@/lib/schema";
 
 type WitnessLens = Pick<Witness, "lens" | "protectedValue"> & { context?: ContextLens };
@@ -176,6 +176,7 @@ export async function runGptSimulation(input: Decision): Promise<Simulation> {
   const synthesis = valid.length === jobs.length ? await synthesize(client, witnesses) : null;
 
   const experiment = synthesis ? buildExperiment(decision, deterministic.baseline, synthesis.uncertainty) : deterministic.experiment;
+  const breakpoint = buildBreakpointAnalysis(decision, experiment.uncertainty);
   const explanation = synthesis
     ? `The independent lenses converge on testing ${synthesis.uncertainty.replaceAll("-", " ")} before treating any future as settled.`
     : deterministic.divergence.explanation;
@@ -184,6 +185,7 @@ export async function runGptSimulation(input: Decision): Promise<Simulation> {
     witnesses,
     divergence: { ...deterministic.divergence, explanation },
     experiment,
+    breakpoint,
     generatedBy: {
       engine: "gpt-5.6",
       model: process.env.OPENAI_MODEL ?? "gpt-5.6-sol",
@@ -191,5 +193,6 @@ export async function runGptSimulation(input: Decision): Promise<Simulation> {
       durationMs: Date.now() - startedAt,
       synthesisReturned: Boolean(synthesis),
     },
+    audit: auditTrace(deterministic.baseline, deterministic.shocked, deterministic.divergence, experiment, breakpoint),
   });
 }

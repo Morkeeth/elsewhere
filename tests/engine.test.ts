@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildExperiment, runSimulation, sampleDecision, validateDisplayManifest } from "../lib/engine";
+import { applyAssumption, assumptionForUncertainty, buildBreakpointAnalysis, buildExperiment, runSimulation, sampleDecision, validateDisplayManifest } from "../lib/engine";
 import { calculateFrancePayroll, calculateUkPayroll, nativeToEur } from "../lib/grounding";
 import { makeJourney, shockPresets } from "../lib/journeys";
 import { assertQualitativeNarrative, buildWitnessInstructions, buildWitnessJobs, ledgerHash } from "../lib/openai-engine";
@@ -158,26 +158,77 @@ test("produces one reversible fourteen-day experiment", () => {
   assert.equal(synthesized.durationDays, 14);
 });
 
-test("a recorded experiment return can revise one explicit assumption and rerun locally", () => {
+test("a recorded experiment return requires observed evidence and changes a causal assumption", () => {
   const decision = structuredClone(sampleDecision);
   const before = runSimulation(decision);
-  const previousValue = decision.priorities.belonging;
-  decision.priorities.belonging = 92;
+  const next = applyAssumption(decision, "shock-cost", decision.shock.monthlyCostEur + 250);
+  const after = runSimulation(next);
+  const beforeBreakpoint = before.breakpoint.futures.map((future) => ({ optionId: future.optionId, before: future.breakpointValue, after: after.breakpoint.futures.find((item) => item.optionId === future.optionId)?.breakpointValue ?? null }));
   decision.calibrations = [{
-    id: "calibration-belonging",
+    id: "calibration-shock-cost",
     createdAt: "2026-07-19T12:00:00.000Z",
     experimentTitle: before.experiment.title,
     observedSignals: [before.experiment.evidence[0]],
-    revisedPriority: "belonging",
-    previousValue,
-    nextValue: 92,
+    kind: "assumption-observation",
+    assumptionId: "shock-cost",
+    previousValue: decision.shock.monthlyCostEur,
+    observedValue: next.shock.monthlyCostEur,
+    unit: "EUR/month",
+    provenance: "user-observed",
+    breakpoints: beforeBreakpoint,
     note: "The ordinary day made proximity matter more than expected.",
   }];
-  const after = runSimulation(decision);
-  assert.equal(after.decision.calibrations.length, 1);
-  assert.equal(after.decision.calibrations[0].revisedPriority, "belonging");
-  assert.notEqual(after.baseline[0].metrics.composite, before.baseline[0].metrics.composite);
+  assert.equal(decision.calibrations[0].observedSignals.length, 1);
+  assert.notEqual(after.shocked[0].metrics.yearEndSavingsEur, before.shocked[0].metrics.yearEndSavingsEur);
   assert.equal(after.generatedBy.engine, "deterministic");
+});
+
+test("assumption sweeps and breakpoints are deterministic and recompute every future", () => {
+  const first = buildBreakpointAnalysis(sampleDecision, "downside-tolerance");
+  const second = buildBreakpointAnalysis(sampleDecision, "downside-tolerance");
+  assert.deepEqual(first, second);
+  assert.equal(first.points.length >= 3, true);
+  assert.ok(first.points.every((point) => point.fits.length === 4));
+  assert.ok(first.futures.every((future) => future.referenceFit >= 0 && future.referenceFit <= 100));
+});
+
+test("assumption breakpoints are fully traced and GPT categories map only to approved assumption IDs", () => {
+  const simulation = runSimulation(sampleDecision);
+  assert.equal(simulation.audit.sourceCoverage, 1);
+  assert.ok(simulation.audit.displayManifest.some((field) => field.id.startsWith(`breakpoint.${simulation.breakpoint.assumption.id}`)));
+  assert.equal(assumptionForUncertainty("daily-rhythm"), "shock-energy");
+  assert.equal(assumptionForUncertainty("support-network"), "travel-burden");
+  assert.equal(assumptionForUncertainty("reversal-cost"), "commitment-timing");
+  assert.equal(assumptionForUncertainty("downside-tolerance"), "shock-cost");
+});
+
+test("empty or unchanged observed calibration records are rejected", () => {
+  const simulation = runSimulation(sampleDecision);
+  const base = {
+    id: "calibration-invalid",
+    createdAt: "2026-07-19T12:00:00.000Z",
+    experimentTitle: simulation.experiment.title,
+    kind: "assumption-observation" as const,
+    assumptionId: "shock-cost" as const,
+    previousValue: sampleDecision.shock.monthlyCostEur,
+    observedValue: sampleDecision.shock.monthlyCostEur,
+    unit: "EUR/month",
+    provenance: "user-observed" as const,
+    breakpoints: simulation.breakpoint.futures.map((future) => ({ optionId: future.optionId, before: future.breakpointValue, after: future.breakpointValue })),
+    note: "",
+  };
+  assert.equal(decisionSchema.safeParse({ ...sampleDecision, calibrations: [{ ...base, observedSignals: [] }] }).success, false);
+  assert.equal(decisionSchema.safeParse({ ...sampleDecision, calibrations: [{ ...base, observedSignals: ["Observed"] }] }).success, false);
+});
+
+test("a priority-only change reweights fit without changing factual future outcomes", () => {
+  const before = runSimulation(sampleDecision);
+  const decision = structuredClone(sampleDecision);
+  decision.priorities.belonging = 92;
+  const after = runSimulation(decision);
+  assert.equal(after.shocked[0].metrics.yearEndSavingsEur, before.shocked[0].metrics.yearEndSavingsEur);
+  assert.equal(after.shocked[0].metrics.averageEnergy, before.shocked[0].metrics.averageEnergy);
+  assert.notEqual(after.shocked[0].metrics.composite, before.shocked[0].metrics.composite);
 });
 
 test("France calculator reproduces the official €32,000 taxable-income example", () => {

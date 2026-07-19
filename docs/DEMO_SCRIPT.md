@@ -1,56 +1,58 @@
-# Elsewhere — 2:45 demo script
+# Elsewhere — three-minute demo
 
-## 0:00–0:20 — Open on the rehearsal
+## 0:00–0:20 — The decision that keeps reopening
 
-Start with the four futures already visible.
+Open with four futures already visible.
 
-“I have re-decided whether to leave Paris about forty times. Always at night, always in my notes app, always the same four options.”
+“I have re-decided whether to leave Paris in my notes app forty times. The notes never told me which assumption was keeping the decision unresolved.”
 
-At second eight, toggle the parent-care shock.
+Do not show setup. Do not toggle the shock yet.
 
-“This is what my notes app could never do. Month six: a parent needs weekly help. Same four lives, re-run.”
+## 0:20–0:55 — Deterministic futures
 
-“The numbers are formulas. The model only gets to show which lives protect what I care about—and the lenses disagree.”
+“Elsewhere opens four grounded versions of the next year. The numbers are formula-owned: cited tax rules, costs, and explicit scenario assumptions.”
 
-## 0:40–1:20 — Same facts, four value lenses
+Point to one timeline, the visible commitment assumption, and the four-future comparison. Do not imply energy, belonging, or optionality are predictions; they are visible scenario assumptions.
 
-Point to the shared record receipt, then reveal the disagreement matrix.
+## 0:55–1:30 — Same facts, different values
 
-“Elsewhere computes four twelve-month world states from cited tax rules, costs, and explicit personal assumptions. Every decision-outcome number is formula-owned. The same record goes to four GPT-5.6 witnesses with different protected values.”
+Reveal the disagreement matrix and shared record receipt.
 
-Point to the shared hash and two conflicting matrix cells. Explain that rows are values, columns are futures, and the shock recolors the same matrix against the shocked world state.
+“Every core witness receives the same immutable record. They disagree because one protects runway, one belonging, one reversibility, and one downside resilience.”
 
-## 1:20–2:05 — Break the worlds
+Contrast only two cells. Do not read every row. AI identifies what is contested; it does not choose a future.
 
-Toggle the parent-care shock.
+## 1:30–2:15 — Shock and Assumption Breakpoint
 
-“A decision that only works in the expected world is not a robust decision. In month six, a parent needs recurring care and travel. Elsewhere reruns every future. Watch the same lives pull apart.”
+Apply the parent-care shock once.
 
-Point to the red shock line and divergence change. Emphasize that shock timing, cost, travel, energy, and belonging effects are editable.
+“Month six: a parent needs recurring help. The ledger reruns every future.”
 
-## 2:05–2:45 — The exit
+Scroll directly to Assumption Breakpoint.
 
-Scroll into the acid-green experiment.
+“The witnesses identify the uncertainty worth testing. Deterministic code then sweeps the underlying assumption and finds the point where each future becomes fragile under my own weights.”
 
-“The synthesis is not allowed to choose. It selects one constrained uncertainty category; deterministic code turns that into this fourteen-day experiment, caps the money at risk, and gives us three observable signals.”
+Point to the current assumption marker and one fragile breakpoint. Say “personal fit calculation,” never “winner.”
 
-Read the first physical step, not the whole hypothesis.
+## 2:15–3:00 — Experiment and return
 
-## 2:45–3:00 — Trust boundary and close
+Show the fourteen-day experiment, then a prepared local evidence return.
 
-Open **Evidence**.
+“The experiment does not decide my life. It collects one observation: the actual recurring travel burden. I record it, and Elsewhere recalculates the breakpoint.”
 
-“This is the trust boundary: 100% trace coverage, dated public sources, visible formulas. GPT can interpret this ledger; it cannot edit it. Four Responses run concurrently and a fifth preserves their disagreement in synthesis.”
+Show before → observed assumption and one breakpoint shift.
 
-Show **Evidence** and the commitment-assumption label.
+“Reality changed one assumption—not the truth of a future.”
 
-“AI interpretation is qualitative and visibly separate. The ledger owns outcomes; the witnesses preserve disagreement; the experiment buys down uncertainty. Don’t ask AI what to choose. Visit the futures first.”
+Close:
+
+“Don’t ask AI what to choose. Find the assumption your future depends on—and test it before you commit.”
 
 ## Recording checklist
 
-- Use a desktop viewport around 1440×900.
-- Begin with the page already loaded and the API key configured.
-- Keep the evidence drawer closed until the architecture reveal.
-- Do not wait silently during witness execution; narrate the deterministic ledger appearing immediately.
-- Capture the engine status showing four witnesses plus one synthesis.
+- Use desktop around 1440×900 and capture one mobile insert at 390×844.
+- Begin with the futures loaded; narrate deterministic rendering while AI work completes.
+- Toggle the shock exactly once.
+- Keep Context Layers, Evidence, architecture, and the roadmap out of the main arc.
+- Show the shared record receipt only after the product insight is clear.
 - Stay below three minutes.
