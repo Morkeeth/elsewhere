@@ -114,7 +114,12 @@ export const witnessSchema = z.object({
   lens: witnessLensSchema,
   protectedValue: z.enum(["Financial resilience", "Belonging and relationships", "Reversibility and optionality", "Adversarial failure and regret"]),
   ledgerHash: z.string(),
-  observations: z.array(z.object({ optionId: z.string(), assessment: qualitativeAssessmentSchema, focus: qualitativeFocusSchema })).length(4),
+  observations: z.array(z.object({
+    optionId: z.string(),
+    baselineAssessment: qualitativeAssessmentSchema,
+    shockedAssessment: qualitativeAssessmentSchema,
+    focus: qualitativeFocusSchema,
+  })).length(4),
   uncertaintyToTest: uncertaintySchema,
   observableSignal: signalSchema,
   fallback: z.boolean().default(false),

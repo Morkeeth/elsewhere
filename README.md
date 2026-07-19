@@ -14,7 +14,7 @@ Most decision tools collapse uncertainty into advice. Elsewhere preserves disagr
 4. A configurable shock reruns every life from the selected month.
 5. The product returns a reversible experiment, not a verdict.
 
-Remove concurrent witnesses and the central product experience—the visible disagreement between valid futures—disappears. Remove the deterministic ledger and the evidence contract disappears.
+The disagreement matrix is model-generated; deterministic code deliberately owns the experiment constraints and every outcome number. Remove the witnesses and the value-based disagreement disappears. Remove the deterministic record and the evidence contract disappears.
 
 ## Full product surface
 

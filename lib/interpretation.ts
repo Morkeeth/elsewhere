@@ -27,8 +27,8 @@ const signalCopy = {
   "recovery-time": "Track how quickly you recover after a difficult day.",
 } as const;
 
-export function witnessObservationCopy(observation: Witness["observations"][number]) {
-  return `${assessmentCopy[observation.assessment]} ${focusCopy[observation.focus]}.`;
+export function witnessObservationCopy(observation: Witness["observations"][number], shocked = false) {
+  return `${assessmentCopy[shocked ? observation.shockedAssessment : observation.baselineAssessment]} ${focusCopy[observation.focus]}.`;
 }
 
 export function witnessTensionCopy(witness: Witness) {

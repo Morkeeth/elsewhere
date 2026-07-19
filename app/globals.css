@@ -218,14 +218,27 @@ h1 {
 .witness-panel { margin: 65px 2vw 0; padding-top: 30px; border-top: 1px solid var(--line); }
 .witness-panel .section-head { margin-bottom: 22px; }
 .witness-panel .section-head > p { max-width: 270px; color: var(--muted); font: 9px/1.5 "DM Mono", monospace; text-transform: uppercase; }
-.witness-grid { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
-.witness-card { min-height: 260px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 20px; display: flex; flex-direction: column; gap: 13px; }
-.witness-card > span { color: var(--acid); font: 8px "DM Mono", monospace; letter-spacing: .1em; text-transform: uppercase; }
-.witness-card > strong { font-size: 15px; line-height: 1.35; font-weight: 400; }
-.witness-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; color: var(--muted); font-size: 10px; line-height: 1.4; }
-.witness-card li { display: grid; grid-template-columns: 42px 1fr; gap: 6px; }
-.witness-card li b { color: var(--ink); font: 8px "DM Mono", monospace; }
-.witness-card small { margin-top: auto; color: var(--muted); font: 9px/1.45 "DM Mono", monospace; }
+.witness-receipt { display: flex; align-items: baseline; gap: 14px; padding: 12px 0 18px; font: 9px "DM Mono", monospace; letter-spacing: .07em; text-transform: uppercase; }
+.witness-receipt > span { color: var(--muted); }
+.witness-receipt strong { color: var(--acid); font-weight: 400; }
+.witness-receipt small { color: var(--muted); font-size: inherit; }
+.witness-receipt.running strong { animation: receiptPulse 1.1s ease-in-out infinite; }
+.disagreement-matrix { display: grid; grid-template-columns: minmax(150px, 1.25fr) repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.matrix-head, .matrix-lens, .matrix-cell { min-height: 58px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.matrix-head { display: flex; align-items: flex-end; padding: 11px; color: var(--muted); font: 8px "DM Mono", monospace; letter-spacing: .08em; text-transform: uppercase; }
+.matrix-head.matrix-lens { color: var(--acid); }
+.matrix-row { display: contents; }
+.matrix-lens { display: flex; align-items: center; padding: 11px; font: 9px/1.35 "DM Mono", monospace; letter-spacing: .04em; text-transform: uppercase; }
+.matrix-cell { display: grid; place-items: center; padding: 8px; transition: background .45s ease, color .45s ease; }
+.matrix-cell span { font: 8px "DM Mono", monospace; letter-spacing: .07em; text-transform: uppercase; }
+.matrix-cell.protects { background: rgba(201,255,100,.2); color: var(--acid); }
+.matrix-cell.strains { background: rgba(255,107,85,.19); color: #ff8878; }
+.matrix-cell.trades-off { background: rgba(124,140,255,.16); color: #aeb7ff; }
+.matrix-cell.pending { color: var(--muted); }
+.matrix-cell.pending span { animation: matrixPulse 1.1s ease-in-out var(--delay) infinite; }
+.matrix-caption { margin: 12px 0 0; color: var(--muted); font: 9px/1.5 "DM Mono", monospace; text-transform: uppercase; letter-spacing: .05em; }
+@keyframes matrixPulse { 0%,100% { opacity: .2; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.25); } }
+@keyframes receiptPulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
 
 .divergence { margin: 42px 2vw 0; padding: 30px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 70px 240px 1fr minmax(220px, 380px); align-items: center; gap: 25px; }
 .divergence > div:nth-child(2) { display: flex; align-items: flex-end; gap: 18px; }
@@ -382,7 +395,6 @@ h1 {
 
 @media (max-width: 980px) {
   .future-grid { grid-template-columns: repeat(2, 1fr); }
-  .witness-grid { grid-template-columns: repeat(2, 1fr); }
   .divergence { grid-template-columns: 50px 180px 1fr; }
   .divergence > p { grid-column: 2 / -1; }
   .experiment-grid { grid-template-columns: 1fr; }
@@ -404,7 +416,11 @@ h1 {
   .section-head { align-items: flex-start; flex-direction: column; gap: 32px; }
   .shock-control > div { text-align: left; }
   .future-grid { grid-template-columns: 1fr; }
-  .witness-grid { grid-template-columns: 1fr; }
+  .witness-panel { overflow-x: auto; }
+  .witness-receipt { min-width: 520px; }
+  .disagreement-matrix { min-width: 520px; grid-template-columns: 130px repeat(4, minmax(92px, 1fr)); }
+  .matrix-head, .matrix-lens, .matrix-cell { min-height: 54px; }
+  .matrix-caption { min-width: 520px; }
   .divergence { grid-template-columns: 45px 1fr; }
   .divergence-bar, .divergence > p { grid-column: 2; }
   .experiment { padding: 80px 24px; }

@@ -6,9 +6,16 @@ import { Timeline } from "@/components/timeline";
 import { runSimulation, sampleDecision } from "@/lib/engine";
 import { journeyMeta, makeJourney, primaryJourneyDomains, type JourneyDomain } from "@/lib/journeys";
 import { decisionSchema, simulationSchema, type Decision, type Simulation } from "@/lib/schema";
-import { uncertaintyCopyForUi, witnessObservationCopy, witnessSignalCopy, witnessTensionCopy } from "@/lib/interpretation";
+import { uncertaintyCopyForUi, witnessObservationCopy } from "@/lib/interpretation";
 
 type AgentState = "idle" | "running" | "complete" | "unavailable";
+
+const pendingWitnesses = [
+  { lens: "financial-resilience", protectedValue: "Financial resilience" },
+  { lens: "belonging", protectedValue: "Belonging and relationships" },
+  { lens: "reversibility", protectedValue: "Reversibility and optionality" },
+  { lens: "adversarial-regret", protectedValue: "Adversarial failure and regret" },
+] as const;
 
 export default function Home() {
   const initialSimulation = useMemo(() => runSimulation(sampleDecision), []);
@@ -22,6 +29,7 @@ export default function Home() {
   const [agentState, setAgentState] = useState<AgentState>("idle");
   const futures = shock ? simulation.shocked : simulation.baseline;
   const domainMeta = journeyMeta[decision.domain];
+  const witnessReceipt = simulation.witnesses[0]?.ledgerHash;
 
   function openJourney(domain?: JourneyDomain) {
     if (domain) setDecision(makeJourney(domain));
@@ -136,17 +144,29 @@ export default function Home() {
         </div>
 
         <section className="witness-panel" aria-label="AI interpretation: same facts, different values">
-          <div className="section-head"><div><span className="section-number">02</span><h2>Same facts. Different values.</h2></div><p>AI interpretation — every lens received the same immutable ledger.</p></div>
-          <div className="witness-grid">
-            {simulation.witnesses.map((witness) => (
-              <article key={witness.lens} className="witness-card">
-                <span>{witness.protectedValue}</span>
-                <strong>{witnessTensionCopy(witness)}</strong>
-                <ul>{witness.observations.map((observation) => <li key={observation.optionId}><b>{simulation.baseline.find((future) => future.optionId === observation.optionId)?.title}</b>{witnessObservationCopy(observation)}</li>)}</ul>
-                <small>Signal: {witnessSignalCopy(witness)}</small>
-              </article>
+          <div className="section-head"><div><span className="section-number">02</span><h2>Same facts. Different values.</h2></div><p>AI interpretation is model-generated; all outcome numbers remain deterministic.</p></div>
+          <div className={`witness-receipt ${agentState}`}>
+            <span>ONE SHARED RECORD</span>
+            <strong>{agentState === "running" ? "Four protected values are checking it in parallel" : witnessReceipt === "deterministic-only" ? "Deterministic fallback active" : `RECEIPT ${witnessReceipt}`}</strong>
+            <small>{agentState === "complete" && witnessReceipt !== "deterministic-only" ? "Same evidence supplied to every lens" : "The record remains usable without AI interpretation"}</small>
+          </div>
+          <div className={`disagreement-matrix ${shock ? "shocked" : "baseline"} ${agentState === "running" ? "is-pending" : ""}`} role="table" aria-label="Disagreement matrix by protected value and future">
+            <div className="matrix-head matrix-lens">PROTECTED VALUE</div>
+            {simulation.baseline.map((future) => <div className="matrix-head" key={future.optionId}>{future.title}</div>)}
+            {(agentState === "running" ? pendingWitnesses : simulation.witnesses).map((witness, rowIndex) => (
+              <div className="matrix-row" key={witness.lens} role="row">
+                <div className="matrix-lens" role="rowheader">{witness.protectedValue}</div>
+                {simulation.baseline.map((future, columnIndex) => {
+                  const observation = "observations" in witness ? witness.observations.find((item) => item.optionId === future.optionId) : undefined;
+                  const assessment = observation ? (shock ? observation.shockedAssessment : observation.baselineAssessment) : "pending";
+                  return <div key={future.optionId} role="cell" className={`matrix-cell ${assessment}`} style={{ "--delay": `${(rowIndex + columnIndex) * 85}ms` } as React.CSSProperties} aria-label={observation ? `${witness.protectedValue}: ${witnessObservationCopy(observation, shock)}` : `${witness.protectedValue}: pending`}>
+                    <span>{assessment === "pending" ? "·" : assessment.replace("-", " ")}</span>
+                  </div>;
+                })}
+              </div>
             ))}
           </div>
+          <p className="matrix-caption">Toggle the shock to see the same witness assessments re-read against the shocked world state.</p>
         </section>
 
         <div className={`divergence ${shock ? "is-visible" : ""}`}>

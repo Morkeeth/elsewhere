@@ -288,7 +288,7 @@ export function createFallbackWitnesses(futures: Future[], ledgerHash = "determi
   return fallbackWitnesses.map((witness) => ({
     ...witness,
     ledgerHash,
-    observations: futures.map((future) => ({ optionId: future.optionId, assessment: "trades-off", focus: "exit-flexibility" })),
+    observations: futures.map((future) => ({ optionId: future.optionId, baselineAssessment: "trades-off", shockedAssessment: "trades-off", focus: "exit-flexibility" })),
     uncertaintyToTest: "daily-rhythm",
     observableSignal: "energy-pattern",
     fallback: true,

@@ -25,10 +25,11 @@ const witnessSchema = {
         additionalProperties: false,
         properties: {
           optionId: { type: "string" },
-          assessment: { type: "string", enum: ["protects", "strains", "trades-off"] },
+          baselineAssessment: { type: "string", enum: ["protects", "strains", "trades-off"] },
+          shockedAssessment: { type: "string", enum: ["protects", "strains", "trades-off"] },
           focus: { type: "string", enum: ["financial-runway", "daily-belonging", "exit-flexibility", "downside-exposure"] },
         },
-        required: ["optionId", "assessment", "focus"],
+        required: ["optionId", "baselineAssessment", "shockedAssessment", "focus"],
       },
     },
     uncertaintyToTest: { type: "string", enum: ["daily-rhythm", "support-network", "reversal-cost", "downside-tolerance"] },
@@ -89,7 +90,7 @@ async function askWitness(client: OpenAI, input: string, ledger: ReturnType<type
     instructions: [
       "You are an independent Elsewhere witness.",
       `Your protected value is exactly: ${lens.protectedValue}. Do not adopt another witness's value function.`,
-      "All four options come from the same immutable deterministic ledger. Compare every option exactly once.",
+      "All four options come from the same immutable deterministic ledger. Compare every option exactly once, then return one assessment before the shock and one after the shock.",
       "Return qualitative interpretation only. Never use digits, currency symbols, percentages, dates, probabilities, quantities, or a recommendation.",
       "Never tell the user to choose, pick, prefer, or go with a future. Name an uncertainty to test instead.",
       retry ? "Your previous output violated the qualitative contract. Be shorter and remove every numeric or prescriptive phrase." : "",

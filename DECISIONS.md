@@ -17,7 +17,7 @@ Codex accelerated the Next.js application, typed Zod data contracts, determinist
 
 ## GPT-5.6 runtime role
 
-Four independent GPT-5.6 Sol Responses calls receive immutable baseline and shocked future states with distinct value functions: financial resilience, regret minimization, belonging, and optionality. A fifth constrained GPT-5.6 response explains unresolved qualitative divergence. Numeric claims in model prose are rejected; experiment duration, cost, and action remain deterministic.
+Four independent GPT-5.6 Sol Responses calls receive the same immutable baseline and shocked future record with distinct protected values: financial resilience, belonging and relationships, reversibility and optionality, and adversarial failure and regret. The disagreement matrix is model-generated; deterministic code owns every experiment duration, cost, action template, and outcome number. A fifth constrained response selects only the qualitative uncertainty category the deterministic experiment should test.
 
 ## Submission evidence
 

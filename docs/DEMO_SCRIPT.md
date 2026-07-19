@@ -1,18 +1,24 @@
 # Elsewhere — 2:45 demo script
 
-## 0:00–0:40 — Four deterministic ledgers
+## 0:00–0:20 — Open on the rehearsal
 
-“Big life decisions are not questions with answers. They are futures with different failure modes. Asking one AI for advice collapses those differences into one confident paragraph.”
+Start with the four futures already visible.
 
-Show the question: **Should I stay in Paris, move to London, go remote, or build a studio?** Open the decision studio briefly to establish that the inputs and shock are editable.
+“I have re-decided whether to leave Paris about forty times. Always at night, always in my notes app, always the same four options.”
+
+At second eight, toggle the parent-care shock.
+
+“This is what my notes app could never do. Month six: a parent needs weekly help. Same four lives, re-run.”
+
+“The numbers are formulas. The model only gets to show which lives protect what I care about—and the lenses disagree.”
 
 ## 0:40–1:20 — Same facts, four value lenses
 
-Press **Open the futures**.
+Point to the shared record receipt, then reveal the disagreement matrix.
 
-“Elsewhere computes four twelve-month world states from cited salaries, tax rules, rent, costs, and explicit personal assumptions. Every decision-outcome number is formula-owned. The same ledger then goes to four GPT-5.6 witnesses with different protected values: money, belonging, reversibility, and failure.”
+“Elsewhere computes four twelve-month world states from cited tax rules, costs, and explicit personal assumptions. Every decision-outcome number is formula-owned. The same record goes to four GPT-5.6 witnesses with different protected values.”
 
-Point to annual net, fixed monthly cost, year-end savings, optionality, and the vertical commitment-assumption marker. Open the same-facts/different-values witness panel.
+Point to the shared hash and two conflicting matrix cells. Explain that rows are values, columns are futures, and the shock recolors the same matrix against the shocked world state.
 
 ## 1:20–2:05 — Break the worlds
 
