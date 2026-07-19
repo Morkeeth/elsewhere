@@ -3,12 +3,44 @@ import type { Decision } from "@/lib/schema";
 
 export type JourneyDomain = Decision["domain"];
 
-export const journeyMeta: Record<JourneyDomain, { icon: string; label: string; line: string; prompt: string }> = {
+export const journeyMeta: Record<JourneyDomain, { icon: string; label: string; line: string; prompt: string; experimental?: boolean }> = {
   career: { icon: "↗", label: "Career", line: "Choose the work, not just the title", prompt: "What should my next career chapter be?" },
   moving: { icon: "⌂", label: "Moving", line: "Try on the city before the postcode", prompt: "Where should I build my next life?" },
-  relationships: { icon: "♡", label: "Relationships", line: "See the futures behind the feeling", prompt: "What shape should this relationship take?" },
-  education: { icon: "✦", label: "Education", line: "Compare the person each path creates", prompt: "How should I invest in my next skill chapter?" },
-  life: { icon: "○", label: "Something else", line: "For the decision living in your Notes app", prompt: "What decision keeps looping in my head?" },
+  relationships: { icon: "♡", label: "Relationships", line: "See the futures behind the feeling", prompt: "What shape should this relationship take?", experimental: true },
+  education: { icon: "✦", label: "Education", line: "Compare the person each path creates", prompt: "How should I invest in my next skill chapter?", experimental: true },
+  life: { icon: "○", label: "Something else", line: "For the decision living in your Notes app", prompt: "What decision keeps looping in my head?", experimental: true },
+};
+
+export const primaryJourneyDomains: JourneyDomain[] = ["career", "moving"];
+
+export type ShockPreset = Decision["shock"];
+
+export const shockPresets: Record<JourneyDomain, ShockPreset[]> = {
+  career: [
+    { label: "The manager I joined for leaves", month: 4, monthlyCostEur: 0, travelCostEur: 0, energyPenalty: 17, belongingPenalty: 9 },
+    { label: "The market cools and hiring freezes", month: 5, monthlyCostEur: 350, travelCostEur: 0, energyPenalty: 12, belongingPenalty: 4 },
+    { label: "My family needs more of my time", month: 6, monthlyCostEur: 480, travelCostEur: 320, energyPenalty: 18, belongingPenalty: 10 },
+  ],
+  moving: [
+    { label: "Remote work rules change", month: 7, monthlyCostEur: 250, travelCostEur: 420, energyPenalty: 11, belongingPenalty: 8 },
+    { label: "Someone close to me needs weekly help", month: 5, monthlyCostEur: 460, travelCostEur: 340, energyPenalty: 18, belongingPenalty: 12 },
+    { label: "Housing costs jump unexpectedly", month: 4, monthlyCostEur: 420, travelCostEur: 0, energyPenalty: 9, belongingPenalty: 3 },
+  ],
+  relationships: [
+    { label: "One of us gets an opportunity elsewhere", month: 5, monthlyCostEur: 0, travelCostEur: 180, energyPenalty: 14, belongingPenalty: 18 },
+    { label: "Trust is tested by a hard conversation", month: 4, monthlyCostEur: 0, travelCostEur: 0, energyPenalty: 16, belongingPenalty: 22 },
+    { label: "Our timelines stop matching", month: 6, monthlyCostEur: 0, travelCostEur: 120, energyPenalty: 12, belongingPenalty: 20 },
+  ],
+  education: [
+    { label: "The job market cools before graduation", month: 8, monthlyCostEur: 350, travelCostEur: 0, energyPenalty: 10, belongingPenalty: 4 },
+    { label: "The course takes twice the energy", month: 4, monthlyCostEur: 0, travelCostEur: 0, energyPenalty: 24, belongingPenalty: 7 },
+    { label: "A paid opportunity arrives early", month: 3, monthlyCostEur: 0, travelCostEur: 80, energyPenalty: 0, belongingPenalty: 5 },
+  ],
+  life: [
+    { label: "The thing I am assuming does not happen", month: 6, monthlyCostEur: 320, travelCostEur: 160, energyPenalty: 14, belongingPenalty: 8 },
+    { label: "My available time is cut in half", month: 4, monthlyCostEur: 0, travelCostEur: 0, energyPenalty: 26, belongingPenalty: 10 },
+    { label: "Someone important needs my help", month: 5, monthlyCostEur: 420, travelCostEur: 280, energyPenalty: 18, belongingPenalty: 12 },
+  ],
 };
 
 const option = (base: Decision["options"][number], patch: Partial<Decision["options"][number]>) => ({ ...base, ...patch });

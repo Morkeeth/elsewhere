@@ -215,10 +215,17 @@ h1 {
 .ledger-strip b { color: var(--ink); display: block; font-size: 9px; font-weight: 400; }
 .irreversible { margin-top: 22px; background: rgba(255,255,255,.035); padding: 11px 12px; display: flex; align-items: center; justify-content: space-between; }
 .irreversible strong { color: var(--accent); font: 12px "DM Mono", monospace; font-weight: 400; }
-.witness-note { margin-top: 12px; border-left: 2px solid var(--accent); padding: 5px 0 4px 12px; }
-.witness-note span { font: 8px "DM Mono", monospace; color: var(--accent); text-transform: uppercase; letter-spacing: .1em; }
-.witness-note p { color: #b8b9b2; font-size: 10px; line-height: 1.5; margin: 6px 0 0; }
-.witness-note small { color: var(--muted); display: block; font: 8px/1.45 "DM Mono", monospace; margin-top: 8px; }
+.witness-panel { margin: 65px 2vw 0; padding-top: 30px; border-top: 1px solid var(--line); }
+.witness-panel .section-head { margin-bottom: 22px; }
+.witness-panel .section-head > p { max-width: 270px; color: var(--muted); font: 9px/1.5 "DM Mono", monospace; text-transform: uppercase; }
+.witness-grid { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.witness-card { min-height: 260px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 20px; display: flex; flex-direction: column; gap: 13px; }
+.witness-card > span { color: var(--acid); font: 8px "DM Mono", monospace; letter-spacing: .1em; text-transform: uppercase; }
+.witness-card > strong { font-size: 15px; line-height: 1.35; font-weight: 400; }
+.witness-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+.witness-card li { display: grid; grid-template-columns: 42px 1fr; gap: 6px; }
+.witness-card li b { color: var(--ink); font: 8px "DM Mono", monospace; }
+.witness-card small { margin-top: auto; color: var(--muted); font: 9px/1.45 "DM Mono", monospace; }
 
 .divergence { margin: 42px 2vw 0; padding: 30px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 70px 240px 1fr minmax(220px, 380px); align-items: center; gap: 25px; }
 .divergence > div:nth-child(2) { display: flex; align-items: flex-end; gap: 18px; }
@@ -236,6 +243,7 @@ h1 {
 .experiment h2 { font-size: clamp(58px, 7vw, 118px); }
 .kicker { color: #405322; margin: 0 0 14px; }
 .experiment-body > p { font-size: 19px; line-height: 1.55; max-width: 600px; margin: 0 0 45px; }
+.interpretation-note { display: block; margin: -25px 0 30px; font: 10px/1.6 "DM Mono", monospace; letter-spacing: .04em; }
 .first-step { border-top: 1px solid rgba(16,17,14,.35); border-bottom: 1px solid rgba(16,17,14,.35); padding: 24px 0; display: flex; flex-direction: column; gap: 12px; }
 .first-step span { font: 9px "DM Mono", monospace; letter-spacing: .11em; }
 .first-step strong { font-size: 20px; line-height: 1.4; font-weight: 500; }
@@ -374,6 +382,7 @@ h1 {
 
 @media (max-width: 980px) {
   .future-grid { grid-template-columns: repeat(2, 1fr); }
+  .witness-grid { grid-template-columns: repeat(2, 1fr); }
   .divergence { grid-template-columns: 50px 180px 1fr; }
   .divergence > p { grid-column: 2 / -1; }
   .experiment-grid { grid-template-columns: 1fr; }
@@ -395,6 +404,7 @@ h1 {
   .section-head { align-items: flex-start; flex-direction: column; gap: 32px; }
   .shock-control > div { text-align: left; }
   .future-grid { grid-template-columns: 1fr; }
+  .witness-grid { grid-template-columns: 1fr; }
   .divergence { grid-template-columns: 45px 1fr; }
   .divergence-bar, .divergence > p { grid-column: 2; }
   .experiment { padding: 80px 24px; }

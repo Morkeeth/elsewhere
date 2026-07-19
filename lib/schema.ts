@@ -12,10 +12,10 @@ export const sourceSchema = z.object({
 });
 
 export const decisionOptionSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  subtitle: z.string(),
-  location: z.string(),
+  id: z.string().trim().min(1).max(64),
+  title: z.string().trim().min(1).max(96),
+  subtitle: z.string().trim().min(1).max(160),
+  location: z.string().trim().min(1).max(96),
   country: z.enum(["FR", "UK", "OTHER"]),
   currency: z.enum(["EUR", "GBP"]),
   taxProfile: z.enum(["france-2026", "uk-2026", "effective"]),
@@ -32,13 +32,13 @@ export const decisionOptionSchema = z.object({
   shockTravelMultiplier: z.number().min(0).max(2),
   shockEnergySensitivity: z.number().min(0).max(2),
   commitmentMonth: z.number().int().min(1).max(12),
-  accent: z.string(),
-  sourceIds: z.array(z.string()).min(1),
+  accent: z.string().trim().min(1).max(32),
+  sourceIds: z.array(z.string().trim().min(1).max(80)).min(1).max(12),
 });
 
 export const decisionSchema = z.object({
   domain: z.enum(["career", "moving", "relationships", "education", "life"]).default("career"),
-  question: z.string(),
+  question: z.string().trim().min(8).max(500),
   startingSavingsEur: z.number(),
   priorities: z.object({
     security: z.number().min(0).max(100),
@@ -52,9 +52,13 @@ export const decisionSchema = z.object({
     travelCostEur: z.number().nonnegative(),
     energyPenalty: z.number().min(0).max(100),
     belongingPenalty: z.number().min(0).max(100),
-    label: z.string(),
+    label: z.string().trim().min(3).max(160),
   }),
-  options: z.array(decisionOptionSchema).min(2).max(4),
+  // The submitted experience, witness architecture, and comparison UI are
+  // deliberately designed around four futures: safe, ambitious, negotiated,
+  // and nonlinear. Keep that contract explicit instead of implying a dynamic
+  // witness count the UI does not offer controls for.
+  options: z.array(decisionOptionSchema).length(4),
 });
 
 export const monthStateSchema = z.object({
@@ -91,13 +95,8 @@ export const futureSchema = z.object({
     label: z.string(),
     reason: z.string(),
   }),
-  witness: z.object({
-    lens: z.string(),
-    tension: z.string(),
-    turningPoint: z.string(),
-    signalToWatch: z.string(),
-  }).optional(),
   trace: z.array(z.object({
+    id: z.string(),
     field: z.string(),
     formula: z.string(),
     sourceIds: z.array(z.string()),
@@ -106,10 +105,36 @@ export const futureSchema = z.object({
   })),
 });
 
+export const witnessLensSchema = z.enum(["financial-resilience", "belonging", "reversibility", "adversarial-regret"]);
+export const qualitativeAssessmentSchema = z.enum(["protects", "strains", "trades-off"]);
+export const qualitativeFocusSchema = z.enum(["financial-runway", "daily-belonging", "exit-flexibility", "downside-exposure"]);
+export const uncertaintySchema = z.enum(["daily-rhythm", "support-network", "reversal-cost", "downside-tolerance"]);
+export const signalSchema = z.enum(["energy-pattern", "support-seeking", "commitment-resistance", "recovery-time"]);
+export const witnessSchema = z.object({
+  lens: witnessLensSchema,
+  protectedValue: z.enum(["Financial resilience", "Belonging and relationships", "Reversibility and optionality", "Adversarial failure and regret"]),
+  ledgerHash: z.string(),
+  observations: z.array(z.object({ optionId: z.string(), assessment: qualitativeAssessmentSchema, focus: qualitativeFocusSchema })).length(4),
+  uncertaintyToTest: uncertaintySchema,
+  observableSignal: signalSchema,
+  fallback: z.boolean().default(false),
+});
+
+const traceRecordSchema = z.object({
+  id: z.string(),
+  value: z.number(),
+  formula: z.string(),
+  sourceIds: z.array(z.string()).min(1),
+  unit: z.string(),
+});
+
+const displayFieldSchema = traceRecordSchema.extend({ traceId: z.string(), traceStatus: z.literal("traced") });
+
 export const simulationSchema = z.object({
   decision: decisionSchema,
   baseline: z.array(futureSchema),
   shocked: z.array(futureSchema),
+  witnesses: z.array(witnessSchema).length(4),
   divergence: z.object({
     baseline: z.number(),
     shocked: z.number(),
@@ -123,6 +148,7 @@ export const simulationSchema = z.object({
     costEur: z.number().nonnegative(),
     firstStep: z.string(),
     evidence: z.array(z.string()),
+    uncertainty: uncertaintySchema,
   }),
   sources: z.array(sourceSchema),
   generatedBy: z.object({
@@ -130,15 +156,20 @@ export const simulationSchema = z.object({
     model: z.string().nullable(),
     responseIds: z.array(z.string()),
     durationMs: z.number().nonnegative().optional(),
+    synthesisReturned: z.boolean().default(false),
   }),
   audit: z.object({
     tracedNumericFields: z.number().int().nonnegative(),
     untracedNumericFields: z.number().int().nonnegative(),
     sourceCoverage: z.number().min(0).max(1),
+    traceRecords: z.array(traceRecordSchema),
+    displayManifest: z.array(displayFieldSchema),
   }),
 });
 
 export type Decision = z.infer<typeof decisionSchema>;
 export type DecisionOption = z.infer<typeof decisionOptionSchema>;
 export type Future = z.infer<typeof futureSchema>;
+export type Witness = z.infer<typeof witnessSchema>;
 export type Simulation = z.infer<typeof simulationSchema>;
+export type Uncertainty = z.infer<typeof uncertaintySchema>;

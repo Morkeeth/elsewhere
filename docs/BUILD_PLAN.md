@@ -8,7 +8,7 @@ Elsewhere does not recommend a life. It lets the user inspect grounded futures, 
 
 | Slice | Product outcome | Status |
 | --- | --- | --- |
-| Decision studio | Edit the question, starting savings, 2–4 paths, tax jurisdiction, salary, costs, values, risk, and shock | Complete |
+| Decision studio | Edit the question, starting savings, exactly four paths, tax jurisdiction, salary, costs, values, risk, and shock | Complete |
 | Guided journey | Mobile-first domain selection, futures, priorities, adaptive reality check, and plot twist | Complete |
 | Grounding engine | France and UK payroll, ECB currency normalization, cited rent benchmarks, deterministic monthly ledger | Complete |
 | Futures | Twelve-month baseline and shocked states, optionality paths, commitment points, divergence | Complete |
@@ -16,13 +16,13 @@ Elsewhere does not recommend a life. It lets the user inspect grounded futures, 
 | Evidence | Per-future source/formula traces and aggregate coverage audit | Complete |
 | Exit from simulation | Fourteen-day experiment with cost, first action, and observable signals | Complete |
 | Persistence and portability | Local decision state, Markdown brief, JSON world-state export | Complete |
-| Edge delivery | OpenClaw webhook endpoint and installable Elsewhere skill | Complete; endpoint configuration pending |
+| Edge delivery | No third-party delivery webhook in the submitted artifact | Deliberately removed from scope |
 | Reliability | Unit tests, scenario evals, health route, validation, graceful no-key state | Complete |
 | Shipping | Vercel configuration, README, security, MIT license, demo and judging docs | Complete; deploy credentials pending |
 
 ## Architecture decisions
 
-1. Numeric world state is never authored by a language model. Inputs and formulas own every displayed number.
+1. Ledger metrics are never authored by a language model. Inputs and formulas own every displayed metric; models return only bounded qualitative categories.
 2. AI witnesses interpret an immutable copy of the baseline and shocked ledgers through structured output.
 3. Independent lenses must be preserved through synthesis; consensus is not the goal.
 4. Shock simulation is a first-class rerun, not prose pasted onto the baseline.
@@ -34,7 +34,7 @@ Elsewhere does not recommend a life. It lets the user inspect grounded futures, 
 - Schema validation at each API boundary
 - Exactly twelve months per future
 - Reproducible deterministic runs
-- 100% trace coverage for numeric summary fields
+- 100% trace coverage for rendered decision-outcome fields
 - Shock never affects a month before its configured start
 - Fourteen-day experiment costs at most €250
 - Qualitative witness output cannot write numeric ledger fields
@@ -47,5 +47,4 @@ The repository itself is complete. Public release still requires secrets or acco
 
 - `OPENAI_API_KEY` for live witness verification
 - Vercel authorization for deployment
-- An optional OpenClaw webhook URL/token for delivery
 - Devpost account access for submission and video upload

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { journeyMeta, makeJourney, type JourneyDomain } from "@/lib/journeys";
+import { journeyMeta, makeJourney, primaryJourneyDomains, shockPresets, type JourneyDomain } from "@/lib/journeys";
 import type { Decision, DecisionOption } from "@/lib/schema";
 
 type Props = {
@@ -15,14 +15,6 @@ type Props = {
 };
 
 const steps = ["Your world", "The futures", "What matters", "Reality check", "Plot twist"];
-const shockIdeas: Record<JourneyDomain, string[]> = {
-  career: ["The manager I joined for leaves", "The market cools and hiring freezes", "My family needs more of my time"],
-  moving: ["Remote work rules change", "Someone close to me needs weekly help", "Housing costs jump unexpectedly"],
-  relationships: ["One of us gets an opportunity elsewhere", "Trust is tested by a hard conversation", "Our timelines stop matching"],
-  education: ["The job market cools before graduation", "The course takes twice the energy", "A paid opportunity arrives early"],
-  life: ["The thing I am assuming does not happen", "My available time is cut in half", "Someone important needs my help"],
-};
-
 export function DecisionStudio({ decision, open, running, onClose, onChange, onRun, initialStep = 0 }: Props) {
   const [step, setStep] = useState(initialStep);
 
@@ -43,6 +35,14 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
 
   function setPriority(key: keyof Decision["priorities"], value: number) {
     onChange({ ...decision, priorities: { ...decision.priorities, [key]: value } });
+  }
+
+  function chooseShock(preset: (typeof shockPresets)[JourneyDomain][number]) {
+    onChange({ ...decision, shock: { ...decision.shock, ...preset } });
+  }
+
+  function setShockValue(key: "monthlyCostEur" | "travelCostEur" | "energyPenalty" | "belongingPenalty", value: number) {
+    onChange({ ...decision, shock: { ...decision.shock, [key]: Math.max(0, value) } });
   }
 
   function finish() {
@@ -68,11 +68,14 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
             <h2>What’s taking up space in your head?</h2>
             <p>Pick the closest shape. You can rewrite every word next.</p>
             <div className="domain-grid">
-              {(Object.entries(journeyMeta) as Array<[JourneyDomain, (typeof journeyMeta)[JourneyDomain]]>).map(([domain, meta]) => (
+              {primaryJourneyDomains.map((domain) => {
+                const meta = journeyMeta[domain];
+                return (
                 <button key={domain} onClick={() => chooseDomain(domain)}>
                   <b>{meta.icon}</b><span>{meta.label}</span><small>{meta.line}</small><i>↗</i>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
@@ -82,7 +85,7 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
             <p className="journey-kicker">SAY IT LIKE YOU’D TEXT A FRIEND</p>
             <h2>What are you actually deciding?</h2>
             <label className="hero-field"><span>THE QUESTION</span><textarea aria-label="The decision question" value={decision.question} onChange={(event) => onChange({ ...decision, question: event.target.value })} /></label>
-            <div className="option-intro"><span>THE LIVES TO OPEN</span><small>Two is enough. Four shows the hidden third door.</small></div>
+            <div className="option-intro"><span>THE FOUR LIVES TO OPEN</span><small>Four defensible futures reveal the hidden doors between them.</small></div>
             <div className="journey-options">
               {decision.options.map((option, index) => (
                 <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
@@ -153,11 +156,17 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
           <section className="journey-screen shock-step">
             <p className="journey-kicker">NOW BREAK THE PERFECT PLAN</p>
             <h2>What could change the weights?</h2>
-            <p>Pick a plot twist or write the one you don’t want to think about.</p>
+            <p>Pick a plot twist, then make its practical impact explicit. The ledger reruns exactly these effects.</p>
             <div className="shock-ideas">
-              {shockIdeas[decision.domain].map((idea) => <button key={idea} className={decision.shock.label === idea ? "selected" : ""} onClick={() => onChange({ ...decision, shock: { ...decision.shock, label: idea } })}>{idea}<span>+</span></button>)}
+              {shockPresets[decision.domain].map((preset) => <button key={preset.label} className={decision.shock.label === preset.label ? "selected" : ""} onClick={() => chooseShock(preset)}>{preset.label}<span>+</span></button>)}
             </div>
             <label className="hero-field"><span>MY OWN PLOT TWIST</span><textarea aria-label="Custom plot twist" value={decision.shock.label} onChange={(event) => onChange({ ...decision, shock: { ...decision.shock, label: event.target.value } })} /></label>
+            <div className="fact-grid shock-impact">
+              <label><span>MONTHLY COST</span><input aria-label="Shock monthly cost" type="number" min="0" value={decision.shock.monthlyCostEur} onChange={(event) => setShockValue("monthlyCostEur", Number(event.target.value))} /></label>
+              <label><span>TRAVEL / MONTH</span><input aria-label="Shock monthly travel cost" type="number" min="0" value={decision.shock.travelCostEur} onChange={(event) => setShockValue("travelCostEur", Number(event.target.value))} /></label>
+              <label><span>ENERGY HIT</span><input aria-label="Shock energy penalty" type="number" min="0" max="100" value={decision.shock.energyPenalty} onChange={(event) => setShockValue("energyPenalty", Number(event.target.value))} /></label>
+              <label><span>BELONGING HIT</span><input aria-label="Shock belonging penalty" type="number" min="0" max="100" value={decision.shock.belongingPenalty} onChange={(event) => setShockValue("belongingPenalty", Number(event.target.value))} /></label>
+            </div>
             <div className="shock-timing">
               <label><span>WHEN?</span><strong>Month {decision.shock.month}</strong><input aria-label="Shock month" type="range" min="1" max="12" value={decision.shock.month} onChange={(event) => onChange({ ...decision, shock: { ...decision.shock, month: Number(event.target.value) } })} /></label>
               <div><span>{decision.options.length}</span> futures <i /> <span>12</span> months <i /> <span>1</span> plot twist</div>

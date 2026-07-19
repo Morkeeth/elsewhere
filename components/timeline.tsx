@@ -12,7 +12,7 @@ function pathFor(future: Future) {
   }).join(" ");
 }
 
-export function Timeline({ future, active, shockMonth, domain }: { future: Future; active: boolean; shockMonth: number; domain: Decision["domain"] }) {
+export function Timeline({ future, index, active, shockMonth, domain }: { future: Future; index: number; active: boolean; shockMonth: number; domain: Decision["domain"] }) {
   const end = future.months.at(-1)!;
   const irreversibleX = 10 + (future.irreversibleAt.month - 1) * (280 / 11);
   const shockX = 10 + (shockMonth - 1) * (280 / 11);
@@ -21,7 +21,7 @@ export function Timeline({ future, active, shockMonth, domain }: { future: Futur
     <article className={`future-card ${active ? "is-active" : ""}`} style={{ "--accent": future.accent } as React.CSSProperties}>
       <div className="future-head">
         <div>
-          <span className="future-index">0{future.months[0].month}</span>
+          <span className="future-index">{String(index + 1).padStart(2, "0")}</span>
           <h3>{future.title}</h3>
           <p>{future.subtitle}</p>
         </div>
@@ -60,16 +60,9 @@ export function Timeline({ future, active, shockMonth, domain }: { future: Futur
         </div>}
 
       <div className="irreversible">
-        <span>Door narrows</span>
+        <span>Commitment assumption</span>
         <strong>{future.irreversibleAt.label}</strong>
       </div>
-      {future.witness && (
-        <div className="witness-note">
-          <span>{future.witness.lens}</span>
-          <p>{future.witness.tension}</p>
-          <small>{future.witness.turningPoint}</small>
-        </div>
-      )}
     </article>
   );
 }

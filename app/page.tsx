@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { DecisionStudio } from "@/components/decision-studio";
 import { Timeline } from "@/components/timeline";
 import { runSimulation, sampleDecision } from "@/lib/engine";
-import { journeyMeta, makeJourney, type JourneyDomain } from "@/lib/journeys";
+import { journeyMeta, makeJourney, primaryJourneyDomains, type JourneyDomain } from "@/lib/journeys";
 import { decisionSchema, simulationSchema, type Decision, type Simulation } from "@/lib/schema";
+import { uncertaintyCopyForUi, witnessObservationCopy, witnessSignalCopy, witnessTensionCopy } from "@/lib/interpretation";
 
 type AgentState = "idle" | "running" | "complete" | "unavailable";
 
@@ -19,7 +20,6 @@ export default function Home() {
   const [studioStartStep, setStudioStartStep] = useState(0);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [agentState, setAgentState] = useState<AgentState>("idle");
-  const [deliveryState, setDeliveryState] = useState<"idle" | "sending" | "sent" | "unavailable">("idle");
   const futures = shock ? simulation.shocked : simulation.baseline;
   const domainMeta = journeyMeta[decision.domain];
 
@@ -84,21 +84,6 @@ export default function Home() {
     URL.revokeObjectURL(url);
   }
 
-  async function deliverBrief() {
-    setDeliveryState("sending");
-    try {
-      const response = await fetch("/api/deliver", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(simulation),
-      });
-      if (!response.ok) throw new Error("Delivery unavailable");
-      setDeliveryState("sent");
-    } catch {
-      setDeliveryState("unavailable");
-    }
-  }
-
   return (
     <main>
       <nav>
@@ -115,7 +100,7 @@ export default function Home() {
         <h1>Try on the lives<br />before you pick one.</h1>
         <p className="hero-copy">For the decision you keep reopening at 1:14am. Elsewhere lets the possible lives unfold, stress-tests them, then gives you one tiny real-world move.</p>
         <div className="hero-domains" aria-label="Decision types">
-          {(Object.entries(journeyMeta) as Array<[JourneyDomain, (typeof journeyMeta)[JourneyDomain]]>).map(([domain, meta]) => <button key={domain} onClick={() => openJourney(domain)}><span>{meta.icon}</span>{meta.label}</button>)}
+          {primaryJourneyDomains.map((domain) => <button key={domain} onClick={() => openJourney(domain)}><span>{journeyMeta[domain].icon}</span>{journeyMeta[domain].label}</button>)}
         </div>
         <div className="decision-line">
           <span>{domainMeta.icon} {domainMeta.label.toUpperCase()}</span>
@@ -127,8 +112,10 @@ export default function Home() {
       <section className={`observatory ${opened ? "revealed" : ""}`} aria-hidden={!opened}>
         <div className={`engine-status ${agentState}`}>
           <span />
-          {agentState === "running" && "Four GPT-5.6 witnesses are living the paths in parallel"}
-          {agentState === "complete" && `${simulation.generatedBy.responseIds.length - 1} witnesses + 1 synthesis returned in ${((simulation.generatedBy.durationMs ?? 0) / 1000).toFixed(1)}s`}
+          {agentState === "running" && "Four GPT-5.6 witnesses are stress-testing the paths in parallel"}
+          {agentState === "complete" && (simulation.witnesses.some((witness) => witness.fallback)
+            ? "AI interpretation was unavailable · verified deterministic ledger remains complete"
+            : `${simulation.witnesses.length} controlled witnesses${simulation.generatedBy.synthesisReturned ? " + 1 synthesis" : ""} returned in ${((simulation.generatedBy.durationMs ?? 0) / 1000).toFixed(1)}s`)}
           {agentState === "unavailable" && "Verified ledger active · connect the API key for future witnesses"}
           {agentState === "idle" && "Ledger ready"}
         </div>
@@ -145,11 +132,25 @@ export default function Home() {
         </div>
 
         <div className={`future-grid ${shock ? "has-shock" : ""}`}>
-          {futures.map((future) => <Timeline key={`${future.optionId}-${shock}-${future.witness?.lens ?? "ledger"}`} future={future} active={shock} shockMonth={simulation.decision.shock.month} domain={simulation.decision.domain} />)}
+          {futures.map((future, index) => <Timeline key={`${future.optionId}-${shock}`} future={future} index={index} active={shock} shockMonth={simulation.decision.shock.month} domain={simulation.decision.domain} />)}
         </div>
 
+        <section className="witness-panel" aria-label="AI interpretation: same facts, different values">
+          <div className="section-head"><div><span className="section-number">02</span><h2>Same facts. Different values.</h2></div><p>AI interpretation — every lens received the same immutable ledger.</p></div>
+          <div className="witness-grid">
+            {simulation.witnesses.map((witness) => (
+              <article key={witness.lens} className="witness-card">
+                <span>{witness.protectedValue}</span>
+                <strong>{witnessTensionCopy(witness)}</strong>
+                <ul>{witness.observations.map((observation) => <li key={observation.optionId}><b>{simulation.baseline.find((future) => future.optionId === observation.optionId)?.title}</b>{witnessObservationCopy(observation)}</li>)}</ul>
+                <small>Signal: {witnessSignalCopy(witness)}</small>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <div className={`divergence ${shock ? "is-visible" : ""}`}>
-          <span className="section-number">02</span>
+          <span className="section-number">03</span>
           <div><p>THE DISTANCE BETWEEN THE LIVES</p><strong>{shock ? simulation.divergence.shocked : simulation.divergence.baseline}</strong></div>
           <div className="divergence-bar"><span style={{ width: `${Math.min(100, (shock ? simulation.divergence.shocked : simulation.divergence.baseline) * 2)}%` }} /></div>
           <p>{shock ? simulation.divergence.explanation : "The paths look comparable until reality changes the weights."}</p>
@@ -162,6 +163,7 @@ export default function Home() {
           <div><p className="kicker">DON’T DECIDE YET.</p><h2>{simulation.experiment.title}.</h2></div>
           <div className="experiment-body">
             <p>{simulation.experiment.hypothesis}</p>
+            <small className="interpretation-note">AI interpretation selected the uncertainty to test: {uncertaintyCopyForUi(simulation.experiment.uncertainty)}.</small>
             <div className="first-step"><span>FIRST PHYSICAL STEP</span><strong>{simulation.experiment.firstStep}</strong></div>
             <div className="experiment-meta">
               <span><b>{simulation.experiment.durationDays}</b> days</span>
@@ -171,7 +173,6 @@ export default function Home() {
             <div className="result-actions">
               <button onClick={() => exportFile("markdown")}>Export brief ↗</button>
               <button onClick={() => exportFile("json")}>World states {"{}"}</button>
-              <button onClick={deliverBrief}>{deliveryState === "sending" ? "Sending…" : deliveryState === "sent" ? "Delivered ✓" : deliveryState === "unavailable" ? "Connect OpenClaw" : "Send to OpenClaw"}</button>
             </div>
           </div>
         </div>
@@ -180,9 +181,9 @@ export default function Home() {
       <aside className={`evidence-drawer ${evidenceOpen ? "open" : ""}`}>
         <button onClick={() => setEvidenceOpen(false)} aria-label="Close evidence">×</button>
         <span className="section-number">EVIDENCE LEDGER</span>
-        <h2>Nothing numeric is dreamed up.</h2>
+        <h2>Ledger numbers are formula-owned.</h2>
         <div className="audit-score"><strong>{Math.round(simulation.audit.sourceCoverage * 100)}%</strong><span>trace coverage</span><i>{simulation.audit.untracedNumericFields} untraced fields</i></div>
-        <p>Inputs are explicit assumptions or dated public figures. Outcomes are recomputed from visible formulas. GPT‑5.6 interprets the ledger; it cannot edit it.</p>
+        <p>Inputs are explicit assumptions or dated public figures. Outcomes are recomputed from visible formulas. GPT‑5.6 adds qualitative interpretation; it cannot edit ledger values.</p>
         {simulation.sources.map((source) => (
           <a href={source.url} target="_blank" rel="noreferrer" key={source.id}>
             <span>{source.kind}</span><strong>{source.label}</strong><small>{source.note}</small>
@@ -198,5 +199,5 @@ export default function Home() {
 
 function buildMarkdown(simulation: Simulation) {
   const rows = simulation.shocked.map((future) => `| ${future.title} | €${future.metrics.yearEndSavingsEur.toLocaleString()} | ${future.metrics.averageEnergy} | ${future.metrics.averageBelonging} | ${future.irreversibleAt.label} |`).join("\n");
-  return `# Elsewhere decision brief\n\n## ${simulation.decision.question}\n\nGenerated with ${simulation.generatedBy.model ?? "the deterministic ledger"}.\n\n| Future | Year-end savings | Energy | Belonging | Door narrows |\n| --- | ---: | ---: | ---: | --- |\n${rows}\n\n## Shock\n\n${simulation.decision.shock.label}, month ${simulation.decision.shock.month}.\n\n## Fourteen-day experiment\n\n**${simulation.experiment.title}**\n\n${simulation.experiment.hypothesis}\n\nFirst step: ${simulation.experiment.firstStep}\n\n## Evidence\n\nTrace coverage: ${Math.round(simulation.audit.sourceCoverage * 100)}%.\n\n${simulation.sources.map((source) => `- [${source.label}](${source.url}) — ${source.note}`).join("\n")}\n`;
+  return `# Elsewhere decision brief\n\n## ${simulation.decision.question}\n\nGenerated with ${simulation.generatedBy.model ?? "the deterministic ledger"}.\n\n| Future | Year-end savings | Energy | Belonging | Commitment assumption |\n| --- | ---: | ---: | ---: | --- |\n${rows}\n\n## Shock\n\n${simulation.decision.shock.label}, month ${simulation.decision.shock.month}.\n\n## Fourteen-day experiment\n\n**${simulation.experiment.title}**\n\n${simulation.experiment.hypothesis}\n\nFirst step: ${simulation.experiment.firstStep}\n\n## Evidence\n\nTrace coverage: ${Math.round(simulation.audit.sourceCoverage * 100)}%.\n\n${simulation.sources.map((source) => `- [${source.label}](${source.url}) — ${source.note}`).join("\n")}\n`;
 }
