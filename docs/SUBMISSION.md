@@ -21,7 +21,7 @@ Then the user introduces a real shock—caregiving, job loss, health, visa, or a
 
 1. Open **Career** or **Moving** and inspect the four editable futures.
 2. Run the futures and verify that the deterministic ledger appears immediately while witnesses work.
-3. Compare the four AI interpretation cards: same ledger, different protected values.
+3. Compare the four AI interpretation matrix rows: same ledger, different protected values.
 4. Toggle one explicit shock and inspect the divergence and editable commitment assumptions.
 5. Open **Evidence** and follow one official source.
 6. Export the Markdown brief and JSON world states.

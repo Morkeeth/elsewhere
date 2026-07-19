@@ -14,7 +14,7 @@ Most decision tools collapse uncertainty into advice. Elsewhere preserves disagr
 4. A configurable shock reruns every life from the selected month.
 5. The product returns a reversible experiment, not a verdict.
 
-Optional private context layers can add up to two further **user-authored perspectives**—for example, “my model of Mum’s protective concern.” They record what the user believes that perspective protects, what is known, and what remains unknown. They are not contact imports, person simulations, or claims about what somebody else thinks.
+Optional context layers can add up to two further **user-authored perspectives**—for example, “my model of Mum’s protective concern.” They record what the user believes that perspective protects, what is known, and what remains unknown. They are stored locally in the browser; when live witnesses run, selected text is sent to OpenAI for qualitative interpretation with `store: false`. They are not contact imports, person simulations, or claims about what somebody else thinks.
 
 The disagreement matrix is model-generated; deterministic code deliberately owns the experiment constraints and every outcome number. Remove the witnesses and the value-based disagreement disappears. Remove the deterministic record and the evidence contract disappears.
 
@@ -26,10 +26,11 @@ The disagreement matrix is model-generated; deterministic code deliberately owns
 - France 2026 and UK 2026 progressive payroll calculators
 - ECB-normalized EUR/GBP comparisons
 - Twelve-month baseline and shocked world states
-- Four concurrent GPT witnesses over the same ledger plus a constrained uncertainty synthesis
+- Four concurrent core GPT witnesses over the same ledger plus a constrained uncertainty synthesis; optional context perspectives add one isolated lens each
 - SVG optionality timelines, shock propagation, commitment markers, and divergence score
 - Evidence drawer with formula and source provenance
 - Local decision persistence
+- Local experiment-return calibration: record observed signals, revise one explicit priority, and rerun without another AI call
 - Markdown and JSON exports
 - Health endpoint, deterministic regression suite, scenario eval harness, security guidance, and Vercel configuration
 
@@ -43,7 +44,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open <http://localhost:3000>. The ledger works without credentials; add `OPENAI_API_KEY` to enable the five-response witness pass.
+Open <http://localhost:3000>. The ledger works without credentials; add `OPENAI_API_KEY` to enable the four-core-witness-plus-synthesis pass. Optional context perspectives add one witness call each.
 
 ## Verify
 
@@ -76,13 +77,13 @@ Never expose these values through `NEXT_PUBLIC_*` variables.
 
 ## Architecture and honesty
 
-Elsewhere intentionally runs four independent GPT-5.6 Responses concurrently and performs a fifth synthesis call. Isolation is part of the product contract: every witness receives the same immutable four-future ledger and receipt hash, while its protected value is the only variable. The synthesis preserves disagreement rather than voting.
+Elsewhere intentionally runs four independent GPT-5.6 Responses concurrently and performs a fifth synthesis call. Isolation is part of the core product contract: every core witness receives the same immutable four-future ledger and receipt hash, while its protected value is the only variable. Optional user-authored context is delivered as untrusted input data to every witness; only its dedicated context lens interprets it. The synthesis preserves disagreement rather than voting.
 
 Accurate language: **“Four independent GPT-5.6 witnesses receive the same immutable four-future world state, then a fifth response synthesizes their disagreement.”**
 
 ## Data contract
 
-Every decision-outcome number comes from inputs and formulas. GPT returns only bounded qualitative categories; the application renders its own interpretation text and never displays model-authored numeric or prescriptive prose. The evidence audit compares a complete rendered-outcome manifest—including timeline data—against independent trace records. The "Commitment assumption" marker is editable user input, not a discovered fact.
+Every decision-outcome number comes from inputs and formulas. Financial inputs use dated public figures where available; energy, belonging, optionality, and commitment timing are transparent scenario assumptions, not validated predictions. GPT returns only bounded qualitative categories; the application renders its own interpretation text and never displays model-authored numeric or prescriptive prose. The evidence audit compares a complete rendered-outcome manifest—including timeline data—against independent trace records. The "Commitment assumption" marker is editable user input, not a discovered fact.
 
 ## How we used GPT-5.6 and Codex
 

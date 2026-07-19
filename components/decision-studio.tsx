@@ -163,7 +163,7 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
               ))}
             </div>
             {decision.contextLenses.length < 2 && <button className="add-perspective" onClick={addContextLens}>+ Add a perspective</button>}
-            <small className="perspective-note">Try: “my model of Mum’s protective concern,” “a cofounder’s risk lens,” or “future me’s freedom.” Never pass it off as someone else’s actual view.</small>
+            <small className="perspective-note">Stored in this browser. If you run live witnesses, selected text is sent to OpenAI for qualitative interpretation with response storage disabled. Try: “my model of Mum’s protective concern,” “a cofounder’s risk lens,” or “future me’s freedom.” Never pass it off as someone else’s actual view.</small>
           </section>
         )}
 
@@ -218,6 +218,7 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
               <label><span>WHEN?</span><strong>Month {decision.shock.month}</strong><input aria-label="Shock month" type="range" min="1" max="12" value={decision.shock.month} onChange={(event) => onChange({ ...decision, shock: { ...decision.shock, month: Number(event.target.value) } })} /></label>
               <div><span>{decision.options.length}</span> futures <i /> <span>12</span> months <i /> <span>1</span> plot twist</div>
             </div>
+            {decision.contextLenses.length > 0 && <p className="transmission-note">Before live witnesses run, you’ll confirm that selected user-authored perspective text is sent to OpenAI for qualitative interpretation. It remains stored locally in this browser.</p>}
           </section>
         )}
       </div>
