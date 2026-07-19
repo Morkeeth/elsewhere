@@ -61,7 +61,7 @@ pnpm verify:openai  # requires OPENAI_API_KEY
 | `OPENAI_API_KEY` | For AI witnesses | Server-side Responses API credential |
 | `OPENAI_MODEL` | No | Defaults to `gpt-5.6-sol` |
 | `ELSEWHERE_JUDGE_SIMULATION_JSON` | No | Validated cached witness response for a free public judge replay |
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Required for production live witnesses | Durable visitor rate limit |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` or Vercel `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Required for production live witnesses | Durable visitor rate limit |
 | `ELSEWHERE_DEMO_BUDGET` | Required for production live witnesses | Global daily live-witness ceiling |
 
 Never expose these values through `NEXT_PUBLIC_*` variables.

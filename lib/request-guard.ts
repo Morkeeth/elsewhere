@@ -22,8 +22,10 @@ export function isSameOriginPost(request: Request) {
 }
 
 function config() {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Vercel's managed KV exposes Upstash-compatible REST credentials under the
+  // KV_* names; support both those and direct Upstash configuration.
+  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
   const budget = Number(process.env.ELSEWHERE_DEMO_BUDGET);
   return { url, token, budget: Number.isFinite(budget) && budget > 0 ? budget : 0 };
 }
