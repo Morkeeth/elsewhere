@@ -347,14 +347,24 @@ export function buildExperiment(decision: Decision, baseline: Future[], uncertai
     "reversal-cost": ["List each commitment before making it.", "Notice which exit you hesitate to preserve.", "Write the cost of changing your mind."],
     "downside-tolerance": ["Introduce one ordinary inconvenience.", "Record recovery after the disruption.", "Write what still feels worth protecting."],
   }[uncertainty];
+  const movingExperiment = decision.domain === "moving";
+  const relationshipExperiment = decision.domain === "relationships";
   return {
-    title: `Borrow ${challenger.location} for two weeks`,
+    title: movingExperiment
+      ? `Live the ${challenger.title} routine for two weeks`
+      : relationshipExperiment
+        ? `Try the ${challenger.title.toLowerCase()} conversation for two weeks`
+        : `Borrow ${challenger.location} for two weeks`,
     hypothesis,
     durationDays: 14 as const,
     costEur,
-    firstStep: challengerOption.shockTravelMultiplier >= 0.8
-      ? `Ask the ${challenger.location} team for two shadow days and reserve a refundable return ticket.`
-      : "Put two representative days from this future into next week’s calendar before noon tomorrow.",
+    firstStep: movingExperiment
+      ? `Make the ${challenger.title} commute at rush hour twice this week, then spend both evenings in the neighbourhood.`
+      : relationshipExperiment
+        ? `Put one honest conversation on the calendar and agree on the single question you both want answered.`
+        : challengerOption.shockTravelMultiplier >= 0.8
+          ? `Ask the ${challenger.location} team for two shadow days and reserve a refundable return ticket.`
+          : "Put two representative days from this future into next week’s calendar before noon tomorrow.",
     evidence,
     uncertainty,
   };

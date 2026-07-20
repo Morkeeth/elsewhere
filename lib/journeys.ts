@@ -62,6 +62,7 @@ export function makeStory(story: StoryId): Decision {
     ...base,
     domain: "moving",
     question: "Which apartment gives me the better life for the next year: Canal or Montreuil?",
+    context: "I expect to stay for one year. Canal keeps me close to the city; Montreuil gives me more space, but the commute may matter if office days increase.",
     priorities: { security: 28, energy: 25, belonging: 24, optionality: 23 },
     shock: { label: "Three office days become five", month: 4, monthlyCostEur: 0, travelCostEur: 280, energyPenalty: 20, belongingPenalty: 5 },
     options: [
@@ -74,6 +75,7 @@ export function makeStory(story: StoryId): Decision {
     ...base,
     domain: "career",
     question: "Should I stay a senior specialist or become a team lead inside the same company?",
+    context: "Both roles are available inside the same company. I care about the daily work, future options, and how much energy each role leaves outside work.",
     priorities: { security: 20, energy: 28, belonging: 18, optionality: 34 },
     shock: { label: "The manager who designed both roles leaves", month: 4, monthlyCostEur: 0, travelCostEur: 0, energyPenalty: 17, belongingPenalty: 9 },
     options: [
@@ -87,6 +89,7 @@ export function makeStory(story: StoryId): Decision {
     ...base,
     domain: "relationships",
     question: "Should I define this relationship now or keep dating without promises for three more months?",
+    context: "The connection matters, but our direction is still unclear. I want to choose an honest next action without pretending I can predict another person.",
     priorities: { security: 8, energy: 25, belonging: 42, optionality: 25 },
     shock: { label: "Our timelines stop matching", month: 6, monthlyCostEur: 0, travelCostEur: 120, energyPenalty: 12, belongingPenalty: 20 },
     options: [
@@ -123,6 +126,7 @@ export function makeJourney(domain: JourneyDomain): Decision {
   if (domain === "moving") return {
     ...base,
     question: "Should I stay in Paris, move to London, try Lisbon, or split my year?",
+    context: "I am comparing the daily life, cost, support network, and flexibility each place would create over the next year.",
     priorities: { security: 22, energy: 24, belonging: 30, optionality: 24 },
     shock: { ...base.shock, label: "Remote work rules change halfway through the year", month: 7, monthlyCostEur: 250, travelCostEur: 420 },
     options: [
@@ -137,6 +141,7 @@ export function makeJourney(domain: JourneyDomain): Decision {
     return {
       ...base,
       question: "Do we commit, reshape the relationship, pause, or choose separate lives?",
+      context: "I want to compare the actions available to me without scoring or predicting the other person.",
       priorities: { security: 8, energy: 25, belonging: 42, optionality: 25 },
       shock: { ...base.shock, label: "One of us gets an opportunity in another city", month: 5, monthlyCostEur: 0, travelCostEur: 180, energyPenalty: 14, belongingPenalty: 18 },
       options: [
@@ -150,6 +155,7 @@ export function makeJourney(domain: JourneyDomain): Decision {
   if (domain === "education") return {
     ...base,
     question: "Should I learn on the job, take a degree, join a cohort, or apprentice?",
+    context: "I care about the person and opportunities each learning path creates, as well as its cost and effect on daily energy.",
     priorities: { security: 20, energy: 20, belonging: 18, optionality: 42 },
     shock: { ...base.shock, label: "The job market cools before graduation", month: 8, monthlyCostEur: 350, travelCostEur: 0 },
     options: [
@@ -162,6 +168,7 @@ export function makeJourney(domain: JourneyDomain): Decision {
   return {
     ...base,
     question: journeyMeta.life.prompt,
+    context: "",
     priorities: { security: 25, energy: 25, belonging: 25, optionality: 25 },
     shock: { ...base.shock, label: "The thing I am assuming does not happen", month: 6 },
   };

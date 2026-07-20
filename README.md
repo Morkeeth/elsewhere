@@ -8,9 +8,9 @@ Elsewhere is an open-source Personal Decision Lab for consequential career and l
 
 Most decision tools collapse uncertainty into advice. Elsewhere preserves disagreement:
 
-1. A deterministic TypeScript ledger computes salary, taxes, rent, living costs, savings, energy, belonging, and optionality.
+1. A deterministic TypeScript engine computes salary, taxes, rent, living costs, savings, energy, belonging, and optionality.
 2. Four GPT-5.6 witnesses receive the same immutable two-to-four-future record, then interpret it through distinct lenses: financial resilience, human belonging, reversibility, and adversarial failure.
-3. A fifth GPT-5.6 response synthesizes the disagreement but cannot change a ledger value or experiment constraint.
+3. A fifth GPT-5.6 response synthesizes the disagreement but cannot change a calculated value or experiment constraint.
 4. A configurable shock reruns every life from the selected month.
 5. A deterministic Assumption Breakpoint sweep shows where each future becomes fragile under the user's own weights.
 6. The product returns a reversible experiment, then recalculates breakpoints from one user-observed assumption—not a verdict.
@@ -31,7 +31,7 @@ The disagreement matrix is model-generated; deterministic code deliberately owns
 - Visible tax provenance on every future; rates outside France and the UK are user-provided and explicitly marked not sourced
 - ECB-normalized EUR/GBP comparisons
 - Twelve-month baseline and shocked world states
-- Four concurrent core GPT witnesses over the same ledger plus a constrained uncertainty synthesis; optional context perspectives add one isolated lens each
+- Four concurrent core GPT witnesses over the same immutable record plus a constrained uncertainty synthesis; optional context perspectives add one isolated lens each
 - SVG optionality timelines, shock propagation, commitment markers, and divergence score
 - Assumption register, deterministic sensitivity sweeps, and a Reversal Map showing robust, sensitive, and fragile regions
 - Evidence drawer with formula and source provenance
@@ -50,7 +50,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open <http://localhost:3000>. The ledger works without credentials; add `OPENAI_API_KEY` to enable the four-core-witness-plus-synthesis pass. Optional context perspectives add one witness call each.
+Open <http://localhost:3000>. The deterministic engine works without credentials; add `OPENAI_API_KEY` to enable the four-core-witness-plus-synthesis pass. Optional context perspectives add one witness call each.
 
 ## Verify
 
@@ -77,7 +77,7 @@ Never expose these values through `NEXT_PUBLIC_*` variables.
 
 ## API
 
-- `POST /api/simulate?agents=1` validates a decision, computes the immutable ledger, runs witnesses, and returns a structured simulation. In production it fails closed unless durable Upstash rate-limit configuration and a global demo budget are present.
+- `POST /api/simulate?agents=1` validates a decision, computes the immutable record, runs witnesses, and returns a structured simulation. In production it fails closed unless durable Upstash rate-limit configuration and a global demo budget are present.
 - `GET /api/simulate` returns the deterministic sample scenario. `GET /api/simulate?agents=1` serves only a deployer-provided validated cache, never paid model work.
 - `GET /api/health` reports configuration readiness without revealing secrets.
 
@@ -93,7 +93,7 @@ Every decision-outcome number comes from inputs and formulas. France and UK payr
 
 ## How we used GPT-5.6 and Codex
 
-GPT-5.6 supplies the independent qualitative witness passes and constrained synthesis; it never computes ledger metrics. Codex accelerated the Next.js implementation, typed schemas, deterministic simulation, API integration, regression tests, mobile journey, and release review. The human product owner chose the user, trust boundary, value lenses, and safety constraints. See [DECISIONS.md](DECISIONS.md) for the accountable decision record.
+GPT-5.6 supplies the independent qualitative witness passes and constrained synthesis; it never computes numeric outcomes. Codex accelerated the Next.js implementation, typed schemas, deterministic simulation, API integration, regression tests, mobile journey, and release review. The human product owner chose the user, trust boundary, value lenses, and safety constraints. See [DECISIONS.md](DECISIONS.md) for the accountable decision record.
 
 ## Deploy
 

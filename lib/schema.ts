@@ -41,6 +41,7 @@ export const decisionOptionSchema = z.object({
 export const decisionSchema = z.object({
   domain: z.enum(["career", "moving", "relationships", "education", "life"]).default("career"),
   question: z.string().trim().min(8).max(500),
+  context: z.string().trim().max(800).default(""),
   startingSavingsEur: z.number(),
   priorities: z.object({
     security: z.number().min(0).max(100),
