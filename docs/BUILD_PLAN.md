@@ -1,4 +1,4 @@
-# Elsewhere — full-scope build record
+# Elsewhere: full-scope build record
 
 ## Product contract
 
@@ -8,43 +8,46 @@ Elsewhere does not recommend a life. It lets the user inspect grounded futures, 
 
 | Slice | Product outcome | Status |
 | --- | --- | --- |
-| Decision studio | Edit the question, starting savings, exactly four paths, tax jurisdiction, salary, costs, values, risk, and shock | Complete |
-| Guided journey | Mobile-first domain selection, futures, priorities, adaptive reality check, and plot twist | Complete |
+| Decision studio | Edit two to four real paths, the outcome to protect, grounded differences, and one uncertainty | Implemented for Career and Moving |
+| Guided journey | One-click apartment story plus a four-step custom path | Implemented |
 | Grounding engine | France and UK payroll, ECB currency normalization, cited rent benchmarks, deterministic monthly calculations, and explicit unsourced labels elsewhere | Complete |
-| Futures | Twelve-month baseline and shocked states, optionality paths, commitment points, divergence | Complete |
+| Futures | Moment-by-moment life stories backed by twelve-month baseline and pressured states | Implemented |
+| Decision Hinge | Causal office-days sweep exposes the point where the apartment comparison reverses | Implemented and regression-tested |
 | AI witnesses | Four concurrent GPT-5.6 lenses plus a structured synthesis that cannot mutate numeric outcomes | Implemented; cached replay and production live smoke verified 2026-07-20 |
 | Evidence | Per-future source/formula traces and aggregate coverage audit | Complete |
 | Exit from simulation | Fourteen-day experiment with cost, first action, and observable signals | Complete |
 | Persistence and portability | Local decision state, Markdown brief, JSON world-state export | Complete |
 | Edge delivery | No third-party delivery webhook in the submitted artifact | Deliberately removed from scope |
 | Reliability | Unit tests, scenario evals, health route, validation, graceful no-key state | Complete |
-| Shipping | Vercel configuration, README, security, MIT license, demo and judging docs | Complete; deploy credentials pending |
+| Shipping | Vercel project, public production alias, README, security, demo, and judging docs | Existing production is healthy; current candidate still needs deploy and rendered walkthrough |
 
 ## Architecture decisions
 
-1. Ledger metrics are never authored by a language model. Inputs and formulas own every displayed metric; models return only bounded qualitative categories.
-2. AI witnesses interpret an immutable copy of the baseline and shocked ledgers through structured output.
+1. World-state metrics are never authored by a language model. Inputs and formulas own every displayed metric; models return only bounded qualitative categories.
+2. AI witnesses interpret an immutable copy of the baseline and pressured world states through structured output.
 3. Independent lenses must be preserved through synthesis; consensus is not the goal.
 4. Shock simulation is a first-class rerun, not prose pasted onto the baseline.
 5. The final call to action is an evidence purchase with a time and cost bound, not a recommendation.
 
-## Quality gates
+## Quality gates for the current candidate
 
-- Type-safe production build
-- Schema validation at each API boundary
-- Exactly twelve months per future
-- Reproducible deterministic runs
-- 100% trace coverage for rendered decision-outcome fields
-- Shock never affects a month before its configured start
-- Fourteen-day experiment costs at most €250
-- Qualitative witness output cannot write numeric ledger fields
-- Mobile and desktop browser pass
-- Live Responses API smoke test before public submission
+- [x] Type-safe production build
+- [x] 41 unit and integration tests
+- [x] 30 scenario evaluation checks
+- [x] Schema validation at each API boundary
+- [x] Exactly twelve months per future
+- [x] Reproducible deterministic runs
+- [x] 100% trace coverage for rendered decision-outcome fields
+- [x] Office-days assumption causally flips the apartment comparison between four and five days
+- [x] Fourteen-day experiment costs at most €250
+- [x] Qualitative witness output cannot write numeric outcome fields
+- [ ] Mobile and desktop rendered walkthrough on the deployed candidate
+- [ ] Live Responses API smoke test on the deployed candidate
 
-## Remaining external gates
+## Remaining release gates
 
-The repository itself is complete. Public release still requires secrets or accounts that should never be pasted into source control:
-
-- `OPENAI_API_KEY` for live witness verification
-- Vercel authorization for deployment
-- Devpost account access for submission and video upload
+- Commit and deploy this candidate, then verify that the public alias serves the same revision.
+- Run the zero-setup apartment flow on desktop and mobile: open, ordinary week, pressure, hinge, witnesses, experiment, evidence.
+- Run one same-origin live witness request against production and retain its response receipt.
+- Record the three-minute path in `docs/DEMO_SCRIPT.md`.
+- Enter the Codex `/feedback` session identifier, public URL, repository, video, and final copy in Devpost.

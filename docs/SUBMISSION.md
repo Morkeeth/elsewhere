@@ -2,30 +2,33 @@
 
 ## One line
 
-Elsewhere is a Personal Decision Lab: four AI witnesses expose what is contested, deterministic code finds the assumption each future depends on, and one reversible experiment tests it before commitment.
+Elsewhere lets you walk through two possible lives, reveals the exact assumption that reverses the comparison, and turns that hinge into a fourteen-day real-world test.
 
 ## Short description
 
-Consequential decisions are not single questions. They are competing futures with different failure modes. Elsewhere turns four career or location paths into inspectable twelve-month world states grounded in sourced France/UK tax rules, rent, income, costs, and explicit personal assumptions. Tax rates for other jurisdictions remain visibly user-provided and unsourced. Four GPT-5.6 witnesses receive that same immutable record concurrently through financial, belonging, reversibility, and adversarial lenses. A fifth response synthesizes the disagreement without being allowed to change a numeric value, experiment constraint, or recommend a future.
+Consequential decisions stay open because one or two assumptions are doing more work than the rest. Elsewhere turns two to four career or location choices into inspectable twelve-month lives grounded in sourced France/UK tax rules, income, housing, time, and explicit personal assumptions. Tax rates for other jurisdictions remain visibly user-provided and unsourced.
 
-Then the user introduces a real shock—caregiving, job loss, health, visa, or any custom event—and every future reruns from the selected month. Elsewhere sweeps the load-bearing scenario assumption and shows where each future becomes robust, sensitive, or fragile under the user's own weights. The final fourteen-day experiment produces one observation; returning with that observation recalculates the breakpoints without pretending to select a life.
+The one-click demo compares a smaller Central Paris apartment with a larger Montreuil apartment. At three or four office days, Montreuil has the stronger fit under the entered priorities. At five, Central Paris crosses it. That reversal is calculated by deterministic code from commute, cost, energy, and the user's weights. It exposes what needs testing rather than recommending a home.
+
+Four GPT-5.6 witnesses then read the same immutable futures through financial, belonging, reversibility, and adversarial lenses. A fifth response synthesizes the disagreement without being allowed to change a calculated value or recommend a future. Elsewhere ends with a two-week rush-hour commute trial; returning with one observation recalculates the hinge.
 
 ## What makes it technically distinctive
 
-- Four concurrent GPT-5.6 witnesses receive identical ledger facts; protected values are the only deliberate difference, followed by a fifth structured synthesis.
-- A deterministic simulation engine owns every ledger metric; GPT returns bounded qualitative categories and the application renders safe interpretation text.
+- Four concurrent GPT-5.6 witnesses receive identical world-state facts; protected values are the only deliberate difference, followed by a fifth structured synthesis.
+- A deterministic simulation engine owns every numeric outcome; GPT returns bounded qualitative categories and the application renders safe interpretation text.
 - A provenance audit traces every rendered decision-outcome field, including timeline values, to formulas and either dated sources or explicit user inputs.
-- The shock engine recomputes the full causal timeline rather than adding narrative commentary.
-- AI selects only a bounded uncertainty category. Deterministic code maps it to an approved assumption, calculates the sensitivity sweep, and owns every displayed breakpoint threshold.
+- The shock engine recomputes the full causal timeline rather than adding narrative commentary. In the apartment demo, changing office days changes the calculation itself.
+- Deterministic code sweeps the selected assumption, identifies the crossing between paths, and owns every displayed breakpoint threshold.
 
 ## Judge test
 
-1. Open **Career** or **Moving** and inspect the four editable futures.
-2. Run the futures and verify that the deterministic ledger appears immediately while witnesses work.
-3. Compare the four AI interpretation matrix rows: same ledger, different protected values.
-4. Toggle one explicit shock and inspect the Assumption Breakpoint Reversal Map.
-5. Record one observed assumption and watch the deterministic breakpoint move.
-6. Open **Evidence** and compare a sourced France/UK rate with an Other-jurisdiction rate marked “user-provided, not sourced.”
+1. Click **Try the apartment decision**. No setup is required.
+2. Open **An ordinary week** and see the money–space–commute trade in concrete terms.
+3. Click **Pressure this assumption**. The chosen condition is three office days becoming five.
+4. Read **The Decision Hinge**: the stronger personal fit crosses from Montreuil to Central Paris between four and five days.
+5. Inspect the four GPT-5.6 readings as interpretation of the same calculated futures.
+6. Click **Show me what to try** and read the two-week Montreuil commute experiment.
+7. Open **Evidence** to inspect source and formula provenance.
 
 ## Built with
 

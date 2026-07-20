@@ -1,4 +1,4 @@
-# Elsewhere UI Flow — Decision Twin
+# Elsewhere UI Flow: Decision Twin
 
 ## 1. Reopen a decision
 
@@ -20,9 +20,9 @@ Unknowns     What am I assuming?
 
 The user selects a small number of relevant artifacts. Each becomes a visible source card with purpose, freshness, and remove control.
 
-## 3. Name four futures
+## 3. Name the real futures
 
-Current Elsewhere behavior remains: safe path, ambitious path, negotiated path, nonlinear path.
+Current Elsewhere accepts two to four paths. The public wedge starts with an honest A/B comparison and adds another path only when the user has a real one.
 
 ## 4. Add context lenses
 
@@ -46,7 +46,7 @@ The UI never asks “What would they say?”
 The main screen contains:
 
 ```text
-Four future timelines
+Two-to-four future stories
         ↓
 Shared evidence receipt
         ↓
@@ -93,4 +93,4 @@ What surprised me?
 Which assumption changed?
 ```
 
-This creates a calibration record and updates the decision’s research archive. The system becomes more useful because the user’s model gets better—not because it pretends to predict more.
+This creates a calibration record and updates the decision’s research archive. The system becomes more useful because the user’s model gets better. It does not pretend to predict more.

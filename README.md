@@ -13,19 +13,17 @@ Most decision tools collapse uncertainty into advice. Elsewhere preserves disagr
 3. A fifth GPT-5.6 response synthesizes the disagreement but cannot change a calculated value or experiment constraint.
 4. A configurable shock reruns every life from the selected month.
 5. A deterministic Assumption Breakpoint sweep shows where each future becomes fragile under the user's own weights.
-6. The product returns a reversible experiment, then recalculates breakpoints from one user-observed assumption—not a verdict.
-
-Optional context layers can add up to two further **user-authored perspectives**—for example, “my model of Mum’s protective concern.” They record what the user believes that perspective protects, what is known, and what remains unknown. They are stored locally in the browser; when live witnesses run, selected text is sent to OpenAI for qualitative interpretation with `store: false`. They are not contact imports, person simulations, or claims about what somebody else thinks.
+6. The product returns a reversible experiment, then recalculates breakpoints from one user-observed assumption. It does not issue a verdict.
 
 The disagreement matrix is model-generated; deterministic code deliberately owns the experiment constraints and every outcome number. Remove the witnesses and the value-based disagreement disappears. Remove the deterministic record and the evidence contract disappears.
 
 ## Full product surface
 
-- Five guided starting shapes—Career, Moving, Relationships, Education, and Something else—with preloaded paths and optional fine-tuning
+- Two grounded starting shapes, Career and Moving, with domain-specific inputs and explicit limits elsewhere
 - Native two-to-four-choice comparisons; two apartments and two internal roles stay honest A/B decisions without invented alternatives
-- Zero-input apartment, internal-role, and relationship-next-move stories
-- Conversational input that starts with the question, the real choice names, and one protected value before exposing detailed assumptions
-- Swipeable future cards, instinctive priority sliders, and selectable plot twists
+- A zero-input apartment story that exposes the money–space–commute trade in one click
+- Four-step input that names the real lives, desired outcome, factual differences, and load-bearing uncertainty
+- A moment-by-moment story walk through each possible life
 - Editable decisions, countries, salaries, costs, value scores, and shock conditions
 - France 2026 and UK 2026 progressive payroll calculators
 - Visible tax provenance on every future; rates outside France and the UK are user-provided and explicitly marked not sourced
@@ -33,7 +31,7 @@ The disagreement matrix is model-generated; deterministic code deliberately owns
 - Twelve-month baseline and shocked world states
 - Four concurrent core GPT witnesses over the same immutable record plus a constrained uncertainty synthesis; optional context perspectives add one isolated lens each
 - SVG optionality timelines, shock propagation, commitment markers, and divergence score
-- Assumption register, deterministic sensitivity sweeps, and a Reversal Map showing robust, sensitive, and fragile regions
+- Assumption register, deterministic sensitivity sweeps, and a Decision Hinge showing where the comparison reverses
 - Evidence drawer with formula and source provenance
 - Local decision persistence
 - Local experiment-return calibration: record observed signals, update the tested causal assumption, and rerun breakpoints without another AI call
@@ -61,7 +59,7 @@ pnpm build
 pnpm verify:openai  # requires OPENAI_API_KEY
 ```
 
-`pnpm check` runs type checking, unit/integration tests, and a 15-check scenario evaluation covering schema validity, reproducibility, traceability, shock causality, and experiment reversibility.
+`pnpm check` runs type checking, unit/integration tests, and a 30-check scenario evaluation covering schema validity, reproducibility, traceability, shock causality, and experiment reversibility.
 
 ## Environment
 
@@ -83,13 +81,13 @@ Never expose these values through `NEXT_PUBLIC_*` variables.
 
 ## Architecture and honesty
 
-Elsewhere intentionally runs four independent GPT-5.6 Responses concurrently and performs a fifth synthesis call. Isolation is part of the core product contract: every core witness receives the same immutable set of two to four futures and receipt hash, while its protected value is the only variable. Optional user-authored context is delivered as untrusted input data to every witness; only its dedicated context lens interprets it. The synthesis preserves disagreement rather than voting.
+Elsewhere intentionally runs four independent GPT-5.6 Responses concurrently and performs a fifth synthesis call. Isolation is part of the core product contract: every core witness receives the same immutable set of two to four futures and receipt hash, while its protected value is the only variable. The synthesis preserves disagreement rather than voting.
 
 Accurate language: **“Four independent GPT-5.6 witnesses receive the same immutable set of two to four futures, then a fifth response synthesizes their disagreement.”**
 
 ## Data contract
 
-Every decision-outcome number comes from inputs and formulas. France and UK payroll rules use dated public sources. Other jurisdictions use rates entered by the user, visibly labelled “user-provided, not sourced”; no FR/UK tax source is attached to those calculations. Energy, belonging, optionality, commitment timing, and all Reversal Map sweeps are transparent scenario assumptions, not validated predictions. “Personal fit” is a user-weighted calculation, not a recommendation or objective outcome. GPT returns only bounded qualitative categories; the application renders its own interpretation text and never displays model-authored numeric or prescriptive prose. The evidence audit compares a complete rendered-outcome manifest—including timeline data and breakpoint sweep values—against independent trace records. Trace coverage means the formula/input chain is complete; it does not mean every input is independently sourced. The "Commitment assumption" marker is editable user input, not a discovered fact.
+Every decision-outcome number comes from inputs and formulas. France and UK payroll rules use dated public sources. Other jurisdictions use rates entered by the user, visibly labelled “user-provided, not sourced”; no FR/UK tax source is attached to those calculations. Energy, belonging, optionality, commitment timing, and all Reversal Map sweeps are transparent scenario assumptions, not validated predictions. “Personal fit” is a user-weighted calculation, not a recommendation or objective outcome. GPT returns only bounded qualitative categories; the application renders its own interpretation text and never displays model-authored numeric or prescriptive prose. The evidence audit compares a complete rendered-outcome manifest, including timeline data and breakpoint sweep values, against independent trace records. Trace coverage means the formula/input chain is complete; it does not mean every input is independently sourced. The "Commitment assumption" marker is editable user input, not a discovered fact.
 
 ## How we used GPT-5.6 and Codex
 

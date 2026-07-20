@@ -10,7 +10,7 @@ Use the supplied London decision and its parent-care shock. Keep the determinist
 
 1. **Deterministic fallback:** existing fixed `trades-off` rows.
 2. **One structured multi-lens call:** one model response creates every matrix row in one context.
-3. **Independent witnesses:** the production architecture—four concurrent core calls and one synthesis.
+3. **Independent witnesses:** the production architecture uses four concurrent core calls and one synthesis.
 
 Context Layers are excluded from the comparison. They are an optional user-authored extension, not part of the core four-lens claim.
 

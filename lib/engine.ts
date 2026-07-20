@@ -34,14 +34,20 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
   const months = monthLabels.map((label, index) => {
     const month = index + 1;
     const shockActive = shockEnabled && month >= decision.shock.month;
+    const officeDaysShock = decision.domain === "moving" && /remote work|office/i.test(decision.shock.label);
+    const extraOfficeDays = officeDaysShock ? Math.max(0, decision.pressureDaysPerWeek - decision.baselineDaysPerWeek) : 2;
+    // Shock presets are calibrated to a two-day weekly change. Making this
+    // multiplier explicit keeps the apartment story causal when office days
+    // are swept in the breakpoint analysis.
+    const officePressure = extraOfficeDays / 2;
     const shockCost = shockActive ? decision.shock.monthlyCostEur : 0;
-    const travelCost = shockActive ? decision.shock.travelCostEur * option.shockTravelMultiplier : 0;
+    const travelCost = shockActive ? decision.shock.travelCostEur * option.shockTravelMultiplier * officePressure : 0;
     const disposable = monthlyNet - monthlyFixedCostEur - shockCost - travelCost;
     savings += disposable;
 
     const settlingPenalty = Math.max(0, 4 - month) * option.risk * 0.07;
     const shockEnergyPenalty = shockActive
-      ? decision.shock.energyPenalty * option.shockEnergySensitivity + (100 - option.flexibility) * 0.12
+      ? (decision.shock.energyPenalty * option.shockEnergySensitivity * officePressure) + (100 - option.flexibility) * 0.12 * officePressure
       : 0;
     const energy = clamp(78 + option.flexibility * 0.08 - option.risk * 0.12 - settlingPenalty - shockEnergyPenalty);
     const belonging = clamp(
@@ -315,7 +321,14 @@ export function createFallbackWitnesses(
   return [...coreWitnessLenses, ...additionalLenses].map((witness) => ({
     ...witness,
     ledgerHash,
-    observations: futures.map((future) => ({ optionId: future.optionId, baselineAssessment: "trades-off", shockedAssessment: "trades-off", focus: "exit-flexibility" })),
+    observations: futures.map((future) => ({
+      optionId: future.optionId,
+      baselineAssessment: "trades-off",
+      shockedAssessment: "trades-off",
+      focus: "exit-flexibility",
+      baselineInsight: `${future.title} protects one part of the life while asking for compromise elsewhere.`,
+      shockedInsight: `${future.title} becomes harder to reverse when the chosen uncertainty arrives.`,
+    })),
     uncertaintyToTest: "daily-rhythm",
     observableSignal: "energy-pattern",
     fallback: true,
@@ -330,6 +343,7 @@ function defaultUncertainty(option: DecisionOption): Uncertainty {
 }
 
 export function buildExperiment(decision: Decision, baseline: Future[], uncertainty = defaultUncertainty(decision.options.find((option) => option.id === baseline[0]?.optionId) ?? decision.options[0])) {
+  if (decision.domain === "moving" && /remote work|office/i.test(decision.shock.label)) uncertainty = "daily-rhythm";
   const uncertaintyOption = [...decision.options].sort((a, b) => b.risk * b.growth * (100 - b.belonging) - a.risk * a.growth * (100 - a.belonging))[0];
   const challenger = baseline.find((future) => future.optionId === uncertaintyOption.id) ?? baseline[0];
   const challengerOption = decision.options.find((option) => option.id === challenger.optionId)!;
@@ -390,6 +404,7 @@ export function assumptionRegister(decision: Decision): Assumption[] {
     { id: "shock-belonging", label: "Shock belonging impact", provenance: "scenario-assumption", currentValue: decision.shock.belongingPenalty, unit: "points", min: 0, max: 100, sweepPoints: [0, 15, 30, 45, 60, 75, 90], uncertainty: "support-network", affects: "monthly belonging after the shock", adverseDirection: "higher" },
     { id: "starting-runway", label: "Starting runway", provenance: "user-estimate", currentValue: decision.startingSavingsEur, unit: "EUR", min: 0, max: Math.max(20_000, decision.startingSavingsEur * 2), sweepPoints: [0, 3_000, 6_000, 9_000, 12_000, 15_000, 18_000], uncertainty: "downside-tolerance", affects: "initial savings, year-end savings, and optionality", adverseDirection: "lower" },
     { id: "commitment-timing", label: "Commitment timing", provenance: "user-estimate", currentValue: commitmentAverage, unit: "month", min: 1, max: 12, sweepPoints: [1, 3, 5, 7, 9, 11, 12], uncertainty: "reversal-cost", affects: "the editable commitment assumption shown for every future", adverseDirection: "lower" },
+    { id: "office-days", label: "Days in the office", provenance: "user-estimate", currentValue: decision.pressureDaysPerWeek, unit: "days/week", min: 0, max: 7, sweepPoints: [0, 1, 2, 3, 4, 5, 6, 7], uncertainty: "daily-rhythm", affects: "commute cost and energy after the remote-work assumption changes", adverseDirection: "higher" },
   ];
   return register.map((assumption) => ({ ...assumption, sweepPoints: [...new Set([...assumption.sweepPoints, assumption.currentValue])].filter((value) => value >= assumption.min && value <= assumption.max).sort((a, b) => a - b) }));
 }
@@ -402,6 +417,7 @@ export function applyAssumption(decision: Decision, id: AssumptionId, value: num
   if (id === "shock-belonging") next.shock.belongingPenalty = value;
   if (id === "starting-runway") next.startingSavingsEur = value;
   if (id === "commitment-timing") next.options = next.options.map((option) => ({ ...option, commitmentMonth: Math.max(1, Math.min(12, Math.round(value))) }));
+  if (id === "office-days") next.pressureDaysPerWeek = Math.max(0, Math.min(7, value));
   return decisionSchema.parse(next);
 }
 
@@ -410,7 +426,10 @@ function fitFor(future: Future) {
 }
 
 export function buildBreakpointAnalysis(decision: Decision, uncertainty = defaultUncertainty(decision.options[0])): BreakpointAnalysis {
-  const assumption = assumptionRegister(decision).find((item) => item.id === assumptionForUncertainty(uncertainty))!;
+  const assumptionId = uncertainty === "daily-rhythm" && decision.domain === "moving" && /remote work|office/i.test(decision.shock.label)
+    ? "office-days"
+    : assumptionForUncertainty(uncertainty);
+  const assumption = assumptionRegister(decision).find((item) => item.id === assumptionId)!;
   const reference = runSimulationWorld(decision);
   const referenceFits = new Map(reference.shocked.map((future) => [future.optionId, fitFor(future)]));
   const points = assumption.sweepPoints.map((value) => {

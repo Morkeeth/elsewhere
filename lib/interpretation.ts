@@ -28,6 +28,8 @@ const signalCopy = {
 } as const;
 
 export function witnessObservationCopy(observation: Witness["observations"][number], shocked = false) {
+  const insight = shocked ? observation.shockedInsight : observation.baselineInsight;
+  if (insight) return insight;
   return `${assessmentCopy[shocked ? observation.shockedAssessment : observation.baselineAssessment]} ${focusCopy[observation.focus]}.`;
 }
 

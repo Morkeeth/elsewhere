@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { DecisionStudio } from "@/components/decision-studio";
 import { CalibrationReturn, type CalibrationSubmission } from "@/components/calibration-return";
 import { Timeline } from "@/components/timeline";
+import { StoryWalk } from "@/components/story-walk";
+import { ReversalMap } from "@/components/reversal-map";
 import { applyAssumption, auditTrace, buildBreakpointAnalysis, runSimulation, sampleDecision } from "@/lib/engine";
 import { makeStory, makeTwoChoiceJourney, type JourneyDomain, type StoryId } from "@/lib/journeys";
 import { decisionSchema, simulationSchema, type AssumptionCalibration, type Decision, type Simulation, type Witness } from "@/lib/schema";
@@ -182,9 +184,9 @@ export default function Home() {
         <p className="hero-copy">For the decision you keep reopening at 1:14am. Elsewhere lets the possible lives unfold, stress-tests them, then gives you one tiny real-world move.</p>
         <div className="hero-actions">
           <button className="demo-cta" onClick={runDemo}>
-            <span><b>Try the apartment decision</b><small>Canal or Montreuil · zero setup</small></span><i>START ↘</i>
+            <span><b>Try the apartment decision</b><small>Central Paris or more space · zero setup</small></span><i>START ↘</i>
           </button>
-          <button className="own-cta" onClick={() => openJourney()}><span>Use my own decision</span><i>+</i></button>
+          <button className="own-cta" onClick={() => openJourney()}><span>Model my move or career decision</span><i>+</i></button>
         </div>
       </section>
 
@@ -192,7 +194,7 @@ export default function Home() {
         <div className="demo-guide">
           <span>{demoMode ? "THE APARTMENT EXAMPLE" : "YOUR DECISION"}</span>
           <strong>{decision.question}</strong>
-          <div><b className={!shock ? "active" : ""}>1</b> Compare <i /> <b className={shock && !experimentOpen ? "active" : ""}>2</b> Pressure <i /> <b className={experimentOpen ? "active" : ""}>3</b> Try</div>
+          <div><b className={!shock ? "active" : ""}>1</b> Enter the lives <i /> <b className={shock && !experimentOpen ? "active" : ""}>2</b> Change one condition <i /> <b className={experimentOpen ? "active" : ""}>3</b> Test in reality</div>
         </div>
         <div className={`engine-status ${agentState}`}>
           <span />
@@ -204,7 +206,7 @@ export default function Home() {
           {agentState === "idle" && "Record ready"}
         </div>
         <header className="section-head">
-          <div><span className="section-number">{shock ? "02" : "01"}</span><h2>{shock ? (demoMode ? "Now the commute changes." : "Now the conditions change.") : (demoMode ? "Two apartments. One year." : "The lives begin together.")}</h2></div>
+          <div><span className="section-number">{shock ? "02" : "01"}</span><h2>{shock ? "Change one condition. Keep the rest fixed." : (demoMode ? "Two apartments. One year." : "Walk into the lives you mapped.")}</h2></div>
           <p>{shock ? simulation.decision.shock.label : (demoMode ? "Same income. Different daily life." : "Your choices, unfolded across one year.")}</p>
         </header>
 
@@ -212,17 +214,23 @@ export default function Home() {
           <span>NOW</span><i />{shock && <><span className="lit">MONTH {simulation.decision.shock.month} / CHANGE</span><i /></>}<span>ONE YEAR</span>
         </div>
 
-        <div className={`future-grid ${shock ? "has-shock" : ""} is-compact`} style={{ "--future-count": futures.length } as React.CSSProperties}>
-          {futures.map((future, index) => <Timeline key={`${future.optionId}-${shock}`} future={future} index={index} active={shock} shockMonth={simulation.decision.shock.month} domain={simulation.decision.domain} compact />)}
-        </div>
+        <StoryWalk key={shock ? "pressured-story" : "baseline-story"} decision={simulation.decision} baseline={simulation.baseline} pressured={simulation.shocked} activePressure={shock} />
+
+        <details className="calculation-details">
+          <summary>Open the calculations and source labels <b>+</b></summary>
+          <div className={`future-grid ${shock ? "has-shock" : ""} is-compact`} style={{ "--future-count": futures.length } as React.CSSProperties}>
+            {futures.map((future, index) => <Timeline key={`${future.optionId}-${shock}`} future={future} index={index} active={shock} shockMonth={simulation.decision.shock.month} domain={simulation.decision.domain} compact />)}
+          </div>
+          {shock && <ReversalMap analysis={simulation.breakpoint} futures={simulation.shocked} />}
+        </details>
 
         {!shock && <div className="story-next">
-          <div><span>ONE MORE QUESTION</span><strong>What if {simulation.decision.shock.label.toLowerCase()}?</strong></div>
-          <button onClick={() => { setShock(true); window.setTimeout(() => document.querySelector("#story-start")?.scrollIntoView({ behavior: "smooth" }), 50); }}>See what changes <b>→</b></button>
+          <div><span>THE UNCERTAINTY THIS STORY TURNS ON</span><strong>{simulation.decision.shock.label}</strong></div>
+          <button onClick={() => { setShock(true); window.setTimeout(() => document.querySelector("#story-start")?.scrollIntoView({ behavior: "smooth" }), 50); }}>Change this condition <b>→</b></button>
         </div>}
 
         {shock && <section className="witness-panel" aria-label="AI interpretation: same facts, different values">
-          <div className="section-head"><div><span className="section-number">{agentState === "unavailable" ? "FALLBACK" : "GPT-5.6"}</span><h2>{agentState === "unavailable" ? "The calculated futures still stand." : "Four independent readings."}</h2></div><p>{agentState === "unavailable" ? "Live qualitative interpretation is unavailable. No model result is being implied." : "Each call protects a different value. None can edit the calculated futures or recommend a winner."}</p></div>
+          <div className="section-head"><div><span className="section-number">{agentState === "unavailable" ? "FALLBACK" : "THE INTERPRETATION LAYER / GPT-5.6"}</span><h2>{agentState === "unavailable" ? "The calculated futures still stand." : "Same futures. Four different values."}</h2></div><p>{agentState === "unavailable" ? "Live qualitative interpretation is unavailable. No model result is being implied." : "Each call protects a different value. None can edit the calculated futures or recommend a winner."}</p></div>
           <div className={`model-chain ${agentState === "unavailable" ? "fallback" : ""}`} aria-label="Elsewhere model architecture"><span>Deterministic futures</span><i>→</i><span>{agentState === "unavailable" ? "GPT-5.6 unavailable" : agentState === "running" ? "4 independent GPT-5.6 calls running" : "4 independent GPT-5.6 calls"}</span><i>→</i><span>{liveWitnesses && simulation.generatedBy.synthesisReturned ? "1 GPT-5.6 synthesis" : agentState === "running" ? "Synthesis waits" : "Deterministic test fallback"}</span></div>
           {agentState !== "unavailable" && <div className="witness-cards">
             {(agentState === "running" ? pendingWitnesses : simulation.witnesses).map((witness) => <article key={witness.lens}>
@@ -257,7 +265,7 @@ export default function Home() {
               <span><b>€{simulation.experiment.costEur}</b> at risk</span>
               <span><b>{simulation.experiment.evidence.length}</b> signals</span>
             </div>
-            {demoMode ? <button className="final-own-cta" onClick={() => openJourney()}>Use my own decision <b>↗</b></button> : <div className="result-actions"><button onClick={() => exportFile("markdown")}>Export brief ↗</button><button onClick={() => exportFile("json")}>World states {"{}"}</button></div>}
+            {demoMode ? <button className="final-own-cta" onClick={() => openJourney()}>Model my move or career decision <b>↗</b></button> : <div className="result-actions"><button onClick={() => exportFile("markdown")}>Export brief ↗</button><button onClick={() => exportFile("json")}>World states {"{}"}</button></div>}
           </div>
         </div>
       </section>
@@ -269,7 +277,7 @@ export default function Home() {
         <span className="section-number">WHERE THE NUMBERS CAME FROM</span>
         <h2>Every number has an owner.</h2>
         <div className="audit-score"><strong>{Math.round(simulation.audit.sourceCoverage * 100)}%</strong><span>trace coverage</span><i>{simulation.audit.untracedNumericFields} untraced fields · trace coverage is not source verification</i></div>
-        <p>Financial inputs are dated public figures or explicit assumptions. Energy, belonging, optionality, and commitment timing are transparent scenario assumptions—not predictions. Outcomes are recomputed from visible formulas. GPT‑5.6 adds qualitative interpretation; it cannot edit numeric results.</p>
+        <p>Financial inputs are dated public figures or explicit assumptions. Energy, belonging, optionality, and commitment timing are transparent scenario assumptions. They are not predictions. Outcomes are recomputed from visible formulas. GPT‑5.6 adds qualitative interpretation; it cannot edit numeric results.</p>
         <div className="tax-grounding-list" aria-label="Tax grounding by future">
           {simulation.baseline.map((future) => <div key={future.optionId} className={future.taxGrounding.status}>
             <span>{future.title}</span><strong>{future.taxGrounding.label}</strong>
@@ -293,5 +301,5 @@ function buildMarkdown(simulation: Simulation) {
   const perspectives = simulation.decision.contextLenses.length
     ? `\n## User-authored perspectives\n\n${simulation.decision.contextLenses.map((lens) => `### ${lens.label}\n\n- Protects: ${lens.protectedValues.join(", ")}\n- What I think I know: ${lens.knownConcern}\n- What I do not know yet: ${lens.unknown}\n- Provenance: ${lens.provenanceLabel}; this is not that person’s actual view.`).join("\n\n")}\n`
     : "";
-  return `# Elsewhere decision brief\n\n## ${simulation.decision.question}\n\n${simulation.decision.context ? `Context: ${simulation.decision.context}\n\n` : ""}Generated with ${simulation.generatedBy.model ?? "the deterministic engine"}.\n\n| Future | Year-end savings | Tax basis | Energy | Belonging | Commitment assumption |\n| --- | ---: | --- | ---: | ---: | --- |\n${rows}${perspectives}\n## Pressure test\n\n${simulation.decision.shock.label}, month ${simulation.decision.shock.month}.\n\n## Fourteen-day experiment\n\n**${simulation.experiment.title}**\n\n${simulation.experiment.hypothesis}\n\nFirst step: ${simulation.experiment.firstStep}\n\n## Evidence\n\nTrace coverage: ${Math.round(simulation.audit.sourceCoverage * 100)}%.\n\n${simulation.sources.map((source) => `- [${source.label}](${source.url}) — ${source.note}`).join("\n")}\n`;
+  return `# Elsewhere decision brief\n\n## ${simulation.decision.question}\n\n${simulation.decision.context ? `Context: ${simulation.decision.context}\n\n` : ""}Generated with ${simulation.generatedBy.model ?? "the deterministic engine"}.\n\n| Future | Year-end savings | Tax basis | Energy | Belonging | Commitment assumption |\n| --- | ---: | --- | ---: | ---: | --- |\n${rows}${perspectives}\n## Pressure test\n\n${simulation.decision.shock.label}, month ${simulation.decision.shock.month}.\n\n## Fourteen-day experiment\n\n**${simulation.experiment.title}**\n\n${simulation.experiment.hypothesis}\n\nFirst step: ${simulation.experiment.firstStep}\n\n## Evidence\n\nTrace coverage: ${Math.round(simulation.audit.sourceCoverage * 100)}%.\n\n${simulation.sources.map((source) => `- [${source.label}](${source.url}): ${source.note}`).join("\n")}\n`;
 }

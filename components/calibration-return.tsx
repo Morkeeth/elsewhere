@@ -18,6 +18,7 @@ function realityCheckQuestion(assumption: Assumption) {
     "shock-belonging": "What would help me still feel connected if this changed?",
     "starting-runway": "What financial buffer would make this feel genuinely reversible?",
     "commitment-timing": "When would this start feeling hard to undo from the outside?",
+    "office-days": "How many days on site should I realistically plan around, including the less flexible weeks?",
   };
   return questions[assumption.id];
 }
@@ -48,11 +49,12 @@ export function CalibrationReturn({ decision, simulation, analysis, onApply }: P
     const distance = Math.max(1, (analysis.assumption.max - analysis.assumption.min) / 4);
     const next = direction === "lower" ? analysis.referenceValue - distance : analysis.referenceValue + distance;
     const clamped = Math.min(analysis.assumption.max, Math.max(analysis.assumption.min, next));
-    setObservedValue(analysis.assumption.unit === "month" || analysis.assumption.unit === "points" ? Math.round(clamped) : Math.round(clamped / 50) * 50);
+    const wholeNumberUnit = ["month", "points", "days/week"].includes(analysis.assumption.unit);
+    setObservedValue(wholeNumberUnit ? Math.round(clamped) : Math.round(clamped / 50) * 50);
   }
 
   async function copyRealityCheck() {
-    const message = `Hey — I’m thinking through: “${decision.question}”\n\nI’m not asking you to decide for me. I’m trying to understand one thing: ${realityCheckQuestion(analysis.assumption)}\n\nA blunt answer would genuinely help me test the assumption before I commit.`;
+    const message = `Hey, I’m thinking through: “${decision.question}”\n\nI’m not asking you to decide for me. I’m trying to understand one thing: ${realityCheckQuestion(analysis.assumption)}\n\nA blunt answer would genuinely help me test the assumption before I commit.`;
     try {
       await navigator.clipboard.writeText(message);
       setCopied(true);
@@ -72,7 +74,7 @@ export function CalibrationReturn({ decision, simulation, analysis, onApply }: P
           <span>ASK YOUR PEOPLE · OPTIONAL</span>
           <strong>Get one real answer before you commit.</strong>
           <p>{realityCheckQuestion(analysis.assumption)}</p>
-          <button onClick={copyRealityCheck}>{copied ? "Copied — send it ↗" : "Copy a reality-check DM ↗"}</button>
+          <button onClick={copyRealityCheck}>{copied ? "Copied. Send it ↗" : "Copy a reality-check DM ↗"}</button>
           <small>Elsewhere never simulates a person or sends a message for you.</small>
         </div>
       </div>
@@ -81,7 +83,7 @@ export function CalibrationReturn({ decision, simulation, analysis, onApply }: P
         <div className="calibration-form">
           <div className="signal-picker"><span>SELECT AT LEAST ONE OBSERVABLE SIGNAL</span>{simulation.experiment.evidence.map((signal) => <button key={signal} className={signals.includes(signal) ? "selected" : ""} onClick={() => toggleSignal(signal)}>{signals.includes(signal) ? "✓ " : "+ "}{signal}</button>)}</div>
           <label><span>TESTED ASSUMPTION · USER-OBSERVED</span><strong>{analysis.assumption.label}</strong><small>{analysis.assumption.affects}</small></label>
-          <label className="calibration-slider"><span>ASSUMPTION: {displayValue(analysis.referenceValue, analysis.assumption)} → {displayValue(observedValue, analysis.assumption)}</span><input aria-label="Observed assumption value" type="range" min={analysis.assumption.min} max={analysis.assumption.max} step={analysis.assumption.unit === "month" ? 1 : analysis.assumption.unit === "points" ? 1 : 50} value={observedValue} onChange={(event) => setObservedValue(Number(event.target.value))} /></label>
+          <label className="calibration-slider"><span>ASSUMPTION: {displayValue(analysis.referenceValue, analysis.assumption)} → {displayValue(observedValue, analysis.assumption)}</span><input aria-label="Observed assumption value" type="range" min={analysis.assumption.min} max={analysis.assumption.max} step={["month", "points", "days/week"].includes(analysis.assumption.unit) ? 1 : 50} value={observedValue} onChange={(event) => setObservedValue(Number(event.target.value))} /></label>
           <div className="observation-shortcuts"><span>QUICK READ · WHAT CAME BACK?</span><button onClick={() => setObservedShortcut("lower")}>Lower than I assumed</button><button onClick={() => setObservedShortcut("higher")}>Higher than I assumed</button></div>
           <label><span>WHAT SURPRISED YOU? <i>optional</i></span><textarea value={note} maxLength={320} onChange={(event) => setNote(event.target.value)} placeholder="A sentence future-you should remember." /></label>
           {!canApply && <small className="calibration-validation">Select an observable signal and move the observed assumption from its previous value to recalculate.</small>}

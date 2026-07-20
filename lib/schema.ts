@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const assumptionIds = ["shock-cost", "travel-burden", "shock-energy", "shock-belonging", "starting-runway", "commitment-timing"] as const;
+const assumptionIds = ["shock-cost", "travel-burden", "shock-energy", "shock-belonging", "starting-runway", "commitment-timing", "office-days"] as const;
 
 export const sourceSchema = z.object({
   id: z.string(),
@@ -18,6 +18,7 @@ export const decisionOptionSchema = z.object({
   title: z.string().trim().min(1).max(96),
   subtitle: z.string().trim().min(1).max(160),
   location: z.string().trim().min(1).max(96),
+  jurisdiction: z.string().trim().min(1).max(96).default("Other"),
   country: z.enum(["FR", "UK", "OTHER"]),
   currency: z.enum(["EUR", "GBP"]),
   taxProfile: z.enum(["france-2026", "uk-2026", "effective"]),
@@ -27,6 +28,12 @@ export const decisionOptionSchema = z.object({
   monthlyRent: z.number().nonnegative(),
   monthlyLiving: z.number().nonnegative(),
   relocation: z.number().nonnegative(),
+  weeklyHours: z.number().min(0).max(100).default(40),
+  commuteMinutes: z.number().min(0).max(240).default(30),
+  friendsMinutes: z.number().min(0).max(240).default(20),
+  dailyLifeMinutes: z.number().min(0).max(240).default(15),
+  natureMinutes: z.number().min(0).max(240).default(30),
+  spaceSqm: z.number().min(0).max(2_000).default(45),
   flexibility: z.number().min(0).max(100),
   belonging: z.number().min(0).max(100),
   growth: z.number().min(0).max(100),
@@ -42,6 +49,11 @@ export const decisionSchema = z.object({
   domain: z.enum(["career", "moving", "relationships", "education", "life"]).default("career"),
   question: z.string().trim().min(8).max(500),
   context: z.string().trim().max(800).default(""),
+  baselineDaysPerWeek: z.number().min(0).max(7).default(3),
+  pressureDaysPerWeek: z.number().min(0).max(7).default(5),
+  socialTripsPerWeek: z.number().min(0).max(14).default(2),
+  dailyLifeTripsPerWeek: z.number().min(0).max(21).default(5),
+  natureTripsPerWeek: z.number().min(0).max(14).default(1),
   startingSavingsEur: z.number(),
   priorities: z.object({
     security: z.number().min(0).max(100),
@@ -163,6 +175,8 @@ export const witnessSchema = z.object({
     baselineAssessment: qualitativeAssessmentSchema,
     shockedAssessment: qualitativeAssessmentSchema,
     focus: qualitativeFocusSchema,
+    baselineInsight: z.string().trim().min(12).max(180).optional(),
+    shockedInsight: z.string().trim().min(12).max(180).optional(),
   })).min(2).max(4),
   uncertaintyToTest: uncertaintySchema,
   observableSignal: signalSchema,

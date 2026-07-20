@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { journeyMeta, makeJourney, makeTwoChoiceJourney, primaryJourneyDomains, type JourneyDomain } from "@/lib/journeys";
-import type { ContextLens, Decision, DecisionOption } from "@/lib/schema";
+import { journeyMeta, makeJourney, makeTwoChoiceJourney, primaryJourneyDomains, shockPresets, type JourneyDomain } from "@/lib/journeys";
+import type { Decision, DecisionOption } from "@/lib/schema";
 
 type Props = {
   decision: Decision;
@@ -14,14 +14,59 @@ type Props = {
   initialStep?: number;
 };
 
-const steps = ["Your decision", "What matters", "Check the inputs"];
-const stepActions = ["Choose what matters", "Check the rough inputs", "See my futures"];
+const steps = ["Name the lives", "Name the outcome", "Map everyday life", "Choose a scenario"];
+
+const jurisdictions = [
+  "France",
+  "United Kingdom",
+  "United States",
+  "Canada",
+  "Germany",
+  "Spain",
+  "Portugal",
+  "Netherlands",
+  "Switzerland",
+  "United Arab Emirates",
+  "Singapore",
+  "Australia",
+  "Japan",
+  "Other",
+] as const;
+
 const priorityChoices = [
   ["security", "Safety", "money, stability, predictability"],
   ["energy", "Aliveness", "energy, curiosity, daily texture"],
   ["belonging", "People", "love, community, being understood"],
   ["optionality", "Freedom", "growth, escape routes, future doors"],
 ] as const;
+
+const domainPriorityCopy: Record<"career" | "moving", Record<(typeof priorityChoices)[number][0], string>> = {
+  career: {
+    security: "steady income and stability",
+    energy: "work you want to wake up for",
+    belonging: "the people and team around you",
+    optionality: "skills and future doors",
+  },
+  moving: {
+    security: "affordability and stability",
+    energy: "your everyday rhythm",
+    belonging: "friends and community",
+    optionality: "the freedom to change course",
+  },
+};
+
+function comparisonQuestion(decision: Decision) {
+  const names = decision.options.map((option) => option.title.trim()).filter(Boolean);
+  const choices = names.length > 1 ? `${names.slice(0, -1).join(", ")} or ${names.at(-1)}` : names[0] ?? "these paths";
+  return decision.domain === "career"
+    ? `Which work life should I rehearse for the next year: ${choices}?`
+    : `Which place should I rehearse for the next year: ${choices}?`;
+}
+
+function visibleJurisdiction(option: DecisionOption) {
+  if (option.jurisdiction !== "Other" || option.country === "OTHER") return option.jurisdiction;
+  return option.country === "FR" ? "France" : "United Kingdom";
+}
 
 export function DecisionStudio({ decision, open, running, onClose, onChange, onRun, initialStep = 0 }: Props) {
   const [step, setStep] = useState(initialStep);
@@ -42,14 +87,27 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
     moveTo(0);
   }
 
+  function commit(next: Decision) {
+    next.question = comparisonQuestion(next);
+    onChange(next);
+  }
+
   function setOption(index: number, patch: Partial<DecisionOption>) {
     const next = structuredClone(decision);
+    if (next.options[index].jurisdiction === "Other" && next.options[index].country !== "OTHER") {
+      next.options[index].jurisdiction = next.options[index].country === "FR" ? "France" : "United Kingdom";
+    }
     next.options[index] = { ...next.options[index], ...patch };
     if (patch.country) {
       next.options[index].currency = patch.country === "UK" ? "GBP" : "EUR";
       next.options[index].taxProfile = patch.country === "UK" ? "uk-2026" : patch.country === "FR" ? "france-2026" : "effective";
     }
-    onChange(next);
+    commit(next);
+  }
+
+  function setJurisdiction(index: number, jurisdiction: string) {
+    const country = jurisdiction === "France" ? "FR" : jurisdiction === "United Kingdom" ? "UK" : "OTHER";
+    setOption(index, { jurisdiction, country });
   }
 
   function addOption() {
@@ -63,20 +121,17 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
     while (usedIds.has(candidateId)) candidateId = `${baseId}-${suffix++}`;
     template.id = candidateId;
     template.title = `Path ${String.fromCharCode(65 + next.options.length)}`;
-    template.subtitle = "Name what this future makes possible";
+    template.subtitle = decision.domain === "career" ? "Another work life" : "Another place to live";
+    template.location = decision.domain === "career" ? "Work setting" : "Place";
     next.options.push(template);
-    onChange(next);
+    commit(next);
   }
 
   function removeOption(index: number) {
     if (decision.options.length <= 2) return;
     const next = structuredClone(decision);
     next.options.splice(index, 1);
-    onChange(next);
-  }
-
-  function setPriority(key: keyof Decision["priorities"], value: number) {
-    onChange({ ...decision, priorities: { ...decision.priorities, [key]: value } });
+    commit(next);
   }
 
   function choosePriority(key: keyof Decision["priorities"]) {
@@ -91,32 +146,12 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
     });
   }
 
-  const dominantPriority = priorityChoices.reduce((winner, [key]) => decision.priorities[key] > decision.priorities[winner] ? key : winner, "security" as keyof Decision["priorities"]);
-
-  function addContextLens() {
-    if (decision.contextLenses.length >= 2) return;
-    const next = structuredClone(decision);
-    next.contextLenses.push({
-      id: `perspective-${Date.now()}`,
-      label: "My model of Mum’s protective concern",
-      protectedValues: ["proximity", "support"],
-      knownConcern: "She may worry about how easily I can show up when life becomes difficult.",
-      unknown: "I have not asked her how she sees this exact decision.",
-      provenanceLabel: "user-authored perspective",
-    });
-    onChange(next);
+  function chooseShock(shock: Decision["shock"]) {
+    onChange({ ...decision, shock: { ...shock } });
   }
 
-  function setContextLens(index: number, patch: Partial<ContextLens>) {
-    const next = structuredClone(decision);
-    next.contextLenses[index] = { ...next.contextLenses[index], ...patch };
-    onChange(next);
-  }
-
-  function removeContextLens(index: number) {
-    const next = structuredClone(decision);
-    next.contextLenses.splice(index, 1);
-    onChange(next);
+  function setScenarioEffect(key: "monthlyCostEur" | "travelCostEur" | "energyPenalty" | "belongingPenalty", value: number) {
+    onChange({ ...decision, shock: { ...decision.shock, [key]: Math.max(0, value) } });
   }
 
   function finish() {
@@ -124,15 +159,15 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
     onRun();
   }
 
-  const canContinue = step !== 0 || (
-    decision.question.trim().length >= 8 &&
-    decision.options.every((option) => option.title.trim().length > 0 && option.subtitle.trim().length > 0)
-  );
+  const canContinue = decision.options.every((option) => option.title.trim().length > 0);
+  const supportedDomain = decision.domain === "moving" ? "moving" : "career";
+  const domainCopy = domainPriorityCopy[supportedDomain];
+  const dominantPriority = priorityChoices.reduce((winner, [key]) => decision.priorities[key] > decision.priorities[winner] ? key : winner, "security" as keyof Decision["priorities"]);
 
   return (
     <aside className={`studio journey ${open ? "open" : ""}`} aria-hidden={!open}>
       <header>
-        <div><span>ELSEWHERE / {step < 0 ? "START" : `${step + 1} OF ${steps.length}`}</span><strong>{step < 0 ? "Your world" : steps[step]}</strong></div>
+        <div><span>ELSEWHERE / {step < 0 ? "START" : `${step + 1} OF ${steps.length}`}</span><strong>{step < 0 ? "Open a decision" : steps[step]}</strong></div>
         <button onClick={onClose} aria-label="Close decision room">×</button>
       </header>
 
@@ -143,140 +178,141 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
       <div className="studio-scroll journey-scroll" ref={scrollRef}>
         {step < 0 && (
           <section className="journey-screen intro-step">
-            <p className="journey-kicker">START WITH THE KIND OF DECISION</p>
-            <h2>What part of life is changing?</h2>
-            <p>This gives you two editable starting points and the right rough assumptions. You can rename everything on the next screen.</p>
-            <div className="domain-grid">
+            <p className="journey-kicker">THE DECISIONS ELSEWHERE CAN GROUND WELL</p>
+            <h2>Is this about work or place?</h2>
+            <p>Start with the shape closest to your decision. Elsewhere will ask only for the facts that can change that comparison.</p>
+            <div className="domain-grid focused">
               {primaryJourneyDomains.map((domain) => {
                 const meta = journeyMeta[domain];
                 return (
-                <button key={domain} onClick={() => chooseDomain(domain)}>
-                  <b>{meta.icon}</b><span>{meta.label}</span><small>{meta.line}</small><i>↗</i>
-                </button>
+                  <button key={domain} onClick={() => chooseDomain(domain)}>
+                    <b>{meta.icon}</b><span>{meta.label}</span><small>{meta.line}</small><i>↗</i>
+                  </button>
                 );
               })}
             </div>
+            <p className="scope-note">Career and moving are the current grounded product. Other kinds of life decisions need different evidence models and are not being disguised as the same calculator.</p>
           </section>
         )}
 
         {step === 0 && (
           <section className="journey-screen">
-            <p className="journey-kicker">STEP 1 · THE CASE</p>
-            <h2>What are you choosing between?</h2>
-            <label className="hero-field"><span>THE QUESTION</span><textarea aria-label="The decision question" value={decision.question} onChange={(event) => onChange({ ...decision, question: event.target.value })} /></label>
-            <label className="context-field"><span>WHAT SHOULD ELSEWHERE KNOW?</span><textarea aria-label="Decision context" placeholder="A few sentences about timing, constraints, or what makes this hard. Avoid names or sensitive details." value={decision.context} onChange={(event) => onChange({ ...decision, context: event.target.value })} /><small>Optional · sent with the question for qualitative GPT-5.6 perspectives; stored in this browser.</small></label>
-            <div className="option-intro"><span>NAME THE LIVES</span><small>Two is enough. Add another only when it is a real option.</small></div>
-            <div className="choice-inputs" aria-label={`${decision.options.length} choices`}>
-              {decision.options.map((option, index) => <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
-                <header><span>CHOICE {String.fromCharCode(65 + index)}</span>{decision.options.length > 2 && <button onClick={() => removeOption(index)} aria-label={`Remove ${option.title}`}>Remove</button>}</header>
-                <input aria-label={`Choice ${String.fromCharCode(65 + index)} name`} value={option.title} onChange={(event) => setOption(index, { title: event.target.value })} />
-                <input aria-label={`Choice ${String.fromCharCode(65 + index)} pull`} value={option.subtitle} onChange={(event) => setOption(index, { subtitle: event.target.value })} />
-              </article>)}
-            </div>
-            {decision.options.length < 4 && <button className="add-choice" onClick={addOption}>+ Add another real option</button>}
-            <details className="fine-tune">
-              <summary>Add a place or context <span>OPTIONAL</span><b>+</b></summary>
-              <div className="journey-options">
+            <p className="journey-kicker">STEP 1 · TWO REAL LIVES</p>
+            <h2>Name what you are choosing between.</h2>
+            <p>No scenario writing. Use the names you already use in your head.</p>
+            <div className="choice-inputs calm" aria-label={`${decision.options.length} choices`}>
               {decision.options.map((option, index) => (
                 <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
-                  <span>0{index + 1}</span>
-                  <strong>{option.title}</strong>
-                  <input aria-label={`Future ${index + 1} place`} value={option.location} onChange={(event) => setOption(index, { location: event.target.value })} />
+                  <header><span>LIFE {String.fromCharCode(65 + index)}</span>{decision.options.length > 2 && <button onClick={() => removeOption(index)} aria-label={`Remove ${option.title}`}>Remove</button>}</header>
+                  <input aria-label={`Life ${String.fromCharCode(65 + index)} name`} value={option.title} placeholder={decision.domain === "career" ? (index === 0 ? "Stay in my role" : "Take the new role") : (index === 0 ? "Stay here" : "Move there")} onChange={(event) => setOption(index, { title: event.target.value })} />
                 </article>
               ))}
-              </div>
-            </details>
+            </div>
+            {decision.options.length < 4 && <button className="add-choice quiet" onClick={addOption}>+ There is another real path</button>}
+            <div className="question-preview"><span>ELSEWHERE WILL REHEARSE</span><strong>{comparisonQuestion(decision)}</strong></div>
           </section>
         )}
 
         {step === 1 && (
           <section className="journey-screen priorities-step">
-            <p className="journey-kicker">STEP 2 · YOUR PRIORITY</p>
-            <h2>What needs protecting most?</h2>
-            <p>Pick one instinctively. The result still shows the trade-offs through the other three.</p>
+            <p className="journey-kicker">STEP 2 · THE OUTCOME THAT MATTERS</p>
+            <h2>What must the next life give you?</h2>
+            <p>Choose the outcome you are unwilling to lose. Then tell Elsewhere what a genuinely good result would look like in your own words.</p>
             <div className="priority-choices">
-              {priorityChoices.map(([key, label, copy]) => <button key={key} className={dominantPriority === key ? "selected" : ""} onClick={() => choosePriority(key)} aria-pressed={dominantPriority === key}><span>{label}</span><small>{copy}</small><b>{dominantPriority === key ? "✓" : "+"}</b></button>)}
+              {priorityChoices.map(([key, label]) => <button key={key} className={dominantPriority === key ? "selected" : ""} onClick={() => choosePriority(key)} aria-pressed={dominantPriority === key}><span>{label}</span><small>{domainCopy[key]}</small><b>{dominantPriority === key ? "✓" : "+"}</b></button>)}
             </div>
-            <details className="fine-tune">
-              <summary>Fine-tune all four weights <span>OPTIONAL</span><b>+</b></summary>
-              <div className="priority-stack">
-                {priorityChoices.map(([key, label, copy]) => (
-                  <label key={key}>
-                    <div><b>{label}</b><small>{copy}</small><strong>{decision.priorities[key]}</strong></div>
-                    <input aria-label={label} type="range" min="0" max="100" value={decision.priorities[key]} onChange={(event) => setPriority(key, Number(event.target.value))} />
-                  </label>
-                ))}
-              </div>
-            </details>
-            <details className="optional-perspectives">
-              <summary><span>OPTIONAL</span> Add a perspective you are already carrying <b>+</b></summary>
-              <div className="optional-perspectives-copy">
-                <p>This is your model of a perspective—not a prediction of a real person. It stays optional because the core decision should work without it.</p>
-                <div className="perspective-stack">
-                  {decision.contextLenses.map((lens, index) => (
-                    <article className="perspective-card" key={lens.id}>
-                      <div className="perspective-card-head"><span>USER-AUTHORED PERSPECTIVE</span><button onClick={() => removeContextLens(index)} aria-label={`Remove ${lens.label}`}>Remove</button></div>
-                      <label><span>NAME THIS PERSPECTIVE</span><input aria-label="Perspective name" value={lens.label} onChange={(event) => setContextLens(index, { label: event.target.value })} /></label>
-                      <label><span>WHAT IT PROTECTS</span><input aria-label="Values this perspective protects" value={lens.protectedValues.join(", ")} onChange={(event) => setContextLens(index, { protectedValues: event.target.value.split(",").map((value) => value.trim()).filter(Boolean).slice(0, 4) })} /></label>
-                      <label><span>WHAT I THINK I KNOW</span><textarea aria-label="Known concern" value={lens.knownConcern} onChange={(event) => setContextLens(index, { knownConcern: event.target.value })} /></label>
-                      <label><span>WHAT I DO NOT KNOW YET</span><textarea aria-label="Unknown concern" value={lens.unknown} onChange={(event) => setContextLens(index, { unknown: event.target.value })} /></label>
-                    </article>
-                  ))}
-                </div>
-                {decision.contextLenses.length < 2 && <button className="add-perspective" onClick={addContextLens}>+ Add a perspective</button>}
-                <small className="perspective-note">Stored in this browser. If you run live witnesses, selected text is sent to OpenAI for qualitative interpretation with response storage disabled. Never pass it off as someone else’s actual view.</small>
-              </div>
-            </details>
+            <label className="context-field single-prompt">
+              <span>DESCRIBE THE LIFE YOU ARE TRYING TO CREATE</span>
+              <textarea aria-label="Decision context" placeholder={decision.domain === "career" ? "I want work that stretches me without consuming every evening. I cannot sacrifice financial independence. I still do not know which role I would enjoy on an ordinary Tuesday…" : "I want a home that feels generous without losing the people and rhythm that make the city mine. I still do not know whether the extra commute would quietly drain the week…"} value={decision.context} onChange={(event) => onChange({ ...decision, context: event.target.value })} />
+              <small>Useful context: what you want more of, what you cannot sacrifice, and what you still do not know. Stored in this browser; sent to GPT-5.6 only for the live readings.</small>
+            </label>
           </section>
         )}
 
         {step === 2 && (
-          <section className="journey-screen">
-            <p className="journey-kicker">STEP 3 · A QUICK REALITY CHECK</p>
-            <h2>{decision.domain === "relationships" ? "How might each path feel?" : "Check the numbers that differ."}</h2>
-            <p>{decision.domain === "relationships" ? "These are your rough estimates about each path—not scores about another person. Change what feels wrong." : "We filled rough examples so you can keep moving. Change what you know; anything you leave alone remains an estimate."}</p>
-            {decision.domain !== "relationships" && (
-              <label className="savings-field"><span>YOUR CURRENT RUNWAY</span><div><i>€</i><input aria-label="Current savings" type="number" value={decision.startingSavingsEur} onChange={(event) => onChange({ ...decision, startingSavingsEur: Number(event.target.value) })} /></div></label>
-            )}
-            <div className="assumption-note"><span>ROUGH INPUTS</span><strong>Edit only what changes the comparison.</strong><small>These values are transparent scenario assumptions, not predictions.</small></div>
-            <div className="reality-cards visible">
+          <section className="journey-screen grounding-step">
+            <p className="journey-kicker">STEP 3 · MAP THE RECURRING LIFE</p>
+            <h2>{decision.domain === "career" ? "What does each working week actually contain?" : "Where does your life happen each week?"}</h2>
+            <p>{decision.domain === "career" ? "Titles are thin descriptions. Ground the hours, travel, money, and softer conditions that will repeat." : "A home is connected to an office, friends, favourite places, and nature. Map the travel that will quietly repeat alongside the rent."}</p>
+            <div className="loaded-assumptions"><span>STARTING ESTIMATES</span><strong>VISIBLE + EDITABLE</strong><small>These are scenario inputs, not facts Elsewhere discovered about you.</small></div>
+            <div className="reality-cards focused">
               {decision.options.map((option, index) => (
                 <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
-                  <header><span>0{index + 1}</span><strong>{option.title}</strong></header>
-                  {decision.domain === "relationships" ? (
+                  <header><span>{String.fromCharCode(65 + index)}</span><strong>{option.title}</strong></header>
+                  <div className="fact-grid essential-facts">
+                    <label><span>{decision.domain === "career" ? "WHERE" : "PLACE"}</span><input aria-label={`${option.title} place`} value={option.location} onChange={(event) => setOption(index, { location: event.target.value })} /></label>
+                    <label><span>COUNTRY</span><select aria-label={`${option.title} country`} value={visibleJurisdiction(option)} onChange={(event) => setJurisdiction(index, event.target.value)}>{jurisdictions.map((label) => <option key={label} value={label}>{label}</option>)}</select></label>
+                    <label><span>{decision.domain === "career" ? "PAY / YEAR" : "INCOME / YEAR"}{option.country === "OTHER" ? " · € EQUIV." : ""}</span><input aria-label={`${option.title} annual income`} type="number" value={option.annualGross} onChange={(event) => setOption(index, { annualGross: Number(event.target.value) })} /></label>
+                    {decision.domain === "moving" && <label><span>RENT / MONTH</span><input aria-label={`${option.title} monthly rent`} type="number" value={option.monthlyRent} onChange={(event) => setOption(index, { monthlyRent: Number(event.target.value) })} /></label>}
+                    {decision.domain === "moving" && <label><span>SPACE · M²</span><input aria-label={`${option.title} space`} type="number" value={option.spaceSqm} onChange={(event) => setOption(index, { spaceSqm: Number(event.target.value) })} /></label>}
+                    <label><span>OFFICE · MIN ONE WAY</span><input aria-label={`${option.title} commute minutes`} type="number" value={option.commuteMinutes} onChange={(event) => setOption(index, { commuteMinutes: Number(event.target.value) })} /></label>
+                    {decision.domain === "moving" && <label><span>FRIENDS · MIN ONE WAY</span><input aria-label={`${option.title} minutes to friends`} type="number" value={option.friendsMinutes} onChange={(event) => setOption(index, { friendsMinutes: Number(event.target.value) })} /></label>}
+                    {decision.domain === "moving" && <label><span>USUAL PLACES · MIN</span><input aria-label={`${option.title} minutes to usual places`} type="number" value={option.dailyLifeMinutes} onChange={(event) => setOption(index, { dailyLifeMinutes: Number(event.target.value) })} /></label>}
+                    {decision.domain === "moving" && <label><span>NATURE · MIN ONE WAY</span><input aria-label={`${option.title} minutes to nature`} type="number" value={option.natureMinutes} onChange={(event) => setOption(index, { natureMinutes: Number(event.target.value) })} /></label>}
+                    {decision.domain === "career" && <label><span>WORK HOURS / WEEK</span><input aria-label={`${option.title} weekly hours`} type="number" value={option.weeklyHours} onChange={(event) => setOption(index, { weeklyHours: Number(event.target.value) })} /></label>}
+                    {option.country === "OTHER" && <>
+                      <label><span>YOUR EST. TAX %</span><input aria-label={`${option.title} estimated tax rate`} type="number" min="0" max="60" step="0.1" value={option.effectiveTaxRate * 100} onChange={(event) => setOption(index, { effectiveTaxRate: Number(event.target.value) / 100 })} /></label>
+                      <label><span>YOUR EST. CONTRIBUTIONS %</span><input aria-label={`${option.title} estimated contribution rate`} type="number" min="0" max="60" step="0.1" value={option.employeeContributionRate * 100} onChange={(event) => setOption(index, { employeeContributionRate: Number(event.target.value) / 100 })} /></label>
+                      <small className="rate-input-note">{visibleJurisdiction(option).toUpperCase()} · USER-PROVIDED, NOT SOURCED · Enter money as a EUR equivalent. Elsewhere does not claim tax or FX coverage here.</small>
+                    </>}
+                    {option.country !== "OTHER" && <small className="rate-input-note sourced-rate">SOURCED · {option.country === "FR" ? "France 2026 tax rules" : "UK 2026 tax + NI rules"}</small>}
+                  </div>
+                  <details className="path-details">
+                    <summary>Adjust softer assumptions <b>+</b></summary>
                     <div className="mini-sliders">
-                      <label><span>freedom <b>{option.flexibility}</b></span><input aria-label={`${option.title} freedom`} type="range" min="0" max="100" value={option.flexibility} onChange={(event) => setOption(index, { flexibility: Number(event.target.value) })} /></label>
+                      <label><span>growth and learning <b>{option.growth}</b></span><input aria-label={`${option.title} growth and learning`} type="range" min="0" max="100" value={option.growth} onChange={(event) => setOption(index, { growth: Number(event.target.value) })} /></label>
                       <label><span>belonging <b>{option.belonging}</b></span><input aria-label={`${option.title} belonging`} type="range" min="0" max="100" value={option.belonging} onChange={(event) => setOption(index, { belonging: Number(event.target.value) })} /></label>
-                      <label><span>growth <b>{option.growth}</b></span><input aria-label={`${option.title} growth`} type="range" min="0" max="100" value={option.growth} onChange={(event) => setOption(index, { growth: Number(event.target.value) })} /></label>
+                      <label><span>freedom to change course <b>{option.flexibility}</b></span><input aria-label={`${option.title} freedom`} type="range" min="0" max="100" value={option.flexibility} onChange={(event) => setOption(index, { flexibility: Number(event.target.value) })} /></label>
+                      <label><span>daily strain <b>{option.risk}</b></span><input aria-label={`${option.title} daily strain`} type="range" min="0" max="100" value={option.risk} onChange={(event) => setOption(index, { risk: Number(event.target.value) })} /></label>
                     </div>
-                  ) : (
-                    <div className="fact-grid">
-                      <label><span>COUNTRY</span><select aria-label={`${option.title} country`} value={option.country} onChange={(event) => setOption(index, { country: event.target.value as DecisionOption["country"] })}><option value="FR">France</option><option value="UK">UK</option><option value="OTHER">Other</option></select></label>
-                      <label><span>GROSS / YEAR</span><input aria-label={`${option.title} annual income`} type="number" value={option.annualGross} onChange={(event) => setOption(index, { annualGross: Number(event.target.value) })} /></label>
-                      <label><span>RENT / MONTH</span><input aria-label={`${option.title} monthly rent`} type="number" value={option.monthlyRent} onChange={(event) => setOption(index, { monthlyRent: Number(event.target.value) })} /></label>
-                      <label><span>LIVING / MONTH</span><input aria-label={`${option.title} monthly living costs`} type="number" value={option.monthlyLiving} onChange={(event) => setOption(index, { monthlyLiving: Number(event.target.value) })} /></label>
-                      {option.country === "OTHER" && <>
-                        <label><span>EST. TAX RATE (%)</span><input aria-label={`${option.title} estimated tax rate`} type="number" min="0" max="60" step="0.1" value={option.effectiveTaxRate * 100} onChange={(event) => setOption(index, { effectiveTaxRate: Number(event.target.value) / 100 })} /></label>
-                        <label><span>EST. CONTRIBUTIONS (%)</span><input aria-label={`${option.title} estimated contribution rate`} type="number" min="0" max="60" step="0.1" value={option.employeeContributionRate * 100} onChange={(event) => setOption(index, { employeeContributionRate: Number(event.target.value) / 100 })} /></label>
-                        <small className="rate-input-note">User-provided estimates. Elsewhere does not source tax rules outside France and the UK.</small>
-                      </>}
-                      {option.country !== "OTHER" && <small className="rate-input-note sourced-rate">Tax calculation sourced for {option.country === "FR" ? "France" : "the UK"}. Other costs remain your estimates.</small>}
+                    <div className="fact-grid secondary-facts">
+                      {decision.domain === "career" && <label><span>RENT / MONTH</span><input aria-label={`${option.title} monthly rent`} type="number" value={option.monthlyRent} onChange={(event) => setOption(index, { monthlyRent: Number(event.target.value) })} /></label>}
+                      <label><span>OTHER LIVING / MONTH</span><input aria-label={`${option.title} monthly living costs`} type="number" value={option.monthlyLiving} onChange={(event) => setOption(index, { monthlyLiving: Number(event.target.value) })} /></label>
                     </div>
-                  )}
+                  </details>
                 </article>
               ))}
             </div>
-            {decision.contextLenses.length > 0 && <p className="transmission-note">Before live witnesses run, you’ll confirm that selected user-authored perspective text is sent to OpenAI for qualitative interpretation. It remains stored locally in this browser.</p>}
+            {decision.domain === "moving" && <div className="life-frequency"><span>HOW OFTEN THESE PLACES ENTER YOUR WEEK</span><div><label><b>Office</b><input aria-label="Office days each week" type="number" min="0" max="7" value={decision.baselineDaysPerWeek} onChange={(event) => onChange({ ...decision, baselineDaysPerWeek: Number(event.target.value) })} /><small>days / week</small></label><label><b>Friends</b><input aria-label="Social trips each week" type="number" min="0" max="14" value={decision.socialTripsPerWeek} onChange={(event) => onChange({ ...decision, socialTripsPerWeek: Number(event.target.value) })} /><small>trips / week</small></label><label><b>Usual places</b><input aria-label="Usual place trips each week" type="number" min="0" max="21" value={decision.dailyLifeTripsPerWeek} onChange={(event) => onChange({ ...decision, dailyLifeTripsPerWeek: Number(event.target.value) })} /><small>trips / week</small></label><label><b>Nature</b><input aria-label="Nature trips each week" type="number" min="0" max="14" value={decision.natureTripsPerWeek} onChange={(event) => onChange({ ...decision, natureTripsPerWeek: Number(event.target.value) })} /><small>trips / week</small></label></div></div>}
+            <details className="runway-details">
+              <summary>Add my current safety buffer <span>OPTIONAL</span><b>+</b></summary>
+              <label className="savings-field"><span>CURRENT SAVINGS</span><div><i>€</i><input aria-label="Current savings" type="number" value={decision.startingSavingsEur} onChange={(event) => onChange({ ...decision, startingSavingsEur: Number(event.target.value) })} /></div></label>
+            </details>
+          </section>
+        )}
+
+        {step === 3 && (
+          <section className="journey-screen uncertainty-step">
+            <p className="journey-kicker">STEP 4 · VARY ONE PLAUSIBLE CONDITION</p>
+            <h2>Which assumption feels least stable?</h2>
+            <p>This is scenario analysis, not a surprise. Elsewhere will first show the recurring life you mapped, then vary this one condition so you can see what depends on it.</p>
+            <div className="shock-ideas uncertainty-choices">
+              {shockPresets[supportedDomain].map((preset) => <button key={preset.label} className={decision.shock.label === preset.label ? "selected" : ""} onClick={() => chooseShock(preset)}><span>{preset.label}</span><b>{decision.shock.label === preset.label ? "✓" : "+"}</b></button>)}
+            </div>
+            <label className="hero-field uncertainty-label"><span>OR NAME THE CONDITION IN YOUR OWN WORDS</span><textarea aria-label="The condition to vary" value={decision.shock.label} onChange={(event) => onChange({ ...decision, shock: { ...decision.shock, label: event.target.value } })} /></label>
+            {decision.domain === "moving" && /remote work|office/i.test(decision.shock.label) && <div className="days-change"><label><span>NOW</span><input aria-label="Current days on site" type="number" min="0" max="7" value={decision.baselineDaysPerWeek} onChange={(event) => onChange({ ...decision, baselineDaysPerWeek: Number(event.target.value) })} /></label><i>→</i><label><span>COULD BECOME</span><input aria-label="Possible days on site" type="number" min="0" max="7" value={decision.pressureDaysPerWeek} onChange={(event) => onChange({ ...decision, pressureDaysPerWeek: Number(event.target.value) })} /></label><small>days on site each week</small></div>}
+            <details className="scenario-effects">
+              <summary>Ground how this condition affects the month <span>EDITABLE ASSUMPTIONS</span><b>+</b></summary>
+              <div className="fact-grid">
+                <label><span>EXTRA COST / MONTH</span><input aria-label="Extra monthly cost in this scenario" type="number" min="0" value={decision.shock.monthlyCostEur} onChange={(event) => setScenarioEffect("monthlyCostEur", Number(event.target.value))} /></label>
+                <label><span>EXTRA TRAVEL SPEND / MONTH</span><input aria-label="Extra monthly travel spending in this scenario" type="number" min="0" value={decision.shock.travelCostEur} onChange={(event) => setScenarioEffect("travelCostEur", Number(event.target.value))} /></label>
+                <label><span>DAILY RHYTHM IMPACT</span><select aria-label="Daily rhythm impact" value={decision.shock.energyPenalty} onChange={(event) => setScenarioEffect("energyPenalty", Number(event.target.value))}>{![8, 18, 30].includes(decision.shock.energyPenalty) && <option value={decision.shock.energyPenalty}>Current estimate</option>}<option value="8">Light</option><option value="18">Noticeable</option><option value="30">Heavy</option></select></label>
+                <label><span>CONNECTION IMPACT</span><select aria-label="Connection impact" value={decision.shock.belongingPenalty} onChange={(event) => setScenarioEffect("belongingPenalty", Number(event.target.value))}>{![5, 15, 28].includes(decision.shock.belongingPenalty) && <option value={decision.shock.belongingPenalty}>Current estimate</option>}<option value="5">Light</option><option value="15">Noticeable</option><option value="28">Heavy</option></select></label>
+              </div>
+              <small>These are your scenario assumptions. GPT-5.6 can interpret their consequences but cannot invent or change them.</small>
+            </details>
+            <div className="question-preview"><span>THE SCENARIO LEVER</span><strong>{decision.shock.label}</strong></div>
           </section>
         )}
       </div>
 
       {step >= 0 && (
         <footer className="journey-footer">
-          <button className="back" onClick={() => moveTo(step - 1)}>← {step === 0 ? "Change decision" : "Back"}</button>
-          {step < steps.length - 1
-            ? <button className="next" onClick={() => moveTo(step + 1)} disabled={!canContinue}>{stepActions[step]}<b>↗</b></button>
-            : <button className="next" onClick={finish} disabled={running || !canContinue}>{running ? "Opening…" : stepActions[step]}<b>↘</b></button>}
+          <button className="back" onClick={() => moveTo(step - 1)}>← {step === 0 ? "Work or place" : "Back"}</button>
+          {step === 0 && <button className="next" onClick={() => moveTo(1)} disabled={!canContinue}>Name the outcome<b>↗</b></button>}
+          {step === 1 && <button className="next" onClick={() => moveTo(2)}>Map everyday life<b>↗</b></button>}
+          {step === 2 && <button className="next" onClick={() => moveTo(3)}>Choose a scenario<b>↗</b></button>}
+          {step === 3 && <button className="next" onClick={finish} disabled={running || !canContinue}>{running ? "Opening…" : `Walk into ${decision.options.length} lives`}<b>↘</b></button>}
         </footer>
       )}
     </aside>

@@ -1,59 +1,57 @@
-# Elsewhere — three-minute demo
+# Elsewhere: three-minute demo
 
-## 0:00–0:20 — The decision that keeps reopening
+## 0:00–0:20: Enter without setup
 
-Open with four futures already visible.
+Click **Try the apartment decision**.
 
-“I have re-decided whether to leave Paris in my notes app forty times. The notes never told me which assumption was keeping the decision unresolved.”
+“A smaller apartment in Central Paris, or twenty-six more square metres in Montreuil? The comparison sounds simple until office days change.”
 
-Do not show setup. Do not toggle the shock yet.
+Do not show custom setup.
 
-## 0:20–0:55 — Deterministic futures
+## 0:20–0:55: Walk through the lives
 
-“Elsewhere opens four grounded versions of the next year. The numbers are formula-owned: sourced France and UK tax rules, visibly user-provided rates elsewhere, costs, and explicit scenario assumptions.”
+Open **An ordinary week**.
 
-Point to one timeline, the visible commitment assumption, and the four-future comparison. Do not imply energy, belonging, or optionality are predictions; they are visible scenario assumptions.
+“Montreuil buys twenty-six square metres and saves six hundred and fifty euros a month. Central Paris returns thirteen commute hours. Elsewhere shows the actual life behind each option before it calculates anything.”
 
-## 0:55–1:30 — Same facts, different values
+## 0:55–1:35: The WOW: find the hinge
 
-Reveal the disagreement matrix and shared record receipt.
+Click **Pressure this assumption**.
 
-“Every core witness receives the same immutable record. They disagree because one protects runway, one belonging, one reversibility, and one downside resilience.”
+“Now three office days become five. Elsewhere does not paste a warning onto the story; it reruns both futures.”
 
-Contrast only two cells. Do not read every row. AI identifies what is contested; it does not choose a future.
+Scroll to **The Decision Hinge**.
 
-## 1:30–2:15 — Shock and Assumption Breakpoint
+“Through four office days, Montreuil has the stronger fit under my priorities. At five, Central Paris crosses it. The product has found the exact assumption keeping this decision open.”
 
-Apply the parent-care shock once.
+Say “personal fit calculation,” never “winner.”
 
-“Month six: a parent needs recurring help. The calculation reruns every future.”
+## 1:35–2:10: Same facts, different values
 
-Scroll directly to Assumption Breakpoint.
+Show only two contrasting witness readings and the model chain.
 
-“The witnesses identify the uncertainty worth testing. Deterministic code then sweeps the underlying assumption and finds the point where each future becomes fragile under my own weights.”
+“Four GPT-5.6 witnesses read the same immutable futures. One protects money, one belonging, one reversibility, and one looks for regret. They can interpret the trade. They cannot move the crossing or recommend a home.”
 
-Point to the current assumption marker and one fragile breakpoint. Say “personal fit calculation,” never “winner.”
+## 2:10–3:00: Leave the model and test reality
 
-## 2:15–3:00 — Experiment and return
+Click **Show me what to try**.
 
-Show the fourteen-day experiment, then a prepared local evidence return.
+“The next move is not another prompt. Make the Montreuil rush-hour commute twice, spend both evenings there, and record the actual energy pattern for two weeks.”
 
-“The experiment does not decide my life. It collects one observation: the actual recurring travel burden. I record it, and Elsewhere recalculates the breakpoint.”
+Optionally show one prepared return changing the observed office-days assumption and recalculating the hinge.
 
-Show before → observed assumption and one breakpoint shift.
-
-“Reality changed one assumption—not the truth of a future.”
+“Reality changed one assumption. The model remembers the correction.”
 
 Close:
 
-“Don’t ask AI what to choose. Find the assumption your future depends on—and test it before you commit.”
+“Don’t ask AI what to choose. Find the assumption your future depends on, then test it before you commit.”
 
 ## Recording checklist
 
 - Use desktop around 1440×900 and capture one mobile insert at 390×844.
-- Begin with the futures loaded; narrate deterministic rendering while AI work completes.
+- Begin with the one-click apartment story; narrate deterministic rendering while AI work completes.
 - Include one brief build-proof insert showing the Codex work and the GPT-5.6 model receipt. Do not present a cached replay as a live call.
-- Toggle the shock exactly once.
+- Pressure the office-days assumption exactly once.
 - Keep Context Layers, Evidence, architecture, and the roadmap out of the main arc.
 - Show the shared record receipt only after the product insight is clear.
 - Stay below three minutes.

@@ -1,4 +1,4 @@
-# Elsewhere Vision — The Personal Decision Twin
+# Elsewhere Vision: The Personal Decision Twin
 
 ## The premise
 

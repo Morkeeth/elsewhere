@@ -4,14 +4,18 @@ import type { Decision } from "@/lib/schema";
 export type JourneyDomain = Decision["domain"];
 
 export const journeyMeta: Record<JourneyDomain, { icon: string; label: string; line: string; prompt: string; experimental?: boolean }> = {
-  career: { icon: "↗", label: "Career", line: "Choose the work, not just the title", prompt: "What should my next career chapter be?" },
-  moving: { icon: "⌂", label: "Moving", line: "Try on the city before the postcode", prompt: "Where should I build my next life?" },
+  career: { icon: "↗", label: "Career", line: "Two roles, an offer, staying or leaving", prompt: "What should my next career chapter be?" },
+  moving: { icon: "⌂", label: "Home or city", line: "Two homes, two cities, staying or moving", prompt: "Where should I build my next life?" },
   relationships: { icon: "♡", label: "Relationships", line: "See the futures behind the feeling", prompt: "What shape should this relationship take?", experimental: true },
   education: { icon: "✦", label: "Education", line: "Compare the person each path creates", prompt: "How should I invest in my next skill chapter?", experimental: true },
   life: { icon: "○", label: "Something else", line: "For the decision living in your Notes app", prompt: "What decision keeps looping in my head?", experimental: true },
 };
 
-export const primaryJourneyDomains: JourneyDomain[] = ["career", "moving", "relationships", "education", "life"];
+// Career and moving are the public wedge: they are the domains the current
+// deterministic income, tax, housing, and runway model can ground honestly.
+// The other domain builders remain available for engine tests and future work,
+// but are not presented as equally mature onboarding paths.
+export const primaryJourneyDomains: JourneyDomain[] = ["career", "moving"];
 
 export type ShockPreset = Decision["shock"];
 
@@ -22,9 +26,9 @@ export const shockPresets: Record<JourneyDomain, ShockPreset[]> = {
     { label: "My family needs more of my time", month: 6, monthlyCostEur: 480, travelCostEur: 320, energyPenalty: 18, belongingPenalty: 10 },
   ],
   moving: [
-    { label: "Remote work rules change", month: 7, monthlyCostEur: 250, travelCostEur: 420, energyPenalty: 11, belongingPenalty: 8 },
-    { label: "Someone close to me needs weekly help", month: 5, monthlyCostEur: 460, travelCostEur: 340, energyPenalty: 18, belongingPenalty: 12 },
-    { label: "Housing costs jump unexpectedly", month: 4, monthlyCostEur: 420, travelCostEur: 0, energyPenalty: 9, belongingPenalty: 3 },
+    { label: "Office attendance rises", month: 7, monthlyCostEur: 250, travelCostEur: 420, energyPenalty: 11, belongingPenalty: 8 },
+    { label: "Regular support requires more travel", month: 5, monthlyCostEur: 460, travelCostEur: 340, energyPenalty: 18, belongingPenalty: 12 },
+    { label: "Housing costs rise at renewal", month: 4, monthlyCostEur: 420, travelCostEur: 0, energyPenalty: 9, belongingPenalty: 3 },
   ],
   relationships: [
     { label: "One of us gets an opportunity elsewhere", month: 5, monthlyCostEur: 0, travelCostEur: 180, energyPenalty: 14, belongingPenalty: 18 },
@@ -61,13 +65,13 @@ export function makeStory(story: StoryId): Decision {
   if (story === "apartments") return {
     ...base,
     domain: "moving",
-    question: "Which apartment gives me the better life for the next year: Canal or Montreuil?",
-    context: "I expect to stay for one year. Canal keeps me close to the city; Montreuil gives me more space, but the commute may matter if office days increase.",
+    question: "Which apartment gives me the better life for the next year: central Paris or more space in Montreuil?",
+    context: "I expect to stay for one year. Central Paris keeps the city at my door; Montreuil gives me more space, but the commute may matter if office days increase.",
     priorities: { security: 28, energy: 25, belonging: 24, optionality: 23 },
-    shock: { label: "Three office days become five", month: 4, monthlyCostEur: 0, travelCostEur: 280, energyPenalty: 20, belongingPenalty: 5 },
+    shock: { label: "Office attendance rises from three days to five", month: 4, monthlyCostEur: 0, travelCostEur: 280, energyPenalty: 20, belongingPenalty: 5 },
     options: [
-      option(base.options[0], { id: "canal-apartment", title: "Canal", subtitle: "Smaller home, immediate city", location: "Canal Saint-Martin", annualGross: 78_000, monthlyRent: 2_100, monthlyLiving: 1_250, relocation: 4_200, flexibility: 48, belonging: 84, growth: 70, risk: 54, shockTravelMultiplier: 0.15, shockEnergySensitivity: 0.45, commitmentMonth: 2, accent: "#C9FF64", sourceIds: ["user-scenario", "fr-tax-2026"] }),
-      option(base.options[2], { id: "montreuil-apartment", title: "Montreuil", subtitle: "More light, longer edges", location: "Montreuil", annualGross: 78_000, monthlyRent: 1_450, monthlyLiving: 1_180, relocation: 2_800, flexibility: 68, belonging: 65, growth: 72, risk: 34, shockTravelMultiplier: 1.4, shockEnergySensitivity: 1.55, commitmentMonth: 3, accent: "#7C8CFF", sourceIds: ["user-scenario", "fr-tax-2026"] }),
+      option(base.options[0], { id: "canal-apartment", title: "Central Paris", subtitle: "Smaller home, city at the door", location: "Canal Saint-Martin", annualGross: 78_000, monthlyRent: 2_100, monthlyLiving: 1_250, relocation: 4_200, weeklyHours: 40, commuteMinutes: 15, friendsMinutes: 10, dailyLifeMinutes: 5, natureMinutes: 35, spaceSqm: 32, flexibility: 48, belonging: 84, growth: 70, risk: 54, shockTravelMultiplier: 0.15, shockEnergySensitivity: 0.45, commitmentMonth: 2, accent: "#C9FF64", sourceIds: ["user-scenario", "fr-tax-2026"] }),
+      option(base.options[2], { id: "montreuil-apartment", title: "Montreuil", subtitle: "More space, different centre of gravity", location: "Outside central Paris", annualGross: 78_000, monthlyRent: 1_450, monthlyLiving: 1_180, relocation: 2_800, weeklyHours: 40, commuteMinutes: 45, friendsMinutes: 30, dailyLifeMinutes: 10, natureMinutes: 12, spaceSqm: 58, flexibility: 68, belonging: 65, growth: 72, risk: 34, shockTravelMultiplier: 1.4, shockEnergySensitivity: 1.55, commitmentMonth: 3, accent: "#7C8CFF", sourceIds: ["user-scenario", "fr-tax-2026"] }),
     ],
   };
 
@@ -79,12 +83,12 @@ export function makeStory(story: StoryId): Decision {
     priorities: { security: 20, energy: 28, belonging: 18, optionality: 34 },
     shock: { label: "The manager who designed both roles leaves", month: 4, monthlyCostEur: 0, travelCostEur: 0, energyPenalty: 17, belongingPenalty: 9 },
     options: [
-      option(base.options[0], { id: "specialist-role", title: "Specialist", subtitle: "Depth, craft, protected focus", location: "Same company", annualGross: 85_000, flexibility: 80, belonging: 68, growth: 82, risk: 32, shockTravelMultiplier: 0.1, shockEnergySensitivity: 0.65, commitmentMonth: 7, accent: "#C9FF64" }),
-      option(base.options[3], { id: "team-lead-role", title: "Team lead", subtitle: "People, scope, visible stakes", location: "Same company", annualGross: 92_000, monthlyRent: 1_307, monthlyLiving: 1_250, relocation: 0, flexibility: 44, belonging: 82, growth: 91, risk: 61, shockTravelMultiplier: 0.1, shockEnergySensitivity: 1.35, commitmentMonth: 2, accent: "#FFD166" }),
+      option(base.options[0], { id: "specialist-role", title: "Specialist", subtitle: "Depth, craft, protected focus", location: "Same company", annualGross: 85_000, weeklyHours: 38, commuteMinutes: 25, flexibility: 80, belonging: 68, growth: 82, risk: 32, shockTravelMultiplier: 0.1, shockEnergySensitivity: 0.65, commitmentMonth: 7, accent: "#C9FF64" }),
+      option(base.options[3], { id: "team-lead-role", title: "Team lead", subtitle: "People, scope, visible stakes", location: "Same company", annualGross: 92_000, monthlyRent: 1_307, monthlyLiving: 1_250, relocation: 0, weeklyHours: 48, commuteMinutes: 25, flexibility: 44, belonging: 82, growth: 91, risk: 61, shockTravelMultiplier: 0.1, shockEnergySensitivity: 1.35, commitmentMonth: 2, accent: "#FFD166" }),
     ],
   };
 
-  const neutral = { annualGross: 60_000, monthlyRent: 1_300, monthlyLiving: 1_250, relocation: 0, taxProfile: "effective" as const, effectiveTaxRate: 0.25, employeeContributionRate: 0, country: "OTHER" as const, currency: "EUR" as const };
+  const neutral = { annualGross: 60_000, monthlyRent: 1_300, monthlyLiving: 1_250, relocation: 0, taxProfile: "effective" as const, effectiveTaxRate: 0.25, employeeContributionRate: 0, jurisdiction: "Other", country: "OTHER" as const, currency: "EUR" as const };
   return {
     ...base,
     domain: "relationships",
@@ -100,8 +104,31 @@ export function makeStory(story: StoryId): Decision {
 }
 
 export function makeTwoChoiceJourney(domain: JourneyDomain): Decision {
-  if (domain === "career") return makeStory("internal-roles");
-  if (domain === "moving") return makeStory("apartments");
+  if (domain === "career") {
+    const journey = makeJourney("career");
+    const next = {
+      ...journey,
+      question: "Which work life should I rehearse for the next year: stay in my role or take the new role?",
+      context: "",
+      options: [
+        option(journey.options[0], { id: "current-role", title: "Stay in my role", subtitle: "Known work, deeper craft", location: "Current workplace" }),
+        option(journey.options[1], { id: "new-role", title: "Take the new role", subtitle: "New scope, new conditions", location: "New workplace" }),
+      ],
+    };
+    return next;
+  }
+  if (domain === "moving") {
+    const journey = makeJourney("moving");
+    return {
+      ...journey,
+      question: "Which place should I rehearse for the next year: stay here or move there?",
+      context: "",
+      options: [
+        option(journey.options[0], { id: "stay-here", title: "Stay here", subtitle: "Keep the life I know", location: "Current place" }),
+        option(journey.options[1], { id: "move-there", title: "Move there", subtitle: "Build a life somewhere new", location: "New place" }),
+      ],
+    };
+  }
   if (domain === "relationships") return makeStory("relationship-next-move");
 
   const journey = makeJourney(domain);
@@ -128,16 +155,16 @@ export function makeJourney(domain: JourneyDomain): Decision {
     question: "Should I stay in Paris, move to London, try Lisbon, or split my year?",
     context: "I am comparing the daily life, cost, support network, and flexibility each place would create over the next year.",
     priorities: { security: 22, energy: 24, belonging: 30, optionality: 24 },
-    shock: { ...base.shock, label: "Remote work rules change halfway through the year", month: 7, monthlyCostEur: 250, travelCostEur: 420 },
+    shock: { ...base.shock, label: "Office attendance rises", month: 7, monthlyCostEur: 250, travelCostEur: 420 },
     options: [
       option(base.options[0], { title: "Stay", subtitle: "Deepen the roots", location: "Paris", flexibility: 62, belonging: 90 }),
       option(base.options[1], { title: "Move", subtitle: "Build a bigger orbit", location: "London" }),
-      option(base.options[2], { title: "Reset", subtitle: "Choose lightness", location: "Lisbon", country: "OTHER", taxProfile: "effective", annualGross: 88_000, monthlyRent: 1_450, monthlyLiving: 1_100, belonging: 55, flexibility: 84 }),
+      option(base.options[2], { title: "Reset", subtitle: "Choose lightness", location: "Lisbon", jurisdiction: "Portugal", country: "OTHER", taxProfile: "effective", annualGross: 88_000, monthlyRent: 1_450, monthlyLiving: 1_100, belonging: 55, flexibility: 84 }),
       option(base.options[3], { title: "Split", subtitle: "Keep two doors open", location: "Two cities", annualGross: 78_000, monthlyRent: 1_850, flexibility: 94, risk: 38 }),
     ],
   };
   if (domain === "relationships") {
-    const neutral = { annualGross: 60_000, monthlyRent: 1_300, monthlyLiving: 1_250, relocation: 0, taxProfile: "effective" as const, effectiveTaxRate: 0.25, employeeContributionRate: 0, country: "OTHER" as const, currency: "EUR" as const };
+    const neutral = { annualGross: 60_000, monthlyRent: 1_300, monthlyLiving: 1_250, relocation: 0, taxProfile: "effective" as const, effectiveTaxRate: 0.25, employeeContributionRate: 0, jurisdiction: "Other", country: "OTHER" as const, currency: "EUR" as const };
     return {
       ...base,
       question: "Do we commit, reshape the relationship, pause, or choose separate lives?",
