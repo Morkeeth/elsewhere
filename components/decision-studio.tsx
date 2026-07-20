@@ -16,6 +16,13 @@ type Props = {
 
 const steps = ["The futures", "What matters", "Reality check", "Plot twist"];
 const stepActions = ["Set what matters", "Ground these futures", "Stress-test the plan", "Visit my futures"];
+const priorityChoices = [
+  ["security", "Safety", "money, stability, predictability"],
+  ["energy", "Aliveness", "energy, curiosity, daily texture"],
+  ["belonging", "People", "love, community, being understood"],
+  ["optionality", "Freedom", "growth, escape routes, future doors"],
+] as const;
+
 export function DecisionStudio({ decision, open, running, onClose, onChange, onRun, initialStep = 0 }: Props) {
   const [step, setStep] = useState(initialStep);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -48,6 +55,20 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
   function setPriority(key: keyof Decision["priorities"], value: number) {
     onChange({ ...decision, priorities: { ...decision.priorities, [key]: value } });
   }
+
+  function choosePriority(key: keyof Decision["priorities"]) {
+    onChange({
+      ...decision,
+      priorities: {
+        security: key === "security" ? 46 : 18,
+        energy: key === "energy" ? 46 : 18,
+        belonging: key === "belonging" ? 46 : 18,
+        optionality: key === "optionality" ? 46 : 18,
+      },
+    });
+  }
+
+  const dominantPriority = priorityChoices.reduce((winner, [key]) => decision.priorities[key] > decision.priorities[winner] ? key : winner, "security" as keyof Decision["priorities"]);
 
   function addContextLens() {
     if (decision.contextLenses.length >= 2) return;
@@ -123,8 +144,13 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
             <p className="journey-kicker">SAY IT LIKE YOU’D TEXT A FRIEND</p>
             <h2>What are you actually deciding?</h2>
             <label className="hero-field"><span>THE QUESTION</span><textarea aria-label="The decision question" value={decision.question} onChange={(event) => onChange({ ...decision, question: event.target.value })} /></label>
-            <div className="option-intro"><span>THE FOUR LIVES TO OPEN</span><small>These are editable starting points—not four answers you need to invent.</small></div>
-            <div className="journey-options">
+            <div className="option-intro"><span>FOUR PATHS ARE ALREADY LOADED</span><small>Edit only if one misses the point.</small></div>
+            <div className="option-preview" aria-label="Four preloaded paths">
+              {decision.options.map((option, index) => <div key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}><span>0{index + 1}</span><strong>{option.title}</strong><small>{option.location}</small></div>)}
+            </div>
+            <details className="fine-tune">
+              <summary>Fine-tune the four paths <span>OPTIONAL</span><b>+</b></summary>
+              <div className="journey-options">
               {decision.options.map((option, index) => (
                 <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
                   <span>0{index + 1}</span>
@@ -133,28 +159,30 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
                   <input aria-label={`Future ${index + 1} place`} value={option.location} onChange={(event) => setOption(index, { location: event.target.value })} />
                 </article>
               ))}
-            </div>
+              </div>
+            </details>
           </section>
         )}
 
         {step === 1 && (
           <section className="journey-screen priorities-step">
             <p className="journey-kicker">NO “RIGHT” ANSWER—ONLY YOUR WEIGHTS</p>
-            <h2>What deserves more volume right now?</h2>
-            <p>Move the sliders fast. Your first instinct is useful data.</p>
-            <div className="priority-stack">
-              {([
-                ["security", "Safety", "money, stability, predictability"],
-                ["energy", "Aliveness", "energy, curiosity, daily texture"],
-                ["belonging", "People", "love, community, being understood"],
-                ["optionality", "Freedom", "growth, escape routes, future doors"],
-              ] as const).map(([key, label, copy]) => (
-                <label key={key}>
-                  <div><b>{label}</b><small>{copy}</small><strong>{decision.priorities[key]}</strong></div>
-                  <input aria-label={label} type="range" min="0" max="100" value={decision.priorities[key]} onChange={(event) => setPriority(key, Number(event.target.value))} />
-                </label>
-              ))}
+            <h2>What needs protecting most?</h2>
+            <p>Pick one. Elsewhere will still show the trade-offs through the other three.</p>
+            <div className="priority-choices">
+              {priorityChoices.map(([key, label, copy]) => <button key={key} className={dominantPriority === key ? "selected" : ""} onClick={() => choosePriority(key)} aria-pressed={dominantPriority === key}><span>{label}</span><small>{copy}</small><b>{dominantPriority === key ? "✓" : "+"}</b></button>)}
             </div>
+            <details className="fine-tune">
+              <summary>Fine-tune all four weights <span>OPTIONAL</span><b>+</b></summary>
+              <div className="priority-stack">
+                {priorityChoices.map(([key, label, copy]) => (
+                  <label key={key}>
+                    <div><b>{label}</b><small>{copy}</small><strong>{decision.priorities[key]}</strong></div>
+                    <input aria-label={label} type="range" min="0" max="100" value={decision.priorities[key]} onChange={(event) => setPriority(key, Number(event.target.value))} />
+                  </label>
+                ))}
+              </div>
+            </details>
             <details className="optional-perspectives">
               <summary><span>OPTIONAL</span> Add a perspective you are already carrying <b>+</b></summary>
               <div className="optional-perspectives-copy">
@@ -181,11 +209,14 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
           <section className="journey-screen">
             <p className="journey-kicker">GROUND THE VIBE</p>
             <h2>{decision.domain === "relationships" ? "How would each future feel?" : "Give the futures real gravity."}</h2>
-            <p>{decision.domain === "relationships" ? "These are personal estimates, not scores about another person." : "Rough numbers are fine. Every assumption stays visible later."}</p>
+            <p>{decision.domain === "relationships" ? "We loaded personal estimates, not scores about another person. Review what feels wrong." : "Example assumptions are loaded so you can keep moving. Review them before relying on the result."}</p>
             {decision.domain !== "relationships" && (
               <label className="savings-field"><span>YOUR CURRENT RUNWAY</span><div><i>€</i><input aria-label="Current savings" type="number" value={decision.startingSavingsEur} onChange={(event) => onChange({ ...decision, startingSavingsEur: Number(event.target.value) })} /></div></label>
             )}
-            <div className="reality-cards">
+            <div className="loaded-assumptions"><span>EXAMPLE ASSUMPTIONS LOADED</span><strong>{decision.options.length} paths ready</strong><small>Nothing here is presented as your real data until you review it.</small></div>
+            <details className="fine-tune reality-details">
+              <summary>Review the path assumptions <span>RECOMMENDED</span><b>+</b></summary>
+              <div className="reality-cards">
               {decision.options.map((option, index) => (
                 <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
                   <header><span>0{index + 1}</span><strong>{option.title}</strong></header>
@@ -210,7 +241,8 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
                   )}
                 </article>
               ))}
-            </div>
+              </div>
+            </details>
           </section>
         )}
 
@@ -218,17 +250,20 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
           <section className="journey-screen shock-step">
             <p className="journey-kicker">NOW BREAK THE PERFECT PLAN</p>
             <h2>What could change the weights?</h2>
-            <p>Pick a plot twist, then make its practical impact explicit. The ledger reruns exactly these effects.</p>
+            <p>Pick a plot twist, then make its practical impact explicit. The deterministic engine reruns exactly these effects.</p>
             <div className="shock-ideas">
               {shockPresets[decision.domain].map((preset) => <button key={preset.label} className={decision.shock.label === preset.label ? "selected" : ""} onClick={() => chooseShock(preset)}>{preset.label}<span>+</span></button>)}
             </div>
-            <label className="hero-field"><span>MY OWN PLOT TWIST</span><textarea aria-label="Custom plot twist" value={decision.shock.label} onChange={(event) => onChange({ ...decision, shock: { ...decision.shock, label: event.target.value } })} /></label>
-            <div className="fact-grid shock-impact">
-              <label><span>MONTHLY COST</span><input aria-label="Shock monthly cost" type="number" min="0" value={decision.shock.monthlyCostEur} onChange={(event) => setShockValue("monthlyCostEur", Number(event.target.value))} /></label>
-              <label><span>TRAVEL / MONTH</span><input aria-label="Shock monthly travel cost" type="number" min="0" value={decision.shock.travelCostEur} onChange={(event) => setShockValue("travelCostEur", Number(event.target.value))} /></label>
-              <label><span>ENERGY HIT</span><input aria-label="Shock energy penalty" type="number" min="0" max="100" value={decision.shock.energyPenalty} onChange={(event) => setShockValue("energyPenalty", Number(event.target.value))} /></label>
-              <label><span>BELONGING HIT</span><input aria-label="Shock belonging penalty" type="number" min="0" max="100" value={decision.shock.belongingPenalty} onChange={(event) => setShockValue("belongingPenalty", Number(event.target.value))} /></label>
-            </div>
+            <details className="fine-tune">
+              <summary>Write my own and tune its impact <span>OPTIONAL</span><b>+</b></summary>
+              <label className="hero-field"><span>MY OWN PLOT TWIST</span><textarea aria-label="Custom plot twist" value={decision.shock.label} onChange={(event) => onChange({ ...decision, shock: { ...decision.shock, label: event.target.value } })} /></label>
+              <div className="fact-grid shock-impact">
+                <label><span>MONTHLY COST</span><input aria-label="Shock monthly cost" type="number" min="0" value={decision.shock.monthlyCostEur} onChange={(event) => setShockValue("monthlyCostEur", Number(event.target.value))} /></label>
+                <label><span>TRAVEL / MONTH</span><input aria-label="Shock monthly travel cost" type="number" min="0" value={decision.shock.travelCostEur} onChange={(event) => setShockValue("travelCostEur", Number(event.target.value))} /></label>
+                <label><span>ENERGY HIT</span><input aria-label="Shock energy penalty" type="number" min="0" max="100" value={decision.shock.energyPenalty} onChange={(event) => setShockValue("energyPenalty", Number(event.target.value))} /></label>
+                <label><span>BELONGING HIT</span><input aria-label="Shock belonging penalty" type="number" min="0" max="100" value={decision.shock.belongingPenalty} onChange={(event) => setShockValue("belongingPenalty", Number(event.target.value))} /></label>
+              </div>
+            </details>
             <div className="shock-timing">
               <label><span>WHEN?</span><strong>Month {decision.shock.month}</strong><input aria-label="Shock month" type="range" min="1" max="12" value={decision.shock.month} onChange={(event) => onChange({ ...decision, shock: { ...decision.shock, month: Number(event.target.value) } })} /></label>
               <div><span>{decision.options.length}</span> futures <i /> <span>12</span> months <i /> <span>1</span> plot twist</div>

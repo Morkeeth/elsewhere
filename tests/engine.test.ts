@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Timeline } from "../components/timeline";
 import { applyAssumption, assumptionForUncertainty, buildBreakpointAnalysis, buildExperiment, runSimulation, sampleDecision, validateDisplayManifest } from "../lib/engine";
 import { calculateFrancePayroll, calculateUkPayroll, nativeToEur } from "../lib/grounding";
-import { makeJourney, shockPresets } from "../lib/journeys";
+import { makeJourney, primaryJourneyDomains, shockPresets } from "../lib/journeys";
 import { assertQualitativeNarrative, buildWitnessInstructions, buildWitnessJobs, ledgerHash } from "../lib/openai-engine";
 import { decisionSchema } from "../lib/schema";
 import { measureWitnessDisagreement } from "../lib/ablation";
@@ -274,7 +274,8 @@ test("non-FR/UK effective rates are labelled user-provided and not sourced", () 
 });
 
 test("every guided journey produces four complete futures", () => {
-  for (const domain of ["career", "moving", "relationships", "education", "life"] as const) {
+  assert.deepEqual(primaryJourneyDomains, ["career", "moving", "relationships", "education", "life"]);
+  for (const domain of primaryJourneyDomains) {
     const result = runSimulation(makeJourney(domain));
     assert.equal(result.decision.domain, domain);
     assert.equal(result.baseline.length, 4);

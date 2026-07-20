@@ -21,7 +21,7 @@ The disagreement matrix is model-generated; deterministic code deliberately owns
 
 ## Full product surface
 
-- Two submission-ready guided journeys—Career and Moving—with one-question-at-a-time mobile input
+- Five guided starting shapes—Career, Moving, Relationships, Education, and Something else—with preloaded paths and optional fine-tuning
 - Swipeable future cards, instinctive priority sliders, and selectable plot twists
 - Editable decisions, countries, salaries, costs, value scores, and shock conditions
 - France 2026 and UK 2026 progressive payroll calculators

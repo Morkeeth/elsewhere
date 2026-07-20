@@ -11,7 +11,7 @@ export const journeyMeta: Record<JourneyDomain, { icon: string; label: string; l
   life: { icon: "○", label: "Something else", line: "For the decision living in your Notes app", prompt: "What decision keeps looping in my head?", experimental: true },
 };
 
-export const primaryJourneyDomains: JourneyDomain[] = ["career", "moving"];
+export const primaryJourneyDomains: JourneyDomain[] = ["career", "moving", "relationships", "education", "life"];
 
 export type ShockPreset = Decision["shock"];
 

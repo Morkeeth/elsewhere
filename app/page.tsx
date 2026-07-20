@@ -33,8 +33,8 @@ export default function Home() {
   const [studioStartStep, setStudioStartStep] = useState(-1);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [agentState, setAgentState] = useState<AgentState>("idle");
+  const [demoMode, setDemoMode] = useState(false);
   const futures = shock ? simulation.shocked : simulation.baseline;
-  const domainMeta = journeyMeta[decision.domain];
   const witnessReceipt = simulation.witnesses[0]?.ledgerHash;
   const pendingWitnesses = [
     ...corePendingWitnesses,
@@ -42,6 +42,7 @@ export default function Home() {
   ];
 
   function openJourney(domain?: JourneyDomain) {
+    setDemoMode(false);
     if (domain) setDecision(makeJourney(domain));
     setStudioStartStep(domain ? 0 : -1);
     setStudioOpen(true);
@@ -65,18 +66,40 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (demoMode) return;
     window.localStorage.setItem("elsewhere:decision", JSON.stringify(decision));
-  }, [decision]);
+  }, [decision, demoMode]);
 
-  async function runDecision() {
-    const validated = decisionSchema.parse(decision);
-    if (validated.contextLenses.length > 0 && !window.confirm("Selected user-authored perspective text will be sent to OpenAI to generate qualitative interpretations. It remains stored in this browser. Continue?")) return;
+  function reveal(validated: Decision) {
     setOpened(true);
     setStudioOpen(false);
     setShock(false);
     setAgentState("running");
     setSimulation(runSimulation(validated));
     window.setTimeout(() => document.querySelector(".observatory")?.scrollIntoView({ behavior: "smooth" }), 100);
+  }
+
+  async function runDemo() {
+    const example = structuredClone(sampleDecision);
+    setDemoMode(true);
+    setDecision(example);
+    reveal(example);
+
+    try {
+      const response = await fetch("/api/simulate?agents=1");
+      if (!response.ok) throw new Error("Demo unavailable");
+      setSimulation(simulationSchema.parse(await response.json()));
+      setAgentState("complete");
+    } catch {
+      setAgentState("unavailable");
+    }
+  }
+
+  async function runDecision() {
+    const validated = decisionSchema.parse(decision);
+    if (validated.contextLenses.length > 0 && !window.confirm("Selected user-authored perspective text will be sent to OpenAI to generate qualitative interpretations. It remains stored in this browser. Continue?")) return;
+    setDemoMode(false);
+    reveal(validated);
 
     try {
       const response = await fetch("/api/simulate?agents=1", {
@@ -147,25 +170,32 @@ export default function Home() {
         <div className="eyebrow"><span className="pulse" /> YOUR NOTES APP, BUT WITH CONSEQUENCES</div>
         <h1>Try on the lives<br />before you pick one.</h1>
         <p className="hero-copy">For the decision you keep reopening at 1:14am. Elsewhere lets the possible lives unfold, stress-tests them, then gives you one tiny real-world move.</p>
-        <div className="hero-domains" aria-label="Decision types">
-          {primaryJourneyDomains.map((domain) => <button key={domain} onClick={() => openJourney(domain)}><span>{journeyMeta[domain].icon}</span>{journeyMeta[domain].label}</button>)}
+        <div className="hero-actions">
+          <button className="demo-cta" onClick={runDemo}>
+            <span><b>Watch a real decision unfold</b><small>Paris, London, remote, or a studio · zero setup</small></span><i>60 SEC ↘</i>
+          </button>
+          <button className="own-cta" onClick={() => openJourney()}><span>Use my own decision</span><i>+</i></button>
         </div>
-        <div className="decision-line">
-          <span>{domainMeta.icon} {domainMeta.label.toUpperCase()}</span>
-          <p>{decision.question}</p>
-          <button onClick={runDecision}>{agentState === "running" ? "Opening worlds…" : opened ? "Run it again" : "Open the futures"}<span>↘</span></button>
+        <div className="hero-domains" aria-label="Decision types">
+          <span>OR START WITH</span>
+          {primaryJourneyDomains.map((domain) => <button key={domain} onClick={() => openJourney(domain)}><span>{journeyMeta[domain].icon}</span>{journeyMeta[domain].label}</button>)}
         </div>
       </section>
 
       <section className={`observatory ${opened ? "revealed" : ""}`} aria-hidden={!opened}>
+        {demoMode && <div className="demo-guide">
+          <span>YOU’RE INSIDE THE EXAMPLE</span>
+          <strong>{decision.question}</strong>
+          <div><b>1</b> Compare the lives <i /> <b>2</b> Introduce the shock <i /> <b>3</b> Leave with a test</div>
+        </div>}
         <div className={`engine-status ${agentState}`}>
           <span />
           {agentState === "running" && `${pendingWitnesses.length} GPT-5.6 witnesses are stress-testing the paths in parallel`}
           {agentState === "complete" && (simulation.witnesses.some((witness) => witness.fallback)
-            ? "AI interpretation was unavailable · verified deterministic ledger remains complete"
+            ? "AI interpretation was unavailable · the verified deterministic record remains complete"
             : `${simulation.witnesses.length} controlled witnesses${simulation.generatedBy.synthesisReturned ? " + 1 synthesis" : ""} returned in ${((simulation.generatedBy.durationMs ?? 0) / 1000).toFixed(1)}s`)}
-          {agentState === "unavailable" && "Verified ledger active · connect the API key for future witnesses"}
-          {agentState === "idle" && "Ledger ready"}
+          {agentState === "unavailable" && "Verified record active · connect the API key for future witnesses"}
+          {agentState === "idle" && "Record ready"}
         </div>
         <header className="section-head">
           <div><span className="section-number">01</span><h2>The lives begin together.</h2></div>
@@ -182,6 +212,11 @@ export default function Home() {
         <div className={`future-grid ${shock ? "has-shock" : ""}`}>
           {futures.map((future, index) => <Timeline key={`${future.optionId}-${shock}`} future={future} index={index} active={shock} shockMonth={simulation.decision.shock.month} domain={simulation.decision.domain} />)}
         </div>
+
+        {demoMode && <div className="demo-handoff">
+          <div><span>NOW MAKE IT YOURS</span><h3>Bring the decision that keeps reopening.</h3><p>Start with one sentence. We preload four plausible paths and example assumptions; you only edit what feels wrong.</p></div>
+          <button onClick={() => openJourney()}>Try my decision <b>↗</b></button>
+        </div>}
 
         <section className="witness-panel" aria-label="AI interpretation: same facts, different values">
           <div className="section-head"><div><span className="section-number">02</span><h2>Same facts. Different values.</h2></div><p>AI interpretation is model-generated; all outcome numbers remain deterministic.</p></div>
@@ -247,10 +282,10 @@ export default function Home() {
 
       <aside className={`evidence-drawer ${evidenceOpen ? "open" : ""}`}>
         <button onClick={() => setEvidenceOpen(false)} aria-label="Close evidence">×</button>
-        <span className="section-number">EVIDENCE LEDGER</span>
-        <h2>Ledger numbers are formula-owned.</h2>
+        <span className="section-number">WHERE THE NUMBERS CAME FROM</span>
+        <h2>Every number has an owner.</h2>
         <div className="audit-score"><strong>{Math.round(simulation.audit.sourceCoverage * 100)}%</strong><span>trace coverage</span><i>{simulation.audit.untracedNumericFields} untraced fields · trace coverage is not source verification</i></div>
-        <p>Financial inputs are dated public figures or explicit assumptions. Energy, belonging, optionality, and commitment timing are transparent scenario assumptions—not predictions. Outcomes are recomputed from visible formulas. GPT‑5.6 adds qualitative interpretation; it cannot edit ledger values.</p>
+        <p>Financial inputs are dated public figures or explicit assumptions. Energy, belonging, optionality, and commitment timing are transparent scenario assumptions—not predictions. Outcomes are recomputed from visible formulas. GPT‑5.6 adds qualitative interpretation; it cannot edit numeric results.</p>
         <div className="tax-grounding-list" aria-label="Tax grounding by future">
           {simulation.baseline.map((future) => <div key={future.optionId} className={future.taxGrounding.status}>
             <span>{future.title}</span><strong>{future.taxGrounding.label}</strong>
