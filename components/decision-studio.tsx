@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { journeyMeta, makeJourney, primaryJourneyDomains, shockPresets, type JourneyDomain } from "@/lib/journeys";
+import { journeyMeta, makeJourney, makeTwoChoiceJourney, primaryJourneyDomains, type JourneyDomain } from "@/lib/journeys";
 import type { ContextLens, Decision, DecisionOption } from "@/lib/schema";
 
 type Props = {
@@ -14,8 +14,15 @@ type Props = {
   initialStep?: number;
 };
 
-const steps = ["The futures", "What matters", "Reality check", "Plot twist"];
-const stepActions = ["Set what matters", "Ground these futures", "Stress-test the plan", "Visit my futures"];
+const steps = ["Your decision", "What matters", "Check the inputs"];
+const stepActions = ["Choose what matters", "Check the rough inputs", "See my futures"];
+const priorityChoices = [
+  ["security", "Safety", "money, stability, predictability"],
+  ["energy", "Aliveness", "energy, curiosity, daily texture"],
+  ["belonging", "People", "love, community, being understood"],
+  ["optionality", "Freedom", "growth, escape routes, future doors"],
+] as const;
+
 export function DecisionStudio({ decision, open, running, onClose, onChange, onRun, initialStep = 0 }: Props) {
   const [step, setStep] = useState(initialStep);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -31,7 +38,7 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
   }
 
   function chooseDomain(domain: JourneyDomain) {
-    onChange(makeJourney(domain));
+    onChange(makeTwoChoiceJourney(domain));
     moveTo(0);
   }
 
@@ -45,9 +52,46 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
     onChange(next);
   }
 
+  function addOption() {
+    if (decision.options.length >= 4) return;
+    const next = structuredClone(decision);
+    const template = structuredClone(makeJourney(decision.domain).options[next.options.length]);
+    const usedIds = new Set(next.options.map((option) => option.id));
+    const baseId = `option-${next.options.length + 1}`;
+    let candidateId = baseId;
+    let suffix = 2;
+    while (usedIds.has(candidateId)) candidateId = `${baseId}-${suffix++}`;
+    template.id = candidateId;
+    template.title = `Path ${String.fromCharCode(65 + next.options.length)}`;
+    template.subtitle = "Name what this future makes possible";
+    next.options.push(template);
+    onChange(next);
+  }
+
+  function removeOption(index: number) {
+    if (decision.options.length <= 2) return;
+    const next = structuredClone(decision);
+    next.options.splice(index, 1);
+    onChange(next);
+  }
+
   function setPriority(key: keyof Decision["priorities"], value: number) {
     onChange({ ...decision, priorities: { ...decision.priorities, [key]: value } });
   }
+
+  function choosePriority(key: keyof Decision["priorities"]) {
+    onChange({
+      ...decision,
+      priorities: {
+        security: key === "security" ? 46 : 18,
+        energy: key === "energy" ? 46 : 18,
+        belonging: key === "belonging" ? 46 : 18,
+        optionality: key === "optionality" ? 46 : 18,
+      },
+    });
+  }
+
+  const dominantPriority = priorityChoices.reduce((winner, [key]) => decision.priorities[key] > decision.priorities[winner] ? key : winner, "security" as keyof Decision["priorities"]);
 
   function addContextLens() {
     if (decision.contextLenses.length >= 2) return;
@@ -75,18 +119,15 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
     onChange(next);
   }
 
-  function chooseShock(preset: (typeof shockPresets)[JourneyDomain][number]) {
-    onChange({ ...decision, shock: { ...decision.shock, ...preset } });
-  }
-
-  function setShockValue(key: "monthlyCostEur" | "travelCostEur" | "energyPenalty" | "belongingPenalty", value: number) {
-    onChange({ ...decision, shock: { ...decision.shock, [key]: Math.max(0, value) } });
-  }
-
   function finish() {
     setStep(0);
     onRun();
   }
+
+  const canContinue = step !== 0 || (
+    decision.question.trim().length >= 8 &&
+    decision.options.every((option) => option.title.trim().length > 0 && option.subtitle.trim().length > 0)
+  );
 
   return (
     <aside className={`studio journey ${open ? "open" : ""}`} aria-hidden={!open}>
@@ -102,9 +143,9 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
       <div className="studio-scroll journey-scroll" ref={scrollRef}>
         {step < 0 && (
           <section className="journey-screen intro-step">
-            <p className="journey-kicker">WHAT KIND OF ELSEWHERE?</p>
-            <h2>What’s taking up space in your head?</h2>
-            <p>Pick the closest shape. You can rewrite every word next.</p>
+            <p className="journey-kicker">START WITH THE KIND OF DECISION</p>
+            <h2>What part of life is changing?</h2>
+            <p>This gives you two editable starting points and the right rough assumptions. You can rename everything on the next screen.</p>
             <div className="domain-grid">
               {primaryJourneyDomains.map((domain) => {
                 const meta = journeyMeta[domain];
@@ -120,41 +161,53 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
 
         {step === 0 && (
           <section className="journey-screen">
-            <p className="journey-kicker">SAY IT LIKE YOU’D TEXT A FRIEND</p>
-            <h2>What are you actually deciding?</h2>
+            <p className="journey-kicker">STEP 1 · THE CASE</p>
+            <h2>What are you choosing between?</h2>
             <label className="hero-field"><span>THE QUESTION</span><textarea aria-label="The decision question" value={decision.question} onChange={(event) => onChange({ ...decision, question: event.target.value })} /></label>
-            <div className="option-intro"><span>THE FOUR LIVES TO OPEN</span><small>These are editable starting points—not four answers you need to invent.</small></div>
-            <div className="journey-options">
+            <label className="context-field"><span>WHAT SHOULD ELSEWHERE KNOW?</span><textarea aria-label="Decision context" placeholder="A few sentences about timing, constraints, or what makes this hard. Avoid names or sensitive details." value={decision.context} onChange={(event) => onChange({ ...decision, context: event.target.value })} /><small>Optional · sent with the question for qualitative GPT-5.6 perspectives; stored in this browser.</small></label>
+            <div className="option-intro"><span>NAME THE LIVES</span><small>Two is enough. Add another only when it is a real option.</small></div>
+            <div className="choice-inputs" aria-label={`${decision.options.length} choices`}>
+              {decision.options.map((option, index) => <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
+                <header><span>CHOICE {String.fromCharCode(65 + index)}</span>{decision.options.length > 2 && <button onClick={() => removeOption(index)} aria-label={`Remove ${option.title}`}>Remove</button>}</header>
+                <input aria-label={`Choice ${String.fromCharCode(65 + index)} name`} value={option.title} onChange={(event) => setOption(index, { title: event.target.value })} />
+                <input aria-label={`Choice ${String.fromCharCode(65 + index)} pull`} value={option.subtitle} onChange={(event) => setOption(index, { subtitle: event.target.value })} />
+              </article>)}
+            </div>
+            {decision.options.length < 4 && <button className="add-choice" onClick={addOption}>+ Add another real option</button>}
+            <details className="fine-tune">
+              <summary>Add a place or context <span>OPTIONAL</span><b>+</b></summary>
+              <div className="journey-options">
               {decision.options.map((option, index) => (
                 <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
                   <span>0{index + 1}</span>
-                  <input aria-label={`Future ${index + 1} name`} value={option.title} onChange={(event) => setOption(index, { title: event.target.value })} />
-                  <input aria-label={`Future ${index + 1} meaning`} value={option.subtitle} onChange={(event) => setOption(index, { subtitle: event.target.value })} />
+                  <strong>{option.title}</strong>
                   <input aria-label={`Future ${index + 1} place`} value={option.location} onChange={(event) => setOption(index, { location: event.target.value })} />
                 </article>
               ))}
-            </div>
+              </div>
+            </details>
           </section>
         )}
 
         {step === 1 && (
           <section className="journey-screen priorities-step">
-            <p className="journey-kicker">NO “RIGHT” ANSWER—ONLY YOUR WEIGHTS</p>
-            <h2>What deserves more volume right now?</h2>
-            <p>Move the sliders fast. Your first instinct is useful data.</p>
-            <div className="priority-stack">
-              {([
-                ["security", "Safety", "money, stability, predictability"],
-                ["energy", "Aliveness", "energy, curiosity, daily texture"],
-                ["belonging", "People", "love, community, being understood"],
-                ["optionality", "Freedom", "growth, escape routes, future doors"],
-              ] as const).map(([key, label, copy]) => (
-                <label key={key}>
-                  <div><b>{label}</b><small>{copy}</small><strong>{decision.priorities[key]}</strong></div>
-                  <input aria-label={label} type="range" min="0" max="100" value={decision.priorities[key]} onChange={(event) => setPriority(key, Number(event.target.value))} />
-                </label>
-              ))}
+            <p className="journey-kicker">STEP 2 · YOUR PRIORITY</p>
+            <h2>What needs protecting most?</h2>
+            <p>Pick one instinctively. The result still shows the trade-offs through the other three.</p>
+            <div className="priority-choices">
+              {priorityChoices.map(([key, label, copy]) => <button key={key} className={dominantPriority === key ? "selected" : ""} onClick={() => choosePriority(key)} aria-pressed={dominantPriority === key}><span>{label}</span><small>{copy}</small><b>{dominantPriority === key ? "✓" : "+"}</b></button>)}
             </div>
+            <details className="fine-tune">
+              <summary>Fine-tune all four weights <span>OPTIONAL</span><b>+</b></summary>
+              <div className="priority-stack">
+                {priorityChoices.map(([key, label, copy]) => (
+                  <label key={key}>
+                    <div><b>{label}</b><small>{copy}</small><strong>{decision.priorities[key]}</strong></div>
+                    <input aria-label={label} type="range" min="0" max="100" value={decision.priorities[key]} onChange={(event) => setPriority(key, Number(event.target.value))} />
+                  </label>
+                ))}
+              </div>
+            </details>
             <details className="optional-perspectives">
               <summary><span>OPTIONAL</span> Add a perspective you are already carrying <b>+</b></summary>
               <div className="optional-perspectives-copy">
@@ -179,13 +232,14 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
 
         {step === 2 && (
           <section className="journey-screen">
-            <p className="journey-kicker">GROUND THE VIBE</p>
-            <h2>{decision.domain === "relationships" ? "How would each future feel?" : "Give the futures real gravity."}</h2>
-            <p>{decision.domain === "relationships" ? "These are personal estimates, not scores about another person." : "Rough numbers are fine. Every assumption stays visible later."}</p>
+            <p className="journey-kicker">STEP 3 · A QUICK REALITY CHECK</p>
+            <h2>{decision.domain === "relationships" ? "How might each path feel?" : "Check the numbers that differ."}</h2>
+            <p>{decision.domain === "relationships" ? "These are your rough estimates about each path—not scores about another person. Change what feels wrong." : "We filled rough examples so you can keep moving. Change what you know; anything you leave alone remains an estimate."}</p>
             {decision.domain !== "relationships" && (
               <label className="savings-field"><span>YOUR CURRENT RUNWAY</span><div><i>€</i><input aria-label="Current savings" type="number" value={decision.startingSavingsEur} onChange={(event) => onChange({ ...decision, startingSavingsEur: Number(event.target.value) })} /></div></label>
             )}
-            <div className="reality-cards">
+            <div className="assumption-note"><span>ROUGH INPUTS</span><strong>Edit only what changes the comparison.</strong><small>These values are transparent scenario assumptions, not predictions.</small></div>
+            <div className="reality-cards visible">
               {decision.options.map((option, index) => (
                 <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
                   <header><span>0{index + 1}</span><strong>{option.title}</strong></header>
@@ -206,32 +260,11 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
                         <label><span>EST. CONTRIBUTIONS (%)</span><input aria-label={`${option.title} estimated contribution rate`} type="number" min="0" max="60" step="0.1" value={option.employeeContributionRate * 100} onChange={(event) => setOption(index, { employeeContributionRate: Number(event.target.value) / 100 })} /></label>
                         <small className="rate-input-note">User-provided estimates. Elsewhere does not source tax rules outside France and the UK.</small>
                       </>}
+                      {option.country !== "OTHER" && <small className="rate-input-note sourced-rate">Tax calculation sourced for {option.country === "FR" ? "France" : "the UK"}. Other costs remain your estimates.</small>}
                     </div>
                   )}
                 </article>
               ))}
-            </div>
-          </section>
-        )}
-
-        {step === 3 && (
-          <section className="journey-screen shock-step">
-            <p className="journey-kicker">NOW BREAK THE PERFECT PLAN</p>
-            <h2>What could change the weights?</h2>
-            <p>Pick a plot twist, then make its practical impact explicit. The ledger reruns exactly these effects.</p>
-            <div className="shock-ideas">
-              {shockPresets[decision.domain].map((preset) => <button key={preset.label} className={decision.shock.label === preset.label ? "selected" : ""} onClick={() => chooseShock(preset)}>{preset.label}<span>+</span></button>)}
-            </div>
-            <label className="hero-field"><span>MY OWN PLOT TWIST</span><textarea aria-label="Custom plot twist" value={decision.shock.label} onChange={(event) => onChange({ ...decision, shock: { ...decision.shock, label: event.target.value } })} /></label>
-            <div className="fact-grid shock-impact">
-              <label><span>MONTHLY COST</span><input aria-label="Shock monthly cost" type="number" min="0" value={decision.shock.monthlyCostEur} onChange={(event) => setShockValue("monthlyCostEur", Number(event.target.value))} /></label>
-              <label><span>TRAVEL / MONTH</span><input aria-label="Shock monthly travel cost" type="number" min="0" value={decision.shock.travelCostEur} onChange={(event) => setShockValue("travelCostEur", Number(event.target.value))} /></label>
-              <label><span>ENERGY HIT</span><input aria-label="Shock energy penalty" type="number" min="0" max="100" value={decision.shock.energyPenalty} onChange={(event) => setShockValue("energyPenalty", Number(event.target.value))} /></label>
-              <label><span>BELONGING HIT</span><input aria-label="Shock belonging penalty" type="number" min="0" max="100" value={decision.shock.belongingPenalty} onChange={(event) => setShockValue("belongingPenalty", Number(event.target.value))} /></label>
-            </div>
-            <div className="shock-timing">
-              <label><span>WHEN?</span><strong>Month {decision.shock.month}</strong><input aria-label="Shock month" type="range" min="1" max="12" value={decision.shock.month} onChange={(event) => onChange({ ...decision, shock: { ...decision.shock, month: Number(event.target.value) } })} /></label>
-              <div><span>{decision.options.length}</span> futures <i /> <span>12</span> months <i /> <span>1</span> plot twist</div>
             </div>
             {decision.contextLenses.length > 0 && <p className="transmission-note">Before live witnesses run, you’ll confirm that selected user-authored perspective text is sent to OpenAI for qualitative interpretation. It remains stored locally in this browser.</p>}
           </section>
@@ -242,8 +275,8 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
         <footer className="journey-footer">
           <button className="back" onClick={() => moveTo(step - 1)}>← {step === 0 ? "Change decision" : "Back"}</button>
           {step < steps.length - 1
-            ? <button className="next" onClick={() => moveTo(step + 1)}>{stepActions[step]}<b>↗</b></button>
-            : <button className="next" onClick={finish} disabled={running}>{running ? "Opening…" : stepActions[step]}<b>↘</b></button>}
+            ? <button className="next" onClick={() => moveTo(step + 1)} disabled={!canContinue}>{stepActions[step]}<b>↗</b></button>
+            : <button className="next" onClick={finish} disabled={running || !canContinue}>{running ? "Opening…" : stepActions[step]}<b>↘</b></button>}
         </footer>
       )}
     </aside>
