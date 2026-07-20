@@ -35,11 +35,11 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
     const month = index + 1;
     const shockActive = shockEnabled && month >= decision.shock.month;
     const officeDaysShock = decision.domain === "moving" && /remote work|office/i.test(decision.shock.label);
-    const extraOfficeDays = officeDaysShock ? Math.max(0, decision.pressureDaysPerWeek - decision.baselineDaysPerWeek) : 2;
+    const officeDayDelta = officeDaysShock ? decision.pressureDaysPerWeek - decision.baselineDaysPerWeek : 2;
     // Shock presets are calibrated to a two-day weekly change. Making this
     // multiplier explicit keeps the apartment story causal when office days
     // are swept in the breakpoint analysis.
-    const officePressure = extraOfficeDays / 2;
+    const officePressure = officeDayDelta / 2;
     const shockCost = shockActive ? decision.shock.monthlyCostEur : 0;
     const travelCost = shockActive ? decision.shock.travelCostEur * option.shockTravelMultiplier * officePressure : 0;
     const disposable = monthlyNet - monthlyFixedCostEur - shockCost - travelCost;
@@ -52,7 +52,7 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
     const energy = clamp(78 + option.flexibility * 0.08 - option.risk * 0.12 - settlingPenalty - shockEnergyPenalty);
     const belonging = clamp(
       option.belonging + Math.min(month - 1, 7) * (100 - option.belonging) * 0.025 -
-      (shockActive ? decision.shock.belongingPenalty * option.shockTravelMultiplier : 0),
+      (shockActive ? decision.shock.belongingPenalty * option.shockTravelMultiplier * officePressure : 0),
     );
     const runwayBoost = clamp(savings / 600, -20, 20);
     const commitmentPressure = Math.max(0, 9 - option.commitmentMonth) * 0.9;

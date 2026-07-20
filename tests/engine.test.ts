@@ -401,6 +401,8 @@ test("office days causally reverse the apartment comparison and render the decis
   assert.ok(atThree.shocked[1].metrics.composite > atThree.shocked[0].metrics.composite);
   assert.ok(atFive.shocked[0].metrics.composite > atFive.shocked[1].metrics.composite);
   assert.equal(atFive.breakpoint.assumption.id, "office-days");
+  const montreuilFits = atFive.breakpoint.points.map((point) => point.fits.find((fit) => fit.optionId === "montreuil-apartment")!.fit);
+  assert.equal(new Set(montreuilFits).size, atFive.breakpoint.points.length);
   const rendered = renderToStaticMarkup(createElement(ReversalMap, { analysis: atFive.breakpoint, futures: atFive.shocked }));
   assert.match(rendered, /Between 4 days\/week and 5 days\/week/);
   assert.match(rendered, /changes from Montreuil to Central Paris/);
