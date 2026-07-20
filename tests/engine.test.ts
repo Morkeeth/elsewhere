@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { DecisionStudio } from "../components/decision-studio";
 import { Timeline } from "../components/timeline";
 import { applyAssumption, assumptionForUncertainty, buildBreakpointAnalysis, buildExperiment, runSimulation, sampleDecision, validateDisplayManifest } from "../lib/engine";
 import { calculateFrancePayroll, calculateUkPayroll, nativeToEur } from "../lib/grounding";
-import { makeJourney, primaryJourneyDomains, shockPresets } from "../lib/journeys";
-import { assertQualitativeNarrative, buildWitnessInstructions, buildWitnessJobs, ledgerHash } from "../lib/openai-engine";
-import { decisionSchema } from "../lib/schema";
+import { makeJourney, makeStory, primaryJourneyDomains, shockPresets, storyIds } from "../lib/journeys";
+import { assertQualitativeNarrative, buildWitnessInstructions, buildWitnessJobs, buildWitnessResponseSchema, ledgerHash } from "../lib/openai-engine";
+import { decisionSchema, simulationSchema } from "../lib/schema";
 import { measureWitnessDisagreement } from "../lib/ablation";
 
 test("returns four independent, schema-valid futures", () => {
@@ -281,6 +283,69 @@ test("every guided journey produces four complete futures", () => {
     assert.equal(result.baseline.length, 4);
     assert.equal(result.audit.sourceCoverage, 1);
   }
+});
+
+test("every zero-input story is a complete native two-choice simulation", () => {
+  for (const story of storyIds) {
+    const decision = makeStory(story);
+    const result = runSimulation(decision);
+    assert.equal(decision.options.length, 2);
+    assert.equal(result.baseline.length, 2);
+    assert.equal(result.shocked.length, 2);
+    assert.ok(result.witnesses.every((witness) => witness.observations.length === 2));
+    assert.ok(result.breakpoint.points.every((point) => point.fits.length === 2));
+    assert.equal(result.breakpoint.futures.length, 2);
+    assert.equal(result.audit.sourceCoverage, 1);
+  }
+});
+
+test("the engine and strict witness schema preserve the same 2–4 option count", () => {
+  for (const count of [2, 3, 4]) {
+    const decision = structuredClone(sampleDecision);
+    decision.options = decision.options.slice(0, count);
+    const result = runSimulation(decision);
+    const responseSchema = buildWitnessResponseSchema(count);
+    assert.equal(result.baseline.length, count);
+    assert.equal(result.shocked.length, count);
+    assert.ok(result.witnesses.every((witness) => witness.observations.length === count));
+    assert.equal(responseSchema.properties.observations.minItems, count);
+    assert.equal(responseSchema.properties.observations.maxItems, count);
+  }
+});
+
+test("simulation validation rejects a missing future or witness observation", () => {
+  const result = runSimulation(makeStory("apartments"));
+  const missingFuture = structuredClone(result);
+  missingFuture.baseline.pop();
+  assert.equal(simulationSchema.safeParse(missingFuture).success, false);
+
+  const missingObservation = structuredClone(result);
+  missingObservation.witnesses[0].observations.pop();
+  assert.equal(simulationSchema.safeParse(missingObservation).success, false);
+
+  const duplicateId = structuredClone(result.decision);
+  duplicateId.options[1].id = duplicateId.options[0].id;
+  assert.equal(decisionSchema.safeParse(duplicateId).success, false);
+});
+
+test("two-choice input renders the real choice names before advanced assumptions", () => {
+  const decision = makeStory("apartments");
+  const rendered = renderToStaticMarkup(createElement(DecisionStudio, {
+    decision,
+    open: true,
+    running: false,
+    onClose: () => undefined,
+    onChange: () => undefined,
+    onRun: () => undefined,
+    initialStep: 0,
+  }));
+  assert.match(rendered, /CHOICE A/);
+  assert.match(rendered, /value="Canal"/);
+  assert.match(rendered, /CHOICE B/);
+  assert.match(rendered, /value="Montreuil"/);
+  assert.match(rendered, /Add another real option/);
+  assert.doesNotMatch(rendered, /GROSS \/ YEAR/);
+  assert.doesNotMatch(rendered, /RENT \/ MONTH/);
 });
 
 test("relationship journeys prioritize belonging without financial distortion", () => {

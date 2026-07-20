@@ -6,7 +6,7 @@ import { CalibrationReturn, type CalibrationSubmission } from "@/components/cali
 import { ReversalMap } from "@/components/reversal-map";
 import { Timeline } from "@/components/timeline";
 import { applyAssumption, auditTrace, buildBreakpointAnalysis, runSimulation, sampleDecision } from "@/lib/engine";
-import { journeyMeta, makeJourney, primaryJourneyDomains, type JourneyDomain } from "@/lib/journeys";
+import { journeyMeta, makeStory, makeTwoChoiceJourney, primaryJourneyDomains, storyIds, storyMeta, type JourneyDomain, type StoryId } from "@/lib/journeys";
 import { decisionSchema, simulationSchema, type AssumptionCalibration, type Decision, type Simulation, type Witness } from "@/lib/schema";
 import { uncertaintyCopyForUi, witnessObservationCopy } from "@/lib/interpretation";
 
@@ -43,7 +43,7 @@ export default function Home() {
 
   function openJourney(domain?: JourneyDomain) {
     setDemoMode(false);
-    if (domain) setDecision(makeJourney(domain));
+    if (domain) setDecision(makeTwoChoiceJourney(domain));
     setStudioStartStep(domain ? 0 : -1);
     setStudioOpen(true);
   }
@@ -88,6 +88,26 @@ export default function Home() {
     try {
       const response = await fetch("/api/simulate?agents=1");
       if (!response.ok) throw new Error("Demo unavailable");
+      setSimulation(simulationSchema.parse(await response.json()));
+      setAgentState("complete");
+    } catch {
+      setAgentState("unavailable");
+    }
+  }
+
+  async function runStory(story: StoryId) {
+    const example = decisionSchema.parse(makeStory(story));
+    setDemoMode(true);
+    setDecision(example);
+    reveal(example);
+
+    try {
+      const response = await fetch("/api/simulate?agents=1", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(example),
+      });
+      if (!response.ok) throw new Error("Witnesses unavailable");
       setSimulation(simulationSchema.parse(await response.json()));
       setAgentState("complete");
     } catch {
@@ -176,6 +196,10 @@ export default function Home() {
           </button>
           <button className="own-cta" onClick={() => openJourney()}><span>Use my own decision</span><i>+</i></button>
         </div>
+        <div className="story-launches" aria-label="Zero-input example stories">
+          <span>ZERO-INPUT STORIES</span>
+          {storyIds.map((story) => <button key={story} onClick={() => runStory(story)}><b>{storyMeta[story].icon}</b><span>{storyMeta[story].label}</span><small>{storyMeta[story].hook}</small><i>↘</i></button>)}
+        </div>
         <div className="hero-domains" aria-label="Decision types">
           <span>OR START WITH</span>
           {primaryJourneyDomains.map((domain) => <button key={domain} onClick={() => openJourney(domain)}><span>{journeyMeta[domain].icon}</span>{journeyMeta[domain].label}</button>)}
@@ -209,7 +233,7 @@ export default function Home() {
           <span>NOW</span><i /><span className={shock ? "lit" : ""}>MONTH {simulation.decision.shock.month} / SHOCK</span><i /><span>ONE YEAR</span>
         </div>
 
-        <div className={`future-grid ${shock ? "has-shock" : ""}`}>
+        <div className={`future-grid ${shock ? "has-shock" : ""}`} style={{ "--future-count": futures.length } as React.CSSProperties}>
           {futures.map((future, index) => <Timeline key={`${future.optionId}-${shock}`} future={future} index={index} active={shock} shockMonth={simulation.decision.shock.month} domain={simulation.decision.domain} />)}
         </div>
 
@@ -226,8 +250,8 @@ export default function Home() {
             <small>{agentState === "complete" && witnessReceipt !== "deterministic-only" ? "Same evidence supplied to every lens" : "The record remains usable without AI interpretation"}</small>
           </div>
           {agentState === "running" && <div className="matrix-live-status" role="status" aria-live="polite"><span />Four lenses are reading the same record. Their cells will land here as each interpretation returns.</div>}
-          <div className="matrix-scroll" tabIndex={0} aria-label="Swipe to compare all four futures">
-            <div className={`disagreement-matrix ${shock ? "shocked" : "baseline"} ${agentState === "running" ? "is-pending" : ""}`} role="table" aria-label="Disagreement matrix by protected value and future">
+          <div className="matrix-scroll" tabIndex={0} aria-label={`Swipe to compare all ${simulation.baseline.length} futures`}>
+            <div className={`disagreement-matrix ${shock ? "shocked" : "baseline"} ${agentState === "running" ? "is-pending" : ""}`} style={{ "--future-count": simulation.baseline.length } as React.CSSProperties} role="table" aria-label="Disagreement matrix by protected value and future">
               <div className="matrix-head matrix-lens">PROTECTED VALUE</div>
               {simulation.baseline.map((future) => <div className="matrix-head" key={future.optionId}>{future.title}</div>)}
               {(agentState === "running" ? pendingWitnesses : simulation.witnesses).map((witness, rowIndex) => (

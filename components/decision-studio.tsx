@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { journeyMeta, makeJourney, primaryJourneyDomains, shockPresets, type JourneyDomain } from "@/lib/journeys";
+import { journeyMeta, makeJourney, makeStory, makeTwoChoiceJourney, primaryJourneyDomains, shockPresets, storyIds, storyMeta, type JourneyDomain, type StoryId } from "@/lib/journeys";
 import type { ContextLens, Decision, DecisionOption } from "@/lib/schema";
 
 type Props = {
@@ -38,7 +38,12 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
   }
 
   function chooseDomain(domain: JourneyDomain) {
-    onChange(makeJourney(domain));
+    onChange(makeTwoChoiceJourney(domain));
+    moveTo(0);
+  }
+
+  function chooseStory(story: StoryId) {
+    onChange(makeStory(story));
     moveTo(0);
   }
 
@@ -49,6 +54,29 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
       next.options[index].currency = patch.country === "UK" ? "GBP" : "EUR";
       next.options[index].taxProfile = patch.country === "UK" ? "uk-2026" : patch.country === "FR" ? "france-2026" : "effective";
     }
+    onChange(next);
+  }
+
+  function addOption() {
+    if (decision.options.length >= 4) return;
+    const next = structuredClone(decision);
+    const template = structuredClone(makeJourney(decision.domain).options[next.options.length]);
+    const usedIds = new Set(next.options.map((option) => option.id));
+    const baseId = `option-${next.options.length + 1}`;
+    let candidateId = baseId;
+    let suffix = 2;
+    while (usedIds.has(candidateId)) candidateId = `${baseId}-${suffix++}`;
+    template.id = candidateId;
+    template.title = `Path ${String.fromCharCode(65 + next.options.length)}`;
+    template.subtitle = "Name what this future makes possible";
+    next.options.push(template);
+    onChange(next);
+  }
+
+  function removeOption(index: number) {
+    if (decision.options.length <= 2) return;
+    const next = structuredClone(decision);
+    next.options.splice(index, 1);
     onChange(next);
   }
 
@@ -125,7 +153,14 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
           <section className="journey-screen intro-step">
             <p className="journey-kicker">WHAT KIND OF ELSEWHERE?</p>
             <h2>What’s taking up space in your head?</h2>
-            <p>Pick the closest shape. You can rewrite every word next.</p>
+            <p>Borrow a real story or build your own comparison. Every example opens with two editable choices.</p>
+            <div className="story-grid">
+              {storyIds.map((story) => {
+                const meta = storyMeta[story];
+                return <button key={story} onClick={() => chooseStory(story)}><b>{meta.icon}</b><span>{meta.label}</span><small>{meta.hook}</small><i>PLAY ↗</i></button>;
+              })}
+            </div>
+            <div className="domain-divider"><span>BUILD MY OWN</span><i /></div>
             <div className="domain-grid">
               {primaryJourneyDomains.map((domain) => {
                 const meta = journeyMeta[domain];
@@ -144,18 +179,22 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
             <p className="journey-kicker">SAY IT LIKE YOU’D TEXT A FRIEND</p>
             <h2>What are you actually deciding?</h2>
             <label className="hero-field"><span>THE QUESTION</span><textarea aria-label="The decision question" value={decision.question} onChange={(event) => onChange({ ...decision, question: event.target.value })} /></label>
-            <div className="option-intro"><span>FOUR PATHS ARE ALREADY LOADED</span><small>Edit only if one misses the point.</small></div>
-            <div className="option-preview" aria-label="Four preloaded paths">
-              {decision.options.map((option, index) => <div key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}><span>0{index + 1}</span><strong>{option.title}</strong><small>{option.location}</small></div>)}
+            <div className="option-intro"><span>NAME THE LIVES</span><small>Two is enough. Add another only when it is a real option.</small></div>
+            <div className="choice-inputs" aria-label={`${decision.options.length} choices`}>
+              {decision.options.map((option, index) => <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
+                <header><span>CHOICE {String.fromCharCode(65 + index)}</span>{decision.options.length > 2 && <button onClick={() => removeOption(index)} aria-label={`Remove ${option.title}`}>Remove</button>}</header>
+                <input aria-label={`Choice ${String.fromCharCode(65 + index)} name`} value={option.title} onChange={(event) => setOption(index, { title: event.target.value })} />
+                <input aria-label={`Choice ${String.fromCharCode(65 + index)} pull`} value={option.subtitle} onChange={(event) => setOption(index, { subtitle: event.target.value })} />
+              </article>)}
             </div>
+            {decision.options.length < 4 && <button className="add-choice" onClick={addOption}>+ Add another real option</button>}
             <details className="fine-tune">
-              <summary>Fine-tune the four paths <span>OPTIONAL</span><b>+</b></summary>
+              <summary>Add a place or context <span>OPTIONAL</span><b>+</b></summary>
               <div className="journey-options">
               {decision.options.map((option, index) => (
                 <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
                   <span>0{index + 1}</span>
-                  <input aria-label={`Future ${index + 1} name`} value={option.title} onChange={(event) => setOption(index, { title: event.target.value })} />
-                  <input aria-label={`Future ${index + 1} meaning`} value={option.subtitle} onChange={(event) => setOption(index, { subtitle: event.target.value })} />
+                  <strong>{option.title}</strong>
                   <input aria-label={`Future ${index + 1} place`} value={option.location} onChange={(event) => setOption(index, { location: event.target.value })} />
                 </article>
               ))}
@@ -249,8 +288,12 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
         {step === 3 && (
           <section className="journey-screen shock-step">
             <p className="journey-kicker">NOW BREAK THE PERFECT PLAN</p>
-            <h2>What could change the weights?</h2>
-            <p>Pick a plot twist, then make its practical impact explicit. The deterministic engine reruns exactly these effects.</p>
+            <h2>What should test the plan?</h2>
+            <p>Elsewhere will tell the story twice: roughly as planned, then under one explicit pressure.</p>
+            <div className="world-pair">
+              <article><span>WORLD 01</span><strong>Roughly as planned</strong><small>Your inputs unfold for twelve months.</small></article>
+              <article><span>WORLD 02</span><strong>{decision.shock.label}</strong><small>The same lives rerun from month {decision.shock.month}.</small></article>
+            </div>
             <div className="shock-ideas">
               {shockPresets[decision.domain].map((preset) => <button key={preset.label} className={decision.shock.label === preset.label ? "selected" : ""} onClick={() => chooseShock(preset)}>{preset.label}<span>+</span></button>)}
             </div>

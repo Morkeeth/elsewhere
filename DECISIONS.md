@@ -17,7 +17,7 @@ Codex accelerated the Next.js application, typed Zod data contracts, determinist
 
 ## GPT-5.6 runtime role
 
-Four independent GPT-5.6 Sol Responses calls receive the same immutable baseline and shocked future record with distinct protected values: financial resilience, belonging and relationships, reversibility and optionality, and adversarial failure and regret. The disagreement matrix is model-generated; deterministic code owns every experiment duration, cost, action template, and outcome number. A fifth constrained response selects only the qualitative uncertainty category the deterministic experiment should test.
+Four independent GPT-5.6 Sol Responses calls receive the same immutable baseline and shocked record containing two to four real alternatives, with distinct protected values: financial resilience, belonging and relationships, reversibility and optionality, and adversarial failure and regret. The disagreement matrix is model-generated; deterministic code owns every experiment duration, cost, action template, and outcome number. A fifth constrained response selects only the qualitative uncertainty category the deterministic experiment should test.
 
 ## Submission evidence
 
