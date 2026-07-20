@@ -59,6 +59,11 @@ export function Timeline({ future, index, active, shockMonth, domain }: { future
           <span>optionality <b>{Math.round(future.metrics.optionality)}</b></span>
         </div>}
 
+      {domain !== "relationships" && <div className={`tax-grounding ${future.taxGrounding.status}`}>
+        <span>TAX BASIS</span>
+        <strong>{future.taxGrounding.label}</strong>
+      </div>}
+
       <div className="irreversible">
         <span>Commitment assumption</span>
         <strong>{future.irreversibleAt.label}</strong>

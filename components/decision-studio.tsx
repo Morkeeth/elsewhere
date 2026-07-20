@@ -201,6 +201,11 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
                       <label><span>GROSS / YEAR</span><input aria-label={`${option.title} annual income`} type="number" value={option.annualGross} onChange={(event) => setOption(index, { annualGross: Number(event.target.value) })} /></label>
                       <label><span>RENT / MONTH</span><input aria-label={`${option.title} monthly rent`} type="number" value={option.monthlyRent} onChange={(event) => setOption(index, { monthlyRent: Number(event.target.value) })} /></label>
                       <label><span>LIVING / MONTH</span><input aria-label={`${option.title} monthly living costs`} type="number" value={option.monthlyLiving} onChange={(event) => setOption(index, { monthlyLiving: Number(event.target.value) })} /></label>
+                      {option.country === "OTHER" && <>
+                        <label><span>EST. TAX RATE (%)</span><input aria-label={`${option.title} estimated tax rate`} type="number" min="0" max="60" step="0.1" value={option.effectiveTaxRate * 100} onChange={(event) => setOption(index, { effectiveTaxRate: Number(event.target.value) / 100 })} /></label>
+                        <label><span>EST. CONTRIBUTIONS (%)</span><input aria-label={`${option.title} estimated contribution rate`} type="number" min="0" max="60" step="0.1" value={option.employeeContributionRate * 100} onChange={(event) => setOption(index, { employeeContributionRate: Number(event.target.value) / 100 })} /></label>
+                        <small className="rate-input-note">User-provided estimates. Elsewhere does not source tax rules outside France and the UK.</small>
+                      </>}
                     </div>
                   )}
                 </article>

@@ -123,6 +123,11 @@ export const futureSchema = z.object({
     optionality: z.number(),
     composite: z.number(),
   }),
+  taxGrounding: z.object({
+    ratePercent: z.number().min(0).max(120),
+    status: z.enum(["sourced", "user-provided-unverified"]),
+    label: z.string(),
+  }),
   irreversibleAt: z.object({
     month: z.number(),
     label: z.string(),

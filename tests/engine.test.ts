@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { renderToStaticMarkup } from "react-dom/server";
+import { Timeline } from "../components/timeline";
 import { applyAssumption, assumptionForUncertainty, buildBreakpointAnalysis, buildExperiment, runSimulation, sampleDecision, validateDisplayManifest } from "../lib/engine";
 import { calculateFrancePayroll, calculateUkPayroll, nativeToEur } from "../lib/grounding";
 import { makeJourney, shockPresets } from "../lib/journeys";
@@ -247,6 +249,28 @@ test("UK calculator applies allowance taper, progressive income tax, and NI", ()
 
 test("ECB conversion normalizes sterling inputs into euros", () => {
   assert.ok(Math.abs(nativeToEur(0.84873, "GBP") - 1) < 0.00001);
+});
+
+test("non-FR/UK effective rates are labelled user-provided and not sourced", () => {
+  const decision = structuredClone(sampleDecision);
+  decision.options[0] = {
+    ...decision.options[0],
+    country: "OTHER",
+    taxProfile: "effective",
+    effectiveTaxRate: 0.17,
+    employeeContributionRate: 0.06,
+  };
+
+  const result = runSimulation(decision);
+  assert.equal(result.baseline[0].taxGrounding.ratePercent, 23);
+  assert.equal(result.baseline[0].taxGrounding.status, "user-provided-unverified");
+  assert.equal(result.baseline[0].taxGrounding.label, "23% effective deductions · user-provided, not sourced");
+  const renderedFuture = renderToStaticMarkup(Timeline({ future: result.baseline[0], index: 0, active: false, shockMonth: 6, domain: "career" }));
+  assert.match(renderedFuture, /23% effective deductions · user-provided, not sourced/);
+  const fallbackTaxTrace = result.baseline[0].trace.find((entry) => entry.field === "annual net income");
+  assert.deepEqual(fallbackTaxTrace?.sourceIds.filter((sourceId) => /^(fr|uk)-/.test(sourceId)), []);
+  assert.match(result.baseline[1].taxGrounding.label, /sourced UK tax \+ NI rules/);
+  assert.match(result.baseline[2].taxGrounding.label, /sourced France tax bands/);
 });
 
 test("every guided journey produces four complete futures", () => {

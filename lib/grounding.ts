@@ -6,6 +6,21 @@ const gbpPerEur = sources.find((source) => source.id === "ecb-gbp-2026-07-16")?.
 
 export const roundMoney = (value: number) => Math.round(value * 100) / 100;
 
+function taxGrounding(
+  rate: number,
+  status: "sourced" | "user-provided-unverified",
+  basis: string,
+) {
+  const ratePercent = roundMoney(rate * 100);
+  return {
+    ratePercent,
+    status,
+    label: status === "sourced"
+      ? `${ratePercent}% effective deductions · ${basis}`
+      : `${ratePercent}% effective deductions · user-provided, not sourced`,
+  };
+}
+
 export function nativeToEur(value: number, currency: DecisionOption["currency"]) {
   return currency === "GBP" ? value / gbpPerEur : value;
 }
@@ -81,6 +96,7 @@ export function calculatePayroll(option: DecisionOption) {
       annualGrossEur: roundMoney(nativeToEur(native.annualGross, option.currency)),
       annualNetEur: roundMoney(nativeToEur(native.annualNet, option.currency)),
       taxAndContributionsEur: roundMoney(nativeToEur(native.incomeTax + native.employeeContributions, option.currency)),
+      taxGrounding: taxGrounding(native.effectiveDeductionRate, "sourced", "sourced UK tax + NI rules"),
     };
   }
   if (option.taxProfile === "france-2026") {
@@ -90,6 +106,7 @@ export function calculatePayroll(option: DecisionOption) {
       annualGrossEur: native.annualGross,
       annualNetEur: native.annualNet,
       taxAndContributionsEur: roundMoney(native.incomeTax + native.employeeContributions),
+      taxGrounding: taxGrounding(native.effectiveDeductionRate, "sourced", "sourced France tax bands; contributions user-provided"),
     };
   }
 
@@ -106,6 +123,7 @@ export function calculatePayroll(option: DecisionOption) {
     annualNetEur: roundMoney(nativeToEur(annualNet, option.currency)),
     taxAndContributionsEur: roundMoney(nativeToEur(deducted, option.currency)),
     sourceIds: ["user-scenario"],
+    taxGrounding: taxGrounding(deducted / Math.max(1, option.annualGross), "user-provided-unverified", ""),
   };
 }
 

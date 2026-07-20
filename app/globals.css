@@ -213,6 +213,11 @@ h1 {
 .ledger-strip { margin-top: 15px; padding-top: 11px; border-top: 1px dashed var(--line); display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .ledger-strip span { color: var(--muted); font: 7px/1.5 "DM Mono", monospace; text-transform: uppercase; }
 .ledger-strip b { color: var(--ink); display: block; font-size: 9px; font-weight: 400; }
+.tax-grounding { margin-top: 10px; padding: 9px 10px; border: 1px solid rgba(201,255,100,.28); background: rgba(201,255,100,.055); display: grid; gap: 4px; }
+.tax-grounding span { color: var(--muted); font: 7px "DM Mono", monospace; letter-spacing: .09em; }
+.tax-grounding strong { color: var(--acid); font: 8px/1.45 "DM Mono", monospace; font-weight: 400; text-transform: uppercase; }
+.tax-grounding.user-provided-unverified { border-color: rgba(255,209,102,.42); background: rgba(255,209,102,.07); }
+.tax-grounding.user-provided-unverified strong { color: #ffd166; }
 .irreversible { margin-top: 22px; background: rgba(255,255,255,.035); padding: 11px 12px; display: flex; align-items: center; justify-content: space-between; }
 .irreversible strong { color: var(--accent); font: 12px "DM Mono", monospace; font-weight: 400; }
 .witness-panel { margin: 65px 2vw 0; padding-top: 30px; border-top: 1px solid var(--line); }
@@ -335,6 +340,11 @@ h1 {
 .evidence-drawer .section-number { color: #657548; }
 .evidence-drawer h2 { margin: 45px 0 20px; font-size: 48px; }
 .evidence-drawer > p { color: #53554e; line-height: 1.6; margin-bottom: 40px; }
+.tax-grounding-list { margin-bottom: 30px; border-bottom: 1px solid rgba(17,18,15,.2); }
+.tax-grounding-list > div { display: grid; gap: 5px; padding: 12px 0; border-top: 1px solid rgba(17,18,15,.2); }
+.tax-grounding-list span { color: #686a63; font: 8px "DM Mono", monospace; text-transform: uppercase; }
+.tax-grounding-list strong { color: #53672f; font: 10px/1.45 "DM Mono", monospace; font-weight: 400; text-transform: uppercase; }
+.tax-grounding-list .user-provided-unverified strong { color: #8b5e00; }
 .audit-score { display: grid; grid-template-columns: auto 1fr; gap: 0 14px; align-items: end; border-top: 1px solid rgba(17,18,15,.2); border-bottom: 1px solid rgba(17,18,15,.2); padding: 18px 0; margin-bottom: 22px; }
 .audit-score strong { font-size: 52px; font-weight: 300; letter-spacing: -.06em; line-height: 1; }
 .audit-score span { font: 9px "DM Mono", monospace; text-transform: uppercase; margin-bottom: 6px; }
@@ -368,6 +378,7 @@ h1 {
 .money-input i { position: absolute; left: 13px; top: 11px; font-style: normal; color: var(--acid); }
 .money-input input { padding-left: 30px; }
 .studio-note { margin: 10px 0 0; border-left: 2px solid var(--acid); padding: 0 0 0 14px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.rate-input-note { grid-column: 1 / -1; color: #ffd166; font: 8px/1.5 "DM Mono", monospace; }
 .path-editors { display: grid; grid-template-columns: repeat(2, 1fr); }
 .path-editor { --accent: var(--acid); padding: 24px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); position: relative; }
 .path-editor::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); }

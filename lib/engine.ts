@@ -18,6 +18,7 @@ import {
 } from "@/lib/schema";
 
 const monthLabels = ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
+const taxRuleSourceIds = new Set(["fr-tax-2026", "uk-tax-2026", "uk-ni-2026"]);
 const clamp = (value: number, min = 0, max = 100) => Math.min(max, Math.max(min, value));
 const round = (value: number, digits = 0) => Math.round(value * 10 ** digits) / 10 ** digits;
 
@@ -82,7 +83,8 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
     averageBelonging * decision.priorities.belonging +
     optionality * decision.priorities.optionality
   ) / weightTotal;
-  const sourceIds = [...new Set([...option.sourceIds, ...grounded.payroll.sourceIds, ...grounded.fxSourceIds, "formula-budget"])];
+  const nonTaxOptionSourceIds = option.sourceIds.filter((sourceId) => !taxRuleSourceIds.has(sourceId));
+  const sourceIds = [...new Set([...nonTaxOptionSourceIds, ...grounded.payroll.sourceIds, ...grounded.fxSourceIds, "formula-budget"])];
 
   return futureSchema.parse({
     optionId: option.id,
@@ -101,6 +103,7 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
       optionality: round(optionality, 1),
       composite: round(composite, 1),
     },
+    taxGrounding: grounded.payroll.taxGrounding,
     irreversibleAt: {
       month: option.commitmentMonth,
       label: monthLabels[option.commitmentMonth - 1],
@@ -112,7 +115,9 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
       {
         id: `${option.id}.annual-net-income`,
         field: "annual net income",
-        formula: `${option.taxProfile} progressive payroll calculation`,
+        formula: option.taxProfile === "effective"
+          ? "user-provided effective tax rate + user-provided contribution rate"
+          : `${option.taxProfile} progressive payroll calculation`,
         sourceIds,
         value: round(grounded.payroll.annualNetEur),
         unit: "EUR/year",

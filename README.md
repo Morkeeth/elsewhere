@@ -25,6 +25,7 @@ The disagreement matrix is model-generated; deterministic code deliberately owns
 - Swipeable future cards, instinctive priority sliders, and selectable plot twists
 - Editable decisions, countries, salaries, costs, value scores, and shock conditions
 - France 2026 and UK 2026 progressive payroll calculators
+- Visible tax provenance on every future; rates outside France and the UK are user-provided and explicitly marked not sourced
 - ECB-normalized EUR/GBP comparisons
 - Twelve-month baseline and shocked world states
 - Four concurrent core GPT witnesses over the same ledger plus a constrained uncertainty synthesis; optional context perspectives add one isolated lens each
@@ -85,7 +86,7 @@ Accurate language: **“Four independent GPT-5.6 witnesses receive the same immu
 
 ## Data contract
 
-Every decision-outcome number comes from inputs and formulas. Financial inputs use dated public figures where available; energy, belonging, optionality, commitment timing, and all Reversal Map sweeps are transparent scenario assumptions, not validated predictions. “Personal fit” is a user-weighted calculation, not a recommendation or objective outcome. GPT returns only bounded qualitative categories; the application renders its own interpretation text and never displays model-authored numeric or prescriptive prose. The evidence audit compares a complete rendered-outcome manifest—including timeline data and breakpoint sweep values—against independent trace records. The "Commitment assumption" marker is editable user input, not a discovered fact.
+Every decision-outcome number comes from inputs and formulas. France and UK payroll rules use dated public sources. Other jurisdictions use rates entered by the user, visibly labelled “user-provided, not sourced”; no FR/UK tax source is attached to those calculations. Energy, belonging, optionality, commitment timing, and all Reversal Map sweeps are transparent scenario assumptions, not validated predictions. “Personal fit” is a user-weighted calculation, not a recommendation or objective outcome. GPT returns only bounded qualitative categories; the application renders its own interpretation text and never displays model-authored numeric or prescriptive prose. The evidence audit compares a complete rendered-outcome manifest—including timeline data and breakpoint sweep values—against independent trace records. Trace coverage means the formula/input chain is complete; it does not mean every input is independently sourced. The "Commitment assumption" marker is editable user input, not a discovered fact.
 
 ## How we used GPT-5.6 and Codex
 
