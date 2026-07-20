@@ -12,13 +12,13 @@ function pathFor(future: Future) {
   }).join(" ");
 }
 
-export function Timeline({ future, index, active, shockMonth, domain }: { future: Future; index: number; active: boolean; shockMonth: number; domain: Decision["domain"] }) {
+export function Timeline({ future, index, active, shockMonth, domain, compact = false }: { future: Future; index: number; active: boolean; shockMonth: number; domain: Decision["domain"]; compact?: boolean }) {
   const end = future.months.at(-1)!;
   const irreversibleX = 10 + (future.irreversibleAt.month - 1) * (280 / 11);
   const shockX = 10 + (shockMonth - 1) * (280 / 11);
 
   return (
-    <article className={`future-card ${active ? "is-active" : ""}`} style={{ "--accent": future.accent } as React.CSSProperties}>
+    <article className={`future-card ${active ? "is-active" : ""} ${compact ? "compact" : ""}`} style={{ "--accent": future.accent } as React.CSSProperties}>
       <div className="future-head">
         <div>
           <span className="future-index">{String(index + 1).padStart(2, "0")}</span>
@@ -53,16 +53,26 @@ export function Timeline({ future, index, active, shockMonth, domain }: { future
         <div><span>belonging</span><strong>{Math.round(future.metrics.averageBelonging)}</strong></div>
       </div>
 
-      {domain !== "relationships" && <div className="ledger-strip">
+      {domain !== "relationships" && !compact && <div className="ledger-strip">
           <span>net / yr <b>{formatMoney(future.metrics.annualNetIncomeEur)}</b></span>
           <span>fixed / mo <b>{formatMoney(future.metrics.monthlyFixedCostEur)}</b></span>
           <span>optionality <b>{Math.round(future.metrics.optionality)}</b></span>
         </div>}
 
-      <div className="irreversible">
+      {domain !== "relationships" && !compact && <div className={`tax-grounding ${future.taxGrounding.status}`}>
+        <span>TAX BASIS</span>
+        <strong>{future.taxGrounding.label}</strong>
+      </div>}
+
+      {domain !== "relationships" && compact && <div className={`compact-grounding ${future.taxGrounding.status}`}>
+        <span>{future.taxGrounding.status === "sourced" ? "SOURCED TAX RULES" : "USER-PROVIDED, NOT SOURCED"}</span>
+        <strong>{future.taxGrounding.ratePercent}% effective deductions</strong>
+      </div>}
+
+      {!compact && <div className="irreversible">
         <span>Commitment assumption</span>
         <strong>{future.irreversibleAt.label}</strong>
-      </div>
+      </div>}
     </article>
   );
 }

@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const wantsAgents = new URL(request.url).searchParams.get("agents") === "1";
     if (wantsAgents && !process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: "OPENAI_API_KEY is not configured; the deterministic ledger remains available." },
+        { error: "OPENAI_API_KEY is not configured; the deterministic record remains available." },
         { status: 503 },
       );
     }

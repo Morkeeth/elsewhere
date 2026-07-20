@@ -41,6 +41,7 @@ export const decisionOptionSchema = z.object({
 export const decisionSchema = z.object({
   domain: z.enum(["career", "moving", "relationships", "education", "life"]).default("career"),
   question: z.string().trim().min(8).max(500),
+  context: z.string().trim().max(800).default(""),
   startingSavingsEur: z.number(),
   priorities: z.object({
     security: z.number().min(0).max(100),
@@ -75,7 +76,7 @@ export const decisionSchema = z.object({
     observedValue: z.number(),
     unit: z.string().min(1),
     provenance: z.literal("user-observed"),
-    breakpoints: z.array(z.object({ optionId: z.string(), before: z.number().nullable(), after: z.number().nullable() })).length(4),
+    breakpoints: z.array(z.object({ optionId: z.string(), before: z.number().nullable(), after: z.number().nullable() })).min(2).max(4),
     note: z.string().trim().max(320),
   }).refine((record) => record.previousValue !== record.observedValue, "Observed evidence must change the tested assumption."), z.object({
     id: z.string().trim().regex(/^[a-zA-Z0-9_-]+$/).min(1).max(80),
@@ -87,11 +88,14 @@ export const decisionSchema = z.object({
     nextValue: z.number().min(0).max(100),
     note: z.string().trim().max(320),
   })])).max(12).default([]),
-  // The submitted experience, witness architecture, and comparison UI are
-  // deliberately designed around four futures: safe, ambitious, negotiated,
-  // and nonlinear. Keep that contract explicit instead of implying a dynamic
-  // witness count the UI does not offer controls for.
-  options: z.array(decisionOptionSchema).length(4),
+  // The number of futures and the number of value witnesses are independent.
+  // A decision may contain two to four real alternatives; every witness must
+  // still assess each alternative exactly once.
+  options: z.array(decisionOptionSchema).min(2).max(4),
+}).superRefine((decision, context) => {
+  if (new Set(decision.options.map((option) => option.id)).size !== decision.options.length) {
+    context.addIssue({ code: "custom", path: ["options"], message: "Every future needs a unique id." });
+  }
 });
 
 export const monthStateSchema = z.object({
@@ -122,6 +126,11 @@ export const futureSchema = z.object({
     averageBelonging: z.number(),
     optionality: z.number(),
     composite: z.number(),
+  }),
+  taxGrounding: z.object({
+    ratePercent: z.number().min(0).max(120),
+    status: z.enum(["sourced", "user-provided-unverified"]),
+    label: z.string(),
   }),
   irreversibleAt: z.object({
     month: z.number(),
@@ -154,7 +163,7 @@ export const witnessSchema = z.object({
     baselineAssessment: qualitativeAssessmentSchema,
     shockedAssessment: qualitativeAssessmentSchema,
     focus: qualitativeFocusSchema,
-  })).length(4),
+  })).min(2).max(4),
   uncertaintyToTest: uncertaintySchema,
   observableSignal: signalSchema,
   fallback: z.boolean().default(false),
@@ -190,14 +199,14 @@ const breakpointSchema = z.object({
   referenceValue: z.number(),
   points: z.array(z.object({
     value: z.number(),
-    fits: z.array(z.object({ optionId: z.string(), fit: z.number(), state: z.enum(["robust", "sensitive", "fragile"]) })).length(4),
+    fits: z.array(z.object({ optionId: z.string(), fit: z.number(), state: z.enum(["robust", "sensitive", "fragile"]) })).min(2).max(4),
   })).min(3),
   futures: z.array(z.object({
     optionId: z.string(),
     referenceFit: z.number(),
     breakpointValue: z.number().nullable(),
     breakpointFit: z.number().nullable(),
-  })).length(4),
+  })).min(2).max(4),
 });
 
 export const simulationSchema = z.object({
@@ -236,6 +245,21 @@ export const simulationSchema = z.object({
     traceRecords: z.array(traceRecordSchema),
     displayManifest: z.array(displayFieldSchema),
   }),
+}).superRefine((simulation, context) => {
+  const optionIds = simulation.decision.options.map((option) => option.id);
+  const matchesOptions = (ids: string[]) => ids.length === optionIds.length && new Set(ids).size === optionIds.length && optionIds.every((id) => ids.includes(id));
+
+  if (!matchesOptions(simulation.baseline.map((future) => future.optionId))) {
+    context.addIssue({ code: "custom", path: ["baseline"], message: "Baseline futures must match the decision options." });
+  }
+  if (!matchesOptions(simulation.shocked.map((future) => future.optionId))) {
+    context.addIssue({ code: "custom", path: ["shocked"], message: "Shocked futures must match the decision options." });
+  }
+  simulation.witnesses.forEach((witness, index) => {
+    if (!matchesOptions(witness.observations.map((observation) => observation.optionId))) {
+      context.addIssue({ code: "custom", path: ["witnesses", index, "observations"], message: "Every witness must assess every option exactly once." });
+    }
+  });
 });
 
 export type Decision = z.infer<typeof decisionSchema>;

@@ -10,7 +10,7 @@ Do not show setup. Do not toggle the shock yet.
 
 ## 0:20–0:55 — Deterministic futures
 
-“Elsewhere opens four grounded versions of the next year. The numbers are formula-owned: cited tax rules, costs, and explicit scenario assumptions.”
+“Elsewhere opens four grounded versions of the next year. The numbers are formula-owned: sourced France and UK tax rules, visibly user-provided rates elsewhere, costs, and explicit scenario assumptions.”
 
 Point to one timeline, the visible commitment assumption, and the four-future comparison. Do not imply energy, belonging, or optionality are predictions; they are visible scenario assumptions.
 
@@ -26,7 +26,7 @@ Contrast only two cells. Do not read every row. AI identifies what is contested;
 
 Apply the parent-care shock once.
 
-“Month six: a parent needs recurring help. The ledger reruns every future.”
+“Month six: a parent needs recurring help. The calculation reruns every future.”
 
 Scroll directly to Assumption Breakpoint.
 
@@ -52,6 +52,7 @@ Close:
 
 - Use desktop around 1440×900 and capture one mobile insert at 390×844.
 - Begin with the futures loaded; narrate deterministic rendering while AI work completes.
+- Include one brief build-proof insert showing the Codex work and the GPT-5.6 model receipt. Do not present a cached replay as a live call.
 - Toggle the shock exactly once.
 - Keep Context Layers, Evidence, architecture, and the roadmap out of the main arc.
 - Show the shared record receipt only after the product insight is clear.

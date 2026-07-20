@@ -18,6 +18,7 @@ import {
 } from "@/lib/schema";
 
 const monthLabels = ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
+const taxRuleSourceIds = new Set(["fr-tax-2026", "uk-tax-2026", "uk-ni-2026"]);
 const clamp = (value: number, min = 0, max = 100) => Math.min(max, Math.max(min, value));
 const round = (value: number, digits = 0) => Math.round(value * 10 ** digits) / 10 ** digits;
 
@@ -82,7 +83,8 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
     averageBelonging * decision.priorities.belonging +
     optionality * decision.priorities.optionality
   ) / weightTotal;
-  const sourceIds = [...new Set([...option.sourceIds, ...grounded.payroll.sourceIds, ...grounded.fxSourceIds, "formula-budget"])];
+  const nonTaxOptionSourceIds = option.sourceIds.filter((sourceId) => !taxRuleSourceIds.has(sourceId));
+  const sourceIds = [...new Set([...nonTaxOptionSourceIds, ...grounded.payroll.sourceIds, ...grounded.fxSourceIds, "formula-budget"])];
 
   return futureSchema.parse({
     optionId: option.id,
@@ -101,6 +103,7 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
       optionality: round(optionality, 1),
       composite: round(composite, 1),
     },
+    taxGrounding: grounded.payroll.taxGrounding,
     irreversibleAt: {
       month: option.commitmentMonth,
       label: monthLabels[option.commitmentMonth - 1],
@@ -112,7 +115,9 @@ function simulateFuture(option: DecisionOption, decision: Decision, shockEnabled
       {
         id: `${option.id}.annual-net-income`,
         field: "annual net income",
-        formula: `${option.taxProfile} progressive payroll calculation`,
+        formula: option.taxProfile === "effective"
+          ? "user-provided effective tax rate + user-provided contribution rate"
+          : `${option.taxProfile} progressive payroll calculation`,
         sourceIds,
         value: round(grounded.payroll.annualNetEur),
         unit: "EUR/year",
@@ -342,14 +347,24 @@ export function buildExperiment(decision: Decision, baseline: Future[], uncertai
     "reversal-cost": ["List each commitment before making it.", "Notice which exit you hesitate to preserve.", "Write the cost of changing your mind."],
     "downside-tolerance": ["Introduce one ordinary inconvenience.", "Record recovery after the disruption.", "Write what still feels worth protecting."],
   }[uncertainty];
+  const movingExperiment = decision.domain === "moving";
+  const relationshipExperiment = decision.domain === "relationships";
   return {
-    title: `Borrow ${challenger.location} for two weeks`,
+    title: movingExperiment
+      ? `Live the ${challenger.title} routine for two weeks`
+      : relationshipExperiment
+        ? `Try the ${challenger.title.toLowerCase()} conversation for two weeks`
+        : `Borrow ${challenger.location} for two weeks`,
     hypothesis,
     durationDays: 14 as const,
     costEur,
-    firstStep: challengerOption.shockTravelMultiplier >= 0.8
-      ? `Ask the ${challenger.location} team for two shadow days and reserve a refundable return ticket.`
-      : "Put two representative days from this future into next week’s calendar before noon tomorrow.",
+    firstStep: movingExperiment
+      ? `Make the ${challenger.title} commute at rush hour twice this week, then spend both evenings in the neighbourhood.`
+      : relationshipExperiment
+        ? `Put one honest conversation on the calendar and agree on the single question you both want answered.`
+        : challengerOption.shockTravelMultiplier >= 0.8
+          ? `Ask the ${challenger.location} team for two shadow days and reserve a refundable return ticket.`
+          : "Put two representative days from this future into next week’s calendar before noon tomorrow.",
     evidence,
     uncertainty,
   };
