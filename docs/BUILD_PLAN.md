@@ -19,7 +19,7 @@ Elsewhere does not recommend a life. It lets the user inspect grounded futures, 
 | Persistence and portability | Local decision state, Markdown brief, JSON world-state export | Complete |
 | Edge delivery | No third-party delivery webhook in the submitted artifact | Deliberately removed from scope |
 | Reliability | Unit tests, scenario evals, health route, validation, graceful no-key state | Complete |
-| Shipping | Vercel project, public production alias, README, security, demo, and judging docs | Candidate `6b0b67d` is public and healthy; rendered walkthrough remains |
+| Shipping | Vercel project, public production alias, README, security, demo, and judging docs | Application commit `293ed40` is public and healthy; rendered walkthrough remains |
 
 ## Architecture decisions
 
