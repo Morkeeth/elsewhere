@@ -19,7 +19,7 @@ Elsewhere does not recommend a life. It lets the user inspect grounded futures, 
 | Persistence and portability | Local decision state, Markdown brief, JSON world-state export | Complete |
 | Edge delivery | No third-party delivery webhook in the submitted artifact | Deliberately removed from scope |
 | Reliability | Unit tests, scenario evals, health route, validation, graceful no-key state | Complete |
-| Shipping | Vercel project, public production alias, README, security, demo, and judging docs | Existing production is healthy; current candidate still needs deploy and rendered walkthrough |
+| Shipping | Vercel project, public production alias, README, security, demo, and judging docs | Candidate `6b0b67d` is public and healthy; rendered walkthrough remains |
 
 ## Architecture decisions
 
@@ -42,12 +42,12 @@ Elsewhere does not recommend a life. It lets the user inspect grounded futures, 
 - [x] Fourteen-day experiment costs at most €250
 - [x] Qualitative witness output cannot write numeric outcome fields
 - [ ] Mobile and desktop rendered walkthrough on the deployed candidate
-- [ ] Live Responses API smoke test on the deployed candidate
+- [x] Live Responses API smoke test on the deployed candidate
 
 ## Remaining release gates
 
-- Commit and deploy this candidate, then verify that the public alias serves the same revision.
 - Run the zero-setup apartment flow on desktop and mobile: open, ordinary week, pressure, hinge, witnesses, experiment, evidence.
-- Run one same-origin live witness request against production and retain its response receipt.
 - Record the three-minute path in `docs/DEMO_SCRIPT.md`.
 - Enter the Codex `/feedback` session identifier, public URL, repository, video, and final copy in Devpost.
+
+Exact release receipts live in `docs/SUBMISSION_SNAPSHOT.md`.
