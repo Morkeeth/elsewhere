@@ -1,8 +1,9 @@
-import type { BreakpointAnalysis, Future } from "@/lib/schema";
+import type { BreakpointAnalysis, Decision, Future } from "@/lib/schema";
 
 type Props = {
   analysis: BreakpointAnalysis;
   futures: Future[];
+  priorities: Decision["priorities"];
 };
 
 function formatValue(value: number, unit: string) {
@@ -14,7 +15,7 @@ function leadAt(point: BreakpointAnalysis["points"][number]) {
   return [...point.fits].sort((left, right) => right.fit - left.fit)[0]?.optionId;
 }
 
-export function ReversalMap({ analysis, futures }: Props) {
+export function ReversalMap({ analysis, futures, priorities }: Props) {
   const futuresById = new Map(futures.map((future) => [future.optionId, future]));
   const ordered = [...analysis.points].sort((left, right) => left.value - right.value);
   const crossings = ordered.flatMap((point, index) => {
@@ -25,23 +26,23 @@ export function ReversalMap({ analysis, futures }: Props) {
   const beforeFuture = crossing ? futuresById.get(leadAt(crossing.before)) : undefined;
   const afterFuture = crossing ? futuresById.get(leadAt(crossing.after)) : undefined;
   const hinge = crossing && beforeFuture && afterFuture
-    ? `Between ${formatValue(crossing.before.value, analysis.assumption.unit)} and ${formatValue(crossing.after.value, analysis.assumption.unit)}, the stronger personal fit changes from ${beforeFuture.title} to ${afterFuture.title}.`
+    ? `Between ${formatValue(crossing.before.value, analysis.assumption.unit)} and ${formatValue(crossing.after.value, analysis.assumption.unit)}, the calculated fit changes from ${beforeFuture.title} to ${afterFuture.title}.`
     : `No path takes the lead across this tested range. The useful signal is which life becomes fragile first.`;
   return (
     <section className="reversal-map" aria-label="Assumption breakpoint map">
       <div className="reversal-map-head">
-        <div><span className="section-number">02 / THE DECISION HINGE</span><h2>What changes the decision?</h2></div>
+        <div><span className="section-number">02 / WHAT WOULD CHANGE YOUR MIND?</span><h2>Here is where the answer flips.</h2></div>
         <p><b>{analysis.assumption.label}</b><br />{analysis.assumption.affects}</p>
       </div>
       <div className="hinge-callout">
-        <span>THE REVERSAL</span>
+        <span>THE TURNING POINT</span>
         <strong>{hinge}</strong>
-        <p>This calculation follows the priorities entered for this decision. It exposes the assumption to verify; it does not choose a home.</p>
+        <p>This exposes the assumption to verify. It does not choose a life.</p>
       </div>
       <div className="assumption-receipt">
         <span>{analysis.assumption.provenance.replace("-", " ")}</span>
         <strong>Current scenario value: {formatValue(analysis.referenceValue, analysis.assumption.unit)}</strong>
-        <small>Personal fit is your weighted calculation. It is not an objective ranking. Fragile begins after a deterministic 3-point fit decline.</small>
+        <small>Starting weights · safety {priorities.security} · energy {priorities.energy} · people {priorities.belonging} · freedom {priorities.optionality}. These are visible assumptions, not an objective ranking.</small>
       </div>
       <details className="hinge-details">
         <summary>Inspect the full assumption sweep <b>+</b></summary>

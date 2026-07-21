@@ -355,7 +355,7 @@ test("two-choice input renders the real choice names before advanced assumptions
   assert.doesNotMatch(rendered, /RENT \/ MONTH/);
 });
 
-test("the guided story grounds concrete differences before asking for uncertainty", () => {
+test("the guided story grounds concrete differences without front-loading uncertainty", () => {
   const decision = makeStory("apartments");
   const rendered = renderToStaticMarkup(createElement(DecisionStudio, {
     decision,
@@ -366,17 +366,32 @@ test("the guided story grounds concrete differences before asking for uncertaint
     onRun: () => undefined,
     initialStep: 2,
   }));
-  assert.match(rendered, /3 OF 4/);
-  assert.match(rendered, /MAP THE RECURRING LIFE/);
+  assert.match(rendered, /2 OF 2/);
+  assert.match(rendered, /GROUND THE RECURRING LIFE/);
   assert.match(rendered, /INCOME \/ YEAR/);
   assert.match(rendered, /France 2026 tax rules/);
   assert.match(rendered, /United States/);
-  assert.match(rendered, /Choose a scenario/);
+  assert.match(rendered, /Walk into 2 lives/);
   assert.match(rendered, /SPACE · M²/);
   assert.match(rendered, /FRIENDS · MIN ONE WAY/);
   assert.match(rendered, /USUAL PLACES · MIN/);
   assert.match(rendered, /NATURE · MIN ONE WAY/);
-  assert.doesNotMatch(rendered, /What should test the plan|NOW BREAK THE PERFECT PLAN|MY OWN PLOT TWIST/);
+  assert.doesNotMatch(rendered, /Choose a scenario|Which assumption feels least stable|What should test the plan|NOW BREAK THE PERFECT PLAN|MY OWN PLOT TWIST/);
+});
+
+test("conditions are edited after the first result in plain language", () => {
+  const rendered = renderToStaticMarkup(createElement(DecisionStudio, {
+    decision: makeStory("apartments"),
+    open: true,
+    running: false,
+    onClose: () => undefined,
+    onChange: () => undefined,
+    onRun: () => undefined,
+    initialStep: 3,
+  }));
+  assert.match(rendered, /TRY ANOTHER CONDITION/);
+  assert.match(rendered, /What would change your mind/);
+  assert.match(rendered, /Replay with this change/);
 });
 
 test("the apartment story reveals the concrete money-space-time trade", () => {
@@ -391,7 +406,7 @@ test("the apartment story reveals the concrete money-space-time trade", () => {
   assert.match(insight, /That is the life pattern, not a score/);
 });
 
-test("office days causally reverse the apartment comparison and render the decision hinge", () => {
+test("office days causally reverse the apartment comparison and render the turning point", () => {
   const threeDays = makeStory("apartments");
   threeDays.pressureDaysPerWeek = 3;
   const fiveDays = makeStory("apartments");
@@ -403,11 +418,11 @@ test("office days causally reverse the apartment comparison and render the decis
   assert.equal(atFive.breakpoint.assumption.id, "office-days");
   const montreuilFits = atFive.breakpoint.points.map((point) => point.fits.find((fit) => fit.optionId === "montreuil-apartment")!.fit);
   assert.equal(new Set(montreuilFits).size, atFive.breakpoint.points.length);
-  const rendered = renderToStaticMarkup(createElement(ReversalMap, { analysis: atFive.breakpoint, futures: atFive.shocked }));
+  const rendered = renderToStaticMarkup(createElement(ReversalMap, { analysis: atFive.breakpoint, futures: atFive.shocked, priorities: fiveDays.priorities }));
   assert.match(rendered, /Between 4 days\/week and 5 days\/week/);
   assert.match(rendered, /changes from Montreuil to Central Paris/);
-  assert.match(rendered, /it does not choose a home/);
-  assert.ok(rendered.indexOf("THE REVERSAL") < rendered.indexOf('<details class="hinge-details">'));
+  assert.match(rendered, /It does not choose a life/);
+  assert.ok(rendered.indexOf("THE TURNING POINT") < rendered.indexOf('<details class="hinge-details">'));
   assert.match(rendered, /Inspect the full assumption sweep/);
 });
 

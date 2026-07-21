@@ -368,7 +368,7 @@ export function buildExperiment(decision: Decision, baseline: Future[], uncertai
       ? `Live the ${challenger.title} routine for two weeks`
       : relationshipExperiment
         ? `Try the ${challenger.title.toLowerCase()} conversation for two weeks`
-        : `Borrow ${challenger.location} for two weeks`,
+        : `Shadow the ${challenger.location} team for two weeks`,
     hypothesis,
     durationDays: 14 as const,
     costEur,

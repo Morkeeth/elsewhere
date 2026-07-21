@@ -19,28 +19,28 @@ Click **An ordinary week**.
 
 > “Montreuil buys twenty-six square metres and saves six hundred and fifty euros a month. Central Paris returns nineteen recurring travel hours. These are the lives behind the listings.”
 
-## 0:20–0:34 — the hinge
+## 0:20–0:34 — what changes the answer
 
-Click **Pressure this assumption**. The product jumps directly to **The Decision Hinge**.
+Click **Show what changes**. The product jumps directly to the turning point.
 
-> “Change office attendance from four days to five and the personal-fit calculation crosses from Montreuil to Central Paris. Elsewhere found the exact assumption keeping this decision open.”
+> “Change office attendance from four days to five and the calculated fit crosses from Montreuil to Central Paris. Elsewhere found the exact assumption keeping this decision open.”
 
-Say “personal-fit calculation,” never “winner.” Do not open the full sweep.
+Say “calculated fit,” never “winner.” The starting value weights are visible beneath the result. Do not open the full sweep.
 
 ## 0:34–0:49 — witnesses and synthesis
 
 Scroll once to the witness matrix and synthesis card.
 
-> “Four independent GPT-5.6 witnesses read the same immutable futures through money, belonging, reversibility, and regret. The fifth response preserves their disagreement and selects what is most useful to test. None can move the hinge or choose the home.”
+> “Four independent GPT-5.6 witnesses read the same futures through money, belonging, reversibility, and regret. The fifth response preserves their disagreement and selects what is most useful to test. None can move the calculation or choose the home.”
 
 Hold long enough for **THE FIFTH RESPONSE / SYNTHESIS** to be visible. If live interpretation is unavailable, stop the take; do not present the deterministic fallback as a live model result.
 
 ## 0:49–1:00 — leave the model
 
-Frame **THE REAL-WORLD PAYOFF**, then click **Open the 14-day test**.
+Frame **THE REAL-WORLD PAYOFF**, then click **Open the 14-day test**. Hold on **ASK SOMEONE WHO KNOWS YOU** and the first physical step.
 
-> “The answer is a two-week rush-hour commute trial, with one physical first step. Don’t ask AI what to choose. Find the assumption your future depends on, then test it.”
+> “The answer is a two-week rush-hour commute trial, one physical first step, and one honest question for someone who knows me. Elsewhere gets the model out of the way and sends me back to reality.”
 
 ## Mobile insert
 
-Repeat only the hinge → witness matrix → synthesis/payoff sequence at 390×844. The matrix must show both apartments without a horizontal gesture; the detailed sweep remains collapsed.
+Repeat only the turning point → witness matrix → synthesis/payoff sequence at 390×844. The detailed sweep remains collapsed.

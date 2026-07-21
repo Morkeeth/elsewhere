@@ -30,18 +30,33 @@ const assessmentLabel = {
   strains: "Strains",
 } as const;
 
+function realityCheckQuestion(assumptionId: string) {
+  const questions: Record<string, string> = {
+    "shock-cost": "If this got harder than expected, what cost or trade-off would you actually expect me to carry?",
+    "travel-burden": "If I needed to show up regularly, what would that realistically look like?",
+    "shock-energy": "What part of this day-to-day change do you think would drain me most?",
+    "shock-belonging": "What would help me still feel connected if this changed?",
+    "starting-runway": "What financial buffer would make this feel genuinely reversible?",
+    "commitment-timing": "When would this start feeling hard to undo from the outside?",
+    "office-days": "How many days on site should I realistically plan around, including the less flexible weeks?",
+  };
+  return questions[assumptionId] ?? "What am I least likely to see clearly from inside this decision?";
+}
+
 export default function Home() {
   const initialSimulation = useMemo(() => runSimulation(sampleDecision), []);
   const [decision, setDecision] = useState<Decision>(sampleDecision);
   const [simulation, setSimulation] = useState<Simulation>(initialSimulation);
   const [shock, setShock] = useState(false);
   const [experimentOpen, setExperimentOpen] = useState(false);
+  const [calibrationOpen, setCalibrationOpen] = useState(false);
   const [opened, setOpened] = useState(false);
   const [studioOpen, setStudioOpen] = useState(false);
   const [studioStartStep, setStudioStartStep] = useState(-1);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [agentState, setAgentState] = useState<AgentState>("idle");
   const [demoMode, setDemoMode] = useState(false);
+  const [realityCheckCopied, setRealityCheckCopied] = useState(false);
   const futures = shock ? simulation.shocked : simulation.baseline;
   const liveWitnesses = agentState === "complete" && !simulation.witnesses.some((witness) => witness.fallback);
   const pendingWitnesses = [
@@ -53,6 +68,11 @@ export default function Home() {
     setDemoMode(false);
     if (domain) setDecision(makeTwoChoiceJourney(domain));
     setStudioStartStep(domain ? 0 : -1);
+    setStudioOpen(true);
+  }
+
+  function openScenarioEditor() {
+    setStudioStartStep(3);
     setStudioOpen(true);
   }
 
@@ -78,11 +98,12 @@ export default function Home() {
     window.localStorage.setItem("elsewhere:decision", JSON.stringify(decision));
   }, [decision, demoMode]);
 
-  function reveal(validated: Decision) {
+  function reveal(validated: Decision, startPressured = false) {
     setOpened(true);
     setStudioOpen(false);
-    setShock(false);
+    setShock(startPressured);
     setExperimentOpen(false);
+    setCalibrationOpen(false);
     setAgentState("running");
     setSimulation(runSimulation(validated));
     window.setTimeout(() => document.querySelector(".observatory")?.scrollIntoView({ behavior: "smooth" }), 100);
@@ -112,11 +133,11 @@ export default function Home() {
     }
   }
 
-  async function runDecision() {
+  async function runDecision(startPressured = false) {
     const validated = decisionSchema.parse(decision);
     if (validated.contextLenses.length > 0 && !window.confirm("Selected user-authored perspective text will be sent to OpenAI to generate qualitative interpretations. It remains stored in this browser. Continue?")) return;
     setDemoMode(false);
-    reveal(validated);
+    reveal(validated, startPressured);
 
     try {
       const response = await fetch("/api/simulate?agents=1", {
@@ -158,19 +179,21 @@ export default function Home() {
     setOpened(true);
     setShock(true);
     setExperimentOpen(true);
+    setCalibrationOpen(false);
     setAgentState("idle");
     window.setTimeout(() => document.querySelector(".observatory")?.scrollIntoView({ behavior: "smooth" }), 100);
   }
 
-  function exportFile(kind: "json" | "markdown") {
-    const body = kind === "json" ? JSON.stringify(simulation, null, 2) : buildMarkdown(simulation);
-    const blob = new Blob([body], { type: kind === "json" ? "application/json" : "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `elsewhere-${new Date().toISOString().slice(0, 10)}.${kind === "json" ? "json" : "md"}`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+  async function copyRealityCheck() {
+    const question = realityCheckQuestion(simulation.breakpoint.assumption.id);
+    const message = `Hey, I’m thinking through: “${decision.question}”\n\nI’m not asking you to decide for me. I’m trying to understand one thing: ${question}\n\nA blunt answer would genuinely help me test the assumption before I commit.`;
+    try {
+      await navigator.clipboard.writeText(message);
+      setRealityCheckCopied(true);
+      window.setTimeout(() => setRealityCheckCopied(false), 1800);
+    } catch {
+      setRealityCheckCopied(false);
+    }
   }
 
   return (
@@ -222,7 +245,7 @@ export default function Home() {
 
         <StoryWalk key={shock ? "pressured-story" : "baseline-story"} decision={simulation.decision} baseline={simulation.baseline} pressured={simulation.shocked} activePressure={shock} />
 
-        {shock && <ReversalMap analysis={simulation.breakpoint} futures={simulation.shocked} />}
+        {shock && <ReversalMap analysis={simulation.breakpoint} futures={simulation.shocked} priorities={simulation.decision.priorities} />}
 
         <details className="calculation-details">
           <summary>Open the calculations and source labels <b>+</b></summary>
@@ -232,8 +255,8 @@ export default function Home() {
         </details>
 
         {!shock && <div className="story-next">
-          <div><span>THE UNCERTAINTY THIS STORY TURNS ON</span><strong>{simulation.decision.shock.label}</strong></div>
-          <button onClick={() => { setShock(true); window.setTimeout(() => document.querySelector(".reversal-map")?.scrollIntoView({ behavior: "smooth", block: "start" }), 120); }}>Pressure this assumption <b>→</b></button>
+          <div><span>NOW CHANGE ONE THING</span><strong>{simulation.decision.shock.label}</strong><small>Elsewhere started here. You can choose a different condition.</small></div>
+          <div className="story-next-actions"><button className="secondary" onClick={openScenarioEditor}>Name another condition</button><button onClick={() => { setShock(true); window.setTimeout(() => document.querySelector(".reversal-map")?.scrollIntoView({ behavior: "smooth", block: "start" }), 120); }}>Show what changes <b>→</b></button></div>
         </div>}
 
         {shock && <section className="witness-panel" aria-label="AI interpretation: same facts, different values">
@@ -259,7 +282,7 @@ export default function Home() {
           <div className={`synthesis-card ${liveWitnesses && simulation.generatedBy.synthesisReturned ? "live" : "fallback"}`}>
             <span>{liveWitnesses && simulation.generatedBy.synthesisReturned ? "THE FIFTH RESPONSE / SYNTHESIS" : agentState === "running" ? "SYNTHESIS IS ARRIVING" : "THE TESTABLE CONCLUSION"}</span>
             <div>
-              <strong>{liveWitnesses && simulation.generatedBy.synthesisReturned ? simulation.divergence.explanation : agentState === "running" ? "The calculated hinge is ready. The fifth response will select which uncertainty is most useful to test." : simulation.divergence.explanation}</strong>
+              <strong>{liveWitnesses && simulation.generatedBy.synthesisReturned ? simulation.divergence.explanation : agentState === "running" ? "The calculated turning point is ready. The fifth response will select which uncertainty is most useful to test." : simulation.divergence.explanation}</strong>
               <p>{liveWitnesses && simulation.generatedBy.synthesisReturned ? "It preserves the disagreement and chooses an uncertainty to test. It does not choose a home." : "The deterministic record remains complete and usable without model interpretation."}</p>
             </div>
             <div className="synthesis-payoff"><span>THE REAL-WORLD PAYOFF</span><strong>{simulation.experiment.title}</strong><small>{simulation.experiment.firstStep}</small></div>
@@ -281,12 +304,19 @@ export default function Home() {
               <span><b>€{simulation.experiment.costEur}</b> at risk</span>
               <span><b>{simulation.experiment.evidence.length}</b> signals</span>
             </div>
-            {demoMode ? <button className="final-own-cta" onClick={() => openJourney()}>Model my move or career decision <b>↗</b></button> : <div className="result-actions"><button onClick={() => exportFile("markdown")}>Export brief ↗</button><button onClick={() => exportFile("json")}>World states {"{}"}</button></div>}
+            <div className="reality-prompt"><span>ASK SOMEONE WHO KNOWS YOU</span><strong>{realityCheckQuestion(simulation.breakpoint.assumption.id)}</strong></div>
+            <div className="result-actions">
+              <button className="primary" onClick={copyRealityCheck}>{realityCheckCopied ? "Copied — ask someone who knows you" : "Copy a reality-check message"} <b>↗</b></button>
+              {!demoMode && <button onClick={openScenarioEditor}>Try another condition</button>}
+              {!demoMode && <button onClick={() => { setCalibrationOpen(true); window.setTimeout(() => document.querySelector(".calibration-return")?.scrollIntoView({ behavior: "smooth" }), 80); }}>I tried it — update the model</button>}
+            </div>
+            <small className="people-boundary">Elsewhere prepares the question. A real person answers it.</small>
+            {demoMode && <button className="final-own-cta" onClick={() => openJourney()}>Model my move or career decision <b>↗</b></button>}
           </div>
         </div>
       </section>
 
-      {opened && experimentOpen && !demoMode && <CalibrationReturn decision={decision} simulation={simulation} analysis={simulation.breakpoint} onApply={applyCalibration} />}
+      {opened && experimentOpen && calibrationOpen && !demoMode && <CalibrationReturn decision={decision} simulation={simulation} analysis={simulation.breakpoint} onApply={applyCalibration} />}
 
       <aside className={`evidence-drawer ${evidenceOpen ? "open" : ""}`}>
         <button onClick={() => setEvidenceOpen(false)} aria-label="Close evidence">×</button>
@@ -310,12 +340,4 @@ export default function Home() {
       <DecisionStudio key={`${studioOpen}-${studioStartStep}`} initialStep={studioStartStep} decision={decision} open={studioOpen} running={agentState === "running"} onClose={() => setStudioOpen(false)} onChange={setDecision} onRun={runDecision} />
     </main>
   );
-}
-
-function buildMarkdown(simulation: Simulation) {
-  const rows = simulation.shocked.map((future) => `| ${future.title} | €${future.metrics.yearEndSavingsEur.toLocaleString()} | ${future.taxGrounding.label} | ${future.metrics.averageEnergy} | ${future.metrics.averageBelonging} | ${future.irreversibleAt.label} |`).join("\n");
-  const perspectives = simulation.decision.contextLenses.length
-    ? `\n## User-authored perspectives\n\n${simulation.decision.contextLenses.map((lens) => `### ${lens.label}\n\n- Protects: ${lens.protectedValues.join(", ")}\n- What I think I know: ${lens.knownConcern}\n- What I do not know yet: ${lens.unknown}\n- Provenance: ${lens.provenanceLabel}; this is not that person’s actual view.`).join("\n\n")}\n`
-    : "";
-  return `# Elsewhere decision brief\n\n## ${simulation.decision.question}\n\n${simulation.decision.context ? `Context: ${simulation.decision.context}\n\n` : ""}Generated with ${simulation.generatedBy.model ?? "the deterministic engine"}.\n\n| Future | Year-end savings | Tax basis | Energy | Belonging | Commitment assumption |\n| --- | ---: | --- | ---: | ---: | --- |\n${rows}${perspectives}\n## Pressure test\n\n${simulation.decision.shock.label}, month ${simulation.decision.shock.month}.\n\n## Fourteen-day experiment\n\n**${simulation.experiment.title}**\n\n${simulation.experiment.hypothesis}\n\nFirst step: ${simulation.experiment.firstStep}\n\n## Evidence\n\nTrace coverage: ${Math.round(simulation.audit.sourceCoverage * 100)}%.\n\n${simulation.sources.map((source) => `- [${source.label}](${source.url}): ${source.note}`).join("\n")}\n`;
 }

@@ -10,11 +10,11 @@ type Props = {
   running: boolean;
   onClose: () => void;
   onChange: (decision: Decision) => void;
-  onRun: () => void;
+  onRun: (startPressured?: boolean) => void;
   initialStep?: number;
 };
 
-const steps = ["Name the lives", "Name the outcome", "Map everyday life", "Choose a scenario"];
+const setupSteps = ["Name the lives", "Ground everyday life"];
 
 const jurisdictions = [
   "France",
@@ -32,28 +32,6 @@ const jurisdictions = [
   "Japan",
   "Other",
 ] as const;
-
-const priorityChoices = [
-  ["security", "Safety", "money, stability, predictability"],
-  ["energy", "Aliveness", "energy, curiosity, daily texture"],
-  ["belonging", "People", "love, community, being understood"],
-  ["optionality", "Freedom", "growth, escape routes, future doors"],
-] as const;
-
-const domainPriorityCopy: Record<"career" | "moving", Record<(typeof priorityChoices)[number][0], string>> = {
-  career: {
-    security: "steady income and stability",
-    energy: "work you want to wake up for",
-    belonging: "the people and team around you",
-    optionality: "skills and future doors",
-  },
-  moving: {
-    security: "affordability and stability",
-    energy: "your everyday rhythm",
-    belonging: "friends and community",
-    optionality: "the freedom to change course",
-  },
-};
 
 function comparisonQuestion(decision: Decision) {
   const names = decision.options.map((option) => option.title.trim()).filter(Boolean);
@@ -134,18 +112,6 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
     commit(next);
   }
 
-  function choosePriority(key: keyof Decision["priorities"]) {
-    onChange({
-      ...decision,
-      priorities: {
-        security: key === "security" ? 46 : 18,
-        energy: key === "energy" ? 46 : 18,
-        belonging: key === "belonging" ? 46 : 18,
-        optionality: key === "optionality" ? 46 : 18,
-      },
-    });
-  }
-
   function chooseShock(shock: Decision["shock"]) {
     onChange({ ...decision, shock: { ...shock } });
   }
@@ -155,24 +121,25 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
   }
 
   function finish() {
+    const startPressured = step === 3;
     setStep(0);
-    onRun();
+    onRun(startPressured);
   }
 
   const canContinue = decision.options.every((option) => option.title.trim().length > 0);
   const supportedDomain = decision.domain === "moving" ? "moving" : "career";
-  const domainCopy = domainPriorityCopy[supportedDomain];
-  const dominantPriority = priorityChoices.reduce((winner, [key]) => decision.priorities[key] > decision.priorities[winner] ? key : winner, "security" as keyof Decision["priorities"]);
+  const scenarioEditor = step === 3;
+  const setupIndex = step === 2 ? 1 : 0;
 
   return (
     <aside className={`studio journey ${open ? "open" : ""}`} aria-hidden={!open}>
       <header>
-        <div><span>ELSEWHERE / {step < 0 ? "START" : `${step + 1} OF ${steps.length}`}</span><strong>{step < 0 ? "Open a decision" : steps[step]}</strong></div>
+        <div><span>ELSEWHERE / {step < 0 ? "START" : scenarioEditor ? "TRY ANOTHER CONDITION" : `${setupIndex + 1} OF ${setupSteps.length}`}</span><strong>{step < 0 ? "Open a decision" : scenarioEditor ? "Change one thing" : setupSteps[setupIndex]}</strong></div>
         <button onClick={onClose} aria-label="Close decision room">×</button>
       </header>
 
       <div className={`journey-progress ${step < 0 ? "start" : ""}`} aria-hidden="true">
-        {steps.map((label, index) => <i key={label} className={index <= step ? "done" : ""} />)}
+        {(scenarioEditor ? ["Change one thing"] : setupSteps).map((label, index) => <i key={label} className={scenarioEditor || index <= setupIndex ? "done" : ""} />)}
       </div>
 
       <div className="studio-scroll journey-scroll" ref={scrollRef}>
@@ -210,30 +177,22 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
             </div>
             {decision.options.length < 4 && <button className="add-choice quiet" onClick={addOption}>+ There is another real path</button>}
             <div className="question-preview"><span>ELSEWHERE WILL REHEARSE</span><strong>{comparisonQuestion(decision)}</strong></div>
-          </section>
-        )}
-
-        {step === 1 && (
-          <section className="journey-screen priorities-step">
-            <p className="journey-kicker">STEP 2 · THE OUTCOME THAT MATTERS</p>
-            <h2>What must the next life give you?</h2>
-            <p>Choose the outcome you are unwilling to lose. Then tell Elsewhere what a genuinely good result would look like in your own words.</p>
-            <div className="priority-choices">
-              {priorityChoices.map(([key, label]) => <button key={key} className={dominantPriority === key ? "selected" : ""} onClick={() => choosePriority(key)} aria-pressed={dominantPriority === key}><span>{label}</span><small>{domainCopy[key]}</small><b>{dominantPriority === key ? "✓" : "+"}</b></button>)}
-            </div>
-            <label className="context-field single-prompt">
-              <span>DESCRIBE THE LIFE YOU ARE TRYING TO CREATE</span>
-              <textarea aria-label="Decision context" placeholder={decision.domain === "career" ? "I want work that stretches me without consuming every evening. I cannot sacrifice financial independence. I still do not know which role I would enjoy on an ordinary Tuesday…" : "I want a home that feels generous without losing the people and rhythm that make the city mine. I still do not know whether the extra commute would quietly drain the week…"} value={decision.context} onChange={(event) => onChange({ ...decision, context: event.target.value })} />
-              <small>Useful context: what you want more of, what you cannot sacrifice, and what you still do not know. Stored in this browser; sent to GPT-5.6 only for the live readings.</small>
-            </label>
+            <details className="runway-details context-details">
+              <summary>Add one sentence of context <span>OPTIONAL</span><b>+</b></summary>
+              <label className="context-field single-prompt">
+                <span>WHAT SHOULD THE WITNESSES UNDERSTAND?</span>
+                <textarea aria-label="Decision context" placeholder={decision.domain === "career" ? "I want work that stretches me without consuming every evening." : "I want more space without quietly losing the people and rhythm I already have."} value={decision.context} onChange={(event) => onChange({ ...decision, context: event.target.value })} />
+                <small>One sentence is enough. You can leave this blank.</small>
+              </label>
+            </details>
           </section>
         )}
 
         {step === 2 && (
           <section className="journey-screen grounding-step">
-            <p className="journey-kicker">STEP 3 · MAP THE RECURRING LIFE</p>
+            <p className="journey-kicker">STEP 2 · GROUND THE RECURRING LIFE</p>
             <h2>{decision.domain === "career" ? "What does each working week actually contain?" : "Where does your life happen each week?"}</h2>
-            <p>{decision.domain === "career" ? "Titles are thin descriptions. Ground the hours, travel, money, and softer conditions that will repeat." : "A home is connected to an office, friends, favourite places, and nature. Map the travel that will quietly repeat alongside the rent."}</p>
+            <p>{decision.domain === "career" ? "Give Elsewhere the recurring facts it cannot safely guess: hours, travel, pay, and place." : "Give Elsewhere the recurring facts it cannot safely guess: rent, travel, income, and place."}</p>
             <div className="loaded-assumptions"><span>STARTING ESTIMATES</span><strong>VISIBLE + EDITABLE</strong><small>These are scenario inputs, not facts Elsewhere discovered about you.</small></div>
             <div className="reality-cards focused">
               {decision.options.map((option, index) => (
@@ -283,9 +242,9 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
 
         {step === 3 && (
           <section className="journey-screen uncertainty-step">
-            <p className="journey-kicker">STEP 4 · VARY ONE PLAUSIBLE CONDITION</p>
-            <h2>Which assumption feels least stable?</h2>
-            <p>This is scenario analysis, not a surprise. Elsewhere will first show the recurring life you mapped, then vary this one condition so you can see what depends on it.</p>
+            <p className="journey-kicker">CHANGE ONE THING · KEEP THE REST FIXED</p>
+            <h2>What would change your mind?</h2>
+            <p>Name one plausible change. Elsewhere will replay the same lives and show exactly what depends on it.</p>
             <div className="shock-ideas uncertainty-choices">
               {shockPresets[supportedDomain].map((preset) => <button key={preset.label} className={decision.shock.label === preset.label ? "selected" : ""} onClick={() => chooseShock(preset)}><span>{preset.label}</span><b>{decision.shock.label === preset.label ? "✓" : "+"}</b></button>)}
             </div>
@@ -308,11 +267,10 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
 
       {step >= 0 && (
         <footer className="journey-footer">
-          <button className="back" onClick={() => moveTo(step - 1)}>← {step === 0 ? "Work or place" : "Back"}</button>
-          {step === 0 && <button className="next" onClick={() => moveTo(1)} disabled={!canContinue}>Name the outcome<b>↗</b></button>}
-          {step === 1 && <button className="next" onClick={() => moveTo(2)}>Map everyday life<b>↗</b></button>}
-          {step === 2 && <button className="next" onClick={() => moveTo(3)}>Choose a scenario<b>↗</b></button>}
-          {step === 3 && <button className="next" onClick={finish} disabled={running || !canContinue}>{running ? "Opening…" : `Walk into ${decision.options.length} lives`}<b>↘</b></button>}
+          <button className="back" onClick={() => scenarioEditor ? onClose() : moveTo(step === 2 ? 0 : -1)}>← {scenarioEditor ? "Results" : step === 0 ? "Work or place" : "Back"}</button>
+          {step === 0 && <button className="next" onClick={() => moveTo(2)} disabled={!canContinue}>Ground everyday life<b>↗</b></button>}
+          {step === 2 && <button className="next" onClick={finish} disabled={running || !canContinue}>{running ? "Opening…" : `Walk into ${decision.options.length} lives`}<b>↘</b></button>}
+          {step === 3 && <button className="next" onClick={finish} disabled={running || !canContinue}>{running ? "Replaying…" : "Replay with this change"}<b>↘</b></button>}
         </footer>
       )}
     </aside>
