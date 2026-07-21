@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DecisionStudio } from "@/components/decision-studio";
 import { CalibrationReturn, type CalibrationSubmission } from "@/components/calibration-return";
 import { LensPlayer } from "@/components/lens-player";
@@ -28,9 +28,11 @@ export default function Home() {
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [agentState, setAgentState] = useState<AgentState>("idle");
   const [demoMode, setDemoMode] = useState(false);
+  const requestIdRef = useRef(0);
   const futures = shock ? simulation.shocked : simulation.baseline;
 
   function openJourney(domain?: JourneyDomain) {
+    requestIdRef.current += 1;
     setDemoMode(false);
     if (domain) setDecision(makeTwoChoiceJourney(domain));
     setStudioStartStep(domain ? 0 : -1);
@@ -81,6 +83,7 @@ export default function Home() {
   }
 
   async function runStory(story: StoryId) {
+    const requestId = ++requestIdRef.current;
     const example = decisionSchema.parse(makeStory(story));
     setDemoMode(true);
     setDecision(example);
@@ -93,9 +96,12 @@ export default function Home() {
         body: JSON.stringify(example),
       });
       if (!response.ok) throw new Error("Witnesses unavailable");
-      setSimulation(simulationSchema.parse(await response.json()));
+      const returned = simulationSchema.parse(await response.json());
+      if (requestId !== requestIdRef.current) return;
+      setSimulation(returned);
       setAgentState("complete");
     } catch {
+      if (requestId !== requestIdRef.current) return;
       setAgentState("unavailable");
     }
   }
@@ -103,6 +109,7 @@ export default function Home() {
   async function runDecision(startPressured = false) {
     const validated = decisionSchema.parse(decision);
     if (validated.contextLenses.length > 0 && !window.confirm("Selected user-authored perspective text will be sent to OpenAI to generate qualitative interpretations. It remains stored in this browser. Continue?")) return;
+    const requestId = ++requestIdRef.current;
     reveal(validated, startPressured);
 
     try {
@@ -112,9 +119,12 @@ export default function Home() {
         body: JSON.stringify(validated),
       });
       if (!response.ok) throw new Error("Agents unavailable");
-      setSimulation(simulationSchema.parse(await response.json()));
+      const returned = simulationSchema.parse(await response.json());
+      if (requestId !== requestIdRef.current) return;
+      setSimulation(returned);
       setAgentState("complete");
     } catch {
+      if (requestId !== requestIdRef.current) return;
       setAgentState("unavailable");
     }
   }
@@ -262,7 +272,7 @@ export default function Home() {
         <div className="formula"><span>CORE FORMULA</span>net income ÷ 12<br />− rent − living − care − travel</div>
       </aside>
 
-      <DecisionStudio key={`${studioOpen}-${studioStartStep}`} initialStep={studioStartStep} decision={decision} open={studioOpen} running={agentState === "running"} onClose={() => setStudioOpen(false)} onChange={setDecision} onRun={runDecision} />
+      <DecisionStudio key={`${studioOpen}-${studioStartStep}`} initialStep={studioStartStep} decision={decision} open={studioOpen} running={false} onClose={() => setStudioOpen(false)} onChange={setDecision} onRun={runDecision} />
     </main>
   );
 }
