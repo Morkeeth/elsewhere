@@ -1,27 +1,27 @@
 # Elsewhere submission snapshot
 
-Generated: 2026-07-21T01:32:00+02:00
+Generated: 2026-07-21T17:17:50+02:00
 
 ## Candidate
 
-- Application commit: `293ed40`
+- Application commit: `d594852`
 - Public repository: `https://github.com/Morkeeth/elsewhere`
 - Public app: `https://the-unfair-advantage-build-on-this.vercel.app`
-- Vercel deployment: `dpl_5zz76hG3b9y5Q19U4c7VDeCQhh7J`
+- Vercel deployment: `dpl_BpdanT6zZPfuGTv4HXe1CUcBpEbR`
 
 ## Verified receipts
 
-- `pnpm check`: 41 tests passed and 30 scenario evaluation checks passed.
+- `pnpm check`: 42 tests passed and 30 scenario evaluation checks passed.
 - `pnpm lint`: passed.
 - `pnpm build`: passed locally and in the Vercel production build.
 - Production `/api/health`: HTTP 200, witnesses configured, model `gpt-5.6-sol`.
 - Free judge replay: HTTP 200 with `X-Elsewhere-Replay: verified-cached`, four witnesses, and full trace coverage.
-- Same-origin production apartment run: HTTP 200 in 15,408 ms with four GPT-5.6 witnesses, one synthesis, five response IDs, full trace coverage, and the `office-days` assumption selected.
+- Exact same-origin production recording route: four GPT-5.6 analyses and one synthesis returned in 47.4 seconds; the People lens produced concrete, decision-relevant scenes for both apartments.
 - Production hinge: all eight office-day values produce distinct Montreuil fits. Montreuil leads at zero through four days; Central Paris leads at five through seven.
+- Full rendered click-through: production desktop at 1440×900 and the same release at 390×844, with no horizontal overflow through setup, scenes, condition replay, lens reads, synthesis, and reality test.
 
 ## Still unverified
 
-- A full rendered click-through on desktop and mobile. The agent's in-app browser was unavailable during this closeout, so HTTP, schema, API, and build checks cannot substitute for the visual pass.
 - Final video and Devpost preview.
 
 This snapshot reports the tested release subset. `docs/VISION.md` remains the larger product direction.

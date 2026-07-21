@@ -15,15 +15,15 @@ Most decision tools collapse uncertainty into advice. Elsewhere preserves disagr
 5. A deterministic Assumption Breakpoint sweep shows where each future becomes fragile under the user's own weights.
 6. The product returns a reversible experiment, then recalculates breakpoints from one user-observed assumption. It does not issue a verdict.
 
-The disagreement matrix is model-generated; deterministic code deliberately owns the experiment constraints and every outcome number. Remove the witnesses and the value-based disagreement disappears. Remove the deterministic record and the evidence contract disappears.
+The qualitative lens readings are model-generated; deterministic code deliberately owns the experiment constraints and every outcome number. Remove the witnesses and the value-based disagreement disappears. Remove the deterministic record and the evidence contract disappears.
 
 ## Full product surface
 
 - Two grounded starting shapes, Career and Moving, with domain-specific inputs and explicit limits elsewhere
 - Native two-to-four-choice comparisons; two apartments and two internal roles stay honest A/B decisions without invented alternatives
 - A zero-input apartment story that exposes the money–space–commute trade in one click
-- Four-step input that names the real lives, desired outcome, factual differences, and load-bearing uncertainty
-- A moment-by-moment story walk through each possible life
+- Progressive setup that names the real lives, then grounds one life at a time without requiring scenario writing
+- A one-scene-at-a-time walk through an ordinary week, a social test, one changed condition, and the year after
 - Editable decisions, countries, salaries, costs, value scores, and shock conditions
 - France 2026 and UK 2026 progressive payroll calculators
 - Visible tax provenance on every future; rates outside France and the UK are user-provided and explicitly marked not sourced
@@ -35,7 +35,7 @@ The disagreement matrix is model-generated; deterministic code deliberately owns
 - Evidence drawer with formula and source provenance
 - Local decision persistence
 - Local experiment-return calibration: record observed signals, update the tested causal assumption, and rerun breakpoints without another AI call
-- Markdown and JSON exports
+- A guided reality-test route: do one physical step, notice one signal, and return with an observation
 - Health endpoint, deterministic regression suite, scenario eval harness, security guidance, and Vercel configuration
 
 ## Run locally

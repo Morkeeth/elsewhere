@@ -20,14 +20,18 @@ Four GPT-5.6 witnesses then read the same immutable futures through financial, b
 - The shock engine recomputes the full causal timeline rather than adding narrative commentary. In the apartment demo, changing office days changes the calculation itself.
 - Deterministic code sweeps the selected assumption, identifies the crossing between paths, and owns every displayed breakpoint threshold.
 
+## How Codex accelerated the build
+
+Codex helped turn the product thesis into a released Next.js system: typed Zod contracts, the deterministic simulation and breakpoint engine, concurrent Responses API integration, adversarial regression tests, mobile layout, production probes, and repeated cold-start demo reviews. The product owner made the framing, trust-boundary, experience, and release decisions; `DECISIONS.md` records that division explicitly.
+
 ## Judge test
 
 1. Click **Try the apartment decision**. No setup is required.
-2. Open **An ordinary week** and see the money–space–commute trade in concrete terms.
-3. Click **Pressure this assumption**. The chosen condition is three office days becoming five.
+2. Use the scene arrow to open **Dinner-party test** and see why having space and people crossing town are separate assumptions.
+3. Click **Choose one condition**. Office attendance rising from three days to five is already checked; click **Replay with this change**.
 4. Read **The Decision Hinge**: the stronger personal fit crosses from Montreuil to Central Paris between four and five days.
-5. Inspect the four GPT-5.6 readings as interpretation of the same calculated futures.
-6. Click **Show me what to try** and read the two-week Montreuil commute experiment.
+5. Read the same calculated futures through the **Money**, **People**, **Freedom**, and **Regret** GPT-5.6 modes.
+6. Click **Turn this into a real test**, then **Start this test**, to see the two-week Montreuil commute experiment as one guided route.
 7. Open **Evidence** to inspect source and formula provenance.
 
 ## Built with
