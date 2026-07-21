@@ -2,7 +2,7 @@
   {
     "id": "user-scenario",
     "label": "Editable decision assumptions",
-    "url": "https://openai.devpost.com/",
+    "url": "https://github.com/Morkeeth/elsewhere/blob/main/data/sample-decision.json",
     "accessed": "2026-07-18",
     "note": "Salary offers, living costs, relocation costs and personal value scores are explicit user inputs. They are never inferred silently.",
     "kind": "user-input"
@@ -10,7 +10,7 @@
   {
     "id": "formula-budget",
     "label": "Elsewhere deterministic world-state model",
-    "url": "https://github.com/",
+    "url": "https://github.com/Morkeeth/elsewhere/blob/main/lib/engine.ts",
     "accessed": "2026-07-18",
     "note": "Monthly savings, shock costs, divergence and decision scores are computed in TypeScript and covered by tests.",
     "kind": "formula"

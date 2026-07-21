@@ -6,7 +6,7 @@ export function GET() {
   return NextResponse.json({
     status: "ok",
     product: "Elsewhere",
-    ledger: "ready",
+    record: "ready",
     witnesses: process.env.OPENAI_API_KEY ? "configured" : "not-configured",
     model: process.env.OPENAI_MODEL ?? "gpt-5.6-sol",
   });

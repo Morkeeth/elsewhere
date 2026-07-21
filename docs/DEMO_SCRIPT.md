@@ -1,57 +1,46 @@
-# Elsewhere: three-minute demo
+# Elsewhere: one-minute demo
 
-## 0:00–0:20: Enter without setup
+## Before recording
+
+- Use the public production URL in a clean tab.
+- Record at 1440×900. Capture a separate 390×844 pass after the desktop take.
+- Click the apartment example once. The live GPT-5.6 responses can arrive while the deterministic story is already visible.
+- Do not open custom setup, Evidence, or the full assumption sweep in the main take.
+
+## 0:00–0:08 — the decision
 
 Click **Try the apartment decision**.
 
-“A smaller apartment in Central Paris, or twenty-six more square metres in Montreuil? The comparison sounds simple until office days change.”
+> “A smaller apartment in Central Paris, or twenty-six more square metres in Montreuil? Elsewhere lets me enter both lives before I choose.”
 
-Do not show custom setup.
+## 0:08–0:20 — the ordinary life
 
-## 0:20–0:55: Walk through the lives
+Click **An ordinary week**.
 
-Open **An ordinary week**.
+> “Montreuil buys twenty-six square metres and saves six hundred and fifty euros a month. Central Paris returns nineteen recurring travel hours. These are the lives behind the listings.”
 
-“Montreuil buys twenty-six square metres and saves six hundred and fifty euros a month. Central Paris returns thirteen commute hours. Elsewhere shows the actual life behind each option before it calculates anything.”
+## 0:20–0:34 — the hinge
 
-## 0:55–1:35: The WOW: find the hinge
+Click **Pressure this assumption**. The product jumps directly to **The Decision Hinge**.
 
-Click **Pressure this assumption**.
+> “Change office attendance from four days to five and the personal-fit calculation crosses from Montreuil to Central Paris. Elsewhere found the exact assumption keeping this decision open.”
 
-“Now three office days become five. Elsewhere does not paste a warning onto the story; it reruns both futures.”
+Say “personal-fit calculation,” never “winner.” Do not open the full sweep.
 
-Scroll to **The Decision Hinge**.
+## 0:34–0:49 — witnesses and synthesis
 
-“Through four office days, Montreuil has the stronger fit under my priorities. At five, Central Paris crosses it. The product has found the exact assumption keeping this decision open.”
+Scroll once to the witness matrix and synthesis card.
 
-Say “personal fit calculation,” never “winner.”
+> “Four independent GPT-5.6 witnesses read the same immutable futures through money, belonging, reversibility, and regret. The fifth response preserves their disagreement and selects what is most useful to test. None can move the hinge or choose the home.”
 
-## 1:35–2:10: Same facts, different values
+Hold long enough for **THE FIFTH RESPONSE / SYNTHESIS** to be visible. If live interpretation is unavailable, stop the take; do not present the deterministic fallback as a live model result.
 
-Show only two contrasting witness readings and the model chain.
+## 0:49–1:00 — leave the model
 
-“Four GPT-5.6 witnesses read the same immutable futures. One protects money, one belonging, one reversibility, and one looks for regret. They can interpret the trade. They cannot move the crossing or recommend a home.”
+Frame **THE REAL-WORLD PAYOFF**, then click **Open the 14-day test**.
 
-## 2:10–3:00: Leave the model and test reality
+> “The answer is a two-week rush-hour commute trial, with one physical first step. Don’t ask AI what to choose. Find the assumption your future depends on, then test it.”
 
-Click **Show me what to try**.
+## Mobile insert
 
-“The next move is not another prompt. Make the Montreuil rush-hour commute twice, spend both evenings there, and record the actual energy pattern for two weeks.”
-
-Optionally show one prepared return changing the observed office-days assumption and recalculating the hinge.
-
-“Reality changed one assumption. The model remembers the correction.”
-
-Close:
-
-“Don’t ask AI what to choose. Find the assumption your future depends on, then test it before you commit.”
-
-## Recording checklist
-
-- Use desktop around 1440×900 and capture one mobile insert at 390×844.
-- Begin with the one-click apartment story; narrate deterministic rendering while AI work completes.
-- Include one brief build-proof insert showing the Codex work and the GPT-5.6 model receipt. Do not present a cached replay as a live call.
-- Pressure the office-days assumption exactly once.
-- Keep Context Layers, Evidence, architecture, and the roadmap out of the main arc.
-- Show the shared record receipt only after the product insight is clear.
-- Stay below three minutes.
+Repeat only the hinge → witness matrix → synthesis/payoff sequence at 390×844. The matrix must show both apartments without a horizontal gesture; the detailed sweep remains collapsed.

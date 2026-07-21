@@ -407,6 +407,8 @@ test("office days causally reverse the apartment comparison and render the decis
   assert.match(rendered, /Between 4 days\/week and 5 days\/week/);
   assert.match(rendered, /changes from Montreuil to Central Paris/);
   assert.match(rendered, /it does not choose a home/);
+  assert.ok(rendered.indexOf("THE REVERSAL") < rendered.indexOf('<details class="hinge-details">'));
+  assert.match(rendered, /Inspect the full assumption sweep/);
 });
 
 test("custom onboarding presents only the two grounded product domains", () => {

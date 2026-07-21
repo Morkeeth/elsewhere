@@ -43,25 +43,28 @@ export function ReversalMap({ analysis, futures }: Props) {
         <strong>Current scenario value: {formatValue(analysis.referenceValue, analysis.assumption.unit)}</strong>
         <small>Personal fit is your weighted calculation. It is not an objective ranking. Fragile begins after a deterministic 3-point fit decline.</small>
       </div>
-      <div className="map-scroll" tabIndex={0} aria-label="Swipe through assumption range">
-        <div className="map-grid" style={{ "--points": analysis.points.length } as React.CSSProperties}>
-          <div className="map-label map-axis">{analysis.assumption.adverseDirection === "higher" ? "LOWER" : "HIGHER"} <span>← MORE FORGIVING</span><span>MORE DEMANDING →</span> {analysis.assumption.adverseDirection === "higher" ? "HIGHER" : "LOWER"}</div>
-          {analysis.points.map((point) => <div className={`map-tick ${point.value === analysis.referenceValue ? "current" : ""}`} key={point.value}>{formatValue(point.value, analysis.assumption.unit)}</div>)}
-          {analysis.futures.map((result) => {
-            const future = futuresById.get(result.optionId);
-            return <div className="map-row" key={result.optionId}>
-              <div className="map-label"><span style={{ color: future?.accent }}>{future?.title}</span><small>{result.breakpointValue === null ? "holds across this range" : `fragile at ${formatValue(result.breakpointValue, analysis.assumption.unit)}`}</small></div>
-              {analysis.points.map((point) => {
-                const state = point.fits.find((fit) => fit.optionId === result.optionId)!;
-                const isBreakpoint = point.value === result.breakpointValue;
-                const isCurrent = point.value === analysis.referenceValue;
-                return <div className={`map-cell ${state.state} ${isCurrent ? "current" : ""} ${isBreakpoint ? "breakpoint" : ""}`} key={point.value} aria-label={`${future?.title}: ${state.state}, personal fit ${state.fit}`}><span>{isBreakpoint ? "●" : ""}</span></div>;
-              })}
-            </div>;
-          })}
+      <details className="hinge-details">
+        <summary>Inspect the full assumption sweep <b>+</b></summary>
+        <div className="map-scroll" tabIndex={0} aria-label="Swipe through assumption range">
+          <div className="map-grid" style={{ "--points": analysis.points.length } as React.CSSProperties}>
+            <div className="map-label map-axis">{analysis.assumption.adverseDirection === "higher" ? "LOWER" : "HIGHER"} <span>← MORE FORGIVING</span><span>MORE DEMANDING →</span> {analysis.assumption.adverseDirection === "higher" ? "HIGHER" : "LOWER"}</div>
+            {analysis.points.map((point) => <div className={`map-tick ${point.value === analysis.referenceValue ? "current" : ""}`} key={point.value}>{formatValue(point.value, analysis.assumption.unit)}</div>)}
+            {analysis.futures.map((result) => {
+              const future = futuresById.get(result.optionId);
+              return <div className="map-row" key={result.optionId}>
+                <div className="map-label"><span style={{ color: future?.accent }}>{future?.title}</span><small>{result.breakpointValue === null ? "holds across this range" : `fragile at ${formatValue(result.breakpointValue, analysis.assumption.unit)}`}</small></div>
+                {analysis.points.map((point) => {
+                  const state = point.fits.find((fit) => fit.optionId === result.optionId)!;
+                  const isBreakpoint = point.value === result.breakpointValue;
+                  const isCurrent = point.value === analysis.referenceValue;
+                  return <div className={`map-cell ${state.state} ${isCurrent ? "current" : ""} ${isBreakpoint ? "breakpoint" : ""}`} key={point.value} aria-label={`${future?.title}: ${state.state}, personal fit ${state.fit}`}><span>{isBreakpoint ? "●" : ""}</span></div>;
+                })}
+              </div>;
+            })}
+          </div>
         </div>
-      </div>
-      <p className="map-caption">Deterministic code recomputes every future at every value. AI interprets the trade-offs later; it cannot move this crossing.</p>
+        <p className="map-caption">Deterministic code recomputes every future at every value. AI interprets the trade-offs later; it cannot move this crossing.</p>
+      </details>
     </section>
   );
 }

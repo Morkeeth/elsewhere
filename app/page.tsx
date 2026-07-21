@@ -24,6 +24,12 @@ function isResolvedWitness(witness: Witness | { lens: string; protectedValue: st
   return "observations" in witness;
 }
 
+const assessmentLabel = {
+  protects: "Protects",
+  "trades-off": "Trades off",
+  strains: "Strains",
+} as const;
+
 export default function Home() {
   const initialSimulation = useMemo(() => runSimulation(sampleDecision), []);
   const [decision, setDecision] = useState<Decision>(sampleDecision);
@@ -216,40 +222,50 @@ export default function Home() {
 
         <StoryWalk key={shock ? "pressured-story" : "baseline-story"} decision={simulation.decision} baseline={simulation.baseline} pressured={simulation.shocked} activePressure={shock} />
 
+        {shock && <ReversalMap analysis={simulation.breakpoint} futures={simulation.shocked} />}
+
         <details className="calculation-details">
           <summary>Open the calculations and source labels <b>+</b></summary>
           <div className={`future-grid ${shock ? "has-shock" : ""} is-compact`} style={{ "--future-count": futures.length } as React.CSSProperties}>
             {futures.map((future, index) => <Timeline key={`${future.optionId}-${shock}`} future={future} index={index} active={shock} shockMonth={simulation.decision.shock.month} domain={simulation.decision.domain} compact />)}
           </div>
-          {shock && <ReversalMap analysis={simulation.breakpoint} futures={simulation.shocked} />}
         </details>
 
         {!shock && <div className="story-next">
           <div><span>THE UNCERTAINTY THIS STORY TURNS ON</span><strong>{simulation.decision.shock.label}</strong></div>
-          <button onClick={() => { setShock(true); window.setTimeout(() => document.querySelector("#story-start")?.scrollIntoView({ behavior: "smooth" }), 50); }}>Change this condition <b>→</b></button>
+          <button onClick={() => { setShock(true); window.setTimeout(() => document.querySelector(".reversal-map")?.scrollIntoView({ behavior: "smooth", block: "start" }), 120); }}>Pressure this assumption <b>→</b></button>
         </div>}
 
         {shock && <section className="witness-panel" aria-label="AI interpretation: same facts, different values">
           <div className="section-head"><div><span className="section-number">{agentState === "unavailable" ? "FALLBACK" : "THE INTERPRETATION LAYER / GPT-5.6"}</span><h2>{agentState === "unavailable" ? "The calculated futures still stand." : "Same futures. Four different values."}</h2></div><p>{agentState === "unavailable" ? "Live qualitative interpretation is unavailable. No model result is being implied." : "Each call protects a different value. None can edit the calculated futures or recommend a winner."}</p></div>
           <div className={`model-chain ${agentState === "unavailable" ? "fallback" : ""}`} aria-label="Elsewhere model architecture"><span>Deterministic futures</span><i>→</i><span>{agentState === "unavailable" ? "GPT-5.6 unavailable" : agentState === "running" ? "4 independent GPT-5.6 calls running" : "4 independent GPT-5.6 calls"}</span><i>→</i><span>{liveWitnesses && simulation.generatedBy.synthesisReturned ? "1 GPT-5.6 synthesis" : agentState === "running" ? "Synthesis waits" : "Deterministic test fallback"}</span></div>
-          {agentState !== "unavailable" && <div className="witness-cards">
-            {(agentState === "running" ? pendingWitnesses : simulation.witnesses).map((witness) => <article key={witness.lens}>
-              <header><span>PROTECTING</span><strong>{witness.protectedValue}</strong>{witness.lens.startsWith("context:") && <small>USER-AUTHORED</small>}</header>
-              <div>
-                {simulation.baseline.map((future) => {
-                  const observation = isResolvedWitness(witness) ? witness.observations.find((item) => item.optionId === future.optionId) : undefined;
-                  return <section key={future.optionId}><span>{future.title}</span><p>{observation ? witnessObservationCopy(observation, true) : "Reading the same future…"}</p></section>;
-                })}
+          {agentState !== "unavailable" && <>
+            <div className={`witness-receipt ${agentState === "running" ? "running" : ""}`}><span>SAME IMMUTABLE RECORD</span><strong>{agentState === "running" ? "READING IN PARALLEL" : `${simulation.witnesses.length} RECEIPTS MATCH`}</strong><small>Only the protected value changes.</small></div>
+            <div className="matrix-scroll">
+              <div className="disagreement-matrix" style={{ "--future-count": simulation.baseline.length } as React.CSSProperties}>
+                <div className="matrix-head matrix-lens">Witness protects</div>
+                {simulation.baseline.map((future) => <div className="matrix-head" key={future.optionId}>{future.title}</div>)}
+                {(agentState === "running" ? pendingWitnesses : simulation.witnesses).map((witness) => <div className="matrix-row" key={witness.lens}>
+                  <div className="matrix-lens">{witness.protectedValue}{witness.lens.startsWith("context:") && <small>USER-AUTHORED</small>}</div>
+                  {simulation.baseline.map((future, index) => {
+                    const observation = isResolvedWitness(witness) ? witness.observations.find((item) => item.optionId === future.optionId) : undefined;
+                    const assessment = observation?.shockedAssessment;
+                    return <div className={`matrix-cell ${assessment ?? "pending"}`} style={{ "--delay": `${index * 0.12}s` } as React.CSSProperties} key={future.optionId} title={observation ? witnessObservationCopy(observation, true) : "Reading the same future"}><span>{assessment ? assessmentLabel[assessment] : "Reading…"}</span></div>;
+                  })}
+                </div>)}
               </div>
-            </article>)}
-          </div>}
-          <p className="matrix-caption">{agentState === "running" ? "The deterministic futures are ready now. AI interpretation is arriving separately." : liveWitnesses ? "GPT-5.6 interprets the trade-offs. It cannot alter the calculated futures." : "The result remains usable without model interpretation."}</p>
+            </div>
+          </>}
+          <div className={`synthesis-card ${liveWitnesses && simulation.generatedBy.synthesisReturned ? "live" : "fallback"}`}>
+            <span>{liveWitnesses && simulation.generatedBy.synthesisReturned ? "THE FIFTH RESPONSE / SYNTHESIS" : agentState === "running" ? "SYNTHESIS IS ARRIVING" : "THE TESTABLE CONCLUSION"}</span>
+            <div>
+              <strong>{liveWitnesses && simulation.generatedBy.synthesisReturned ? simulation.divergence.explanation : agentState === "running" ? "The calculated hinge is ready. The fifth response will select which uncertainty is most useful to test." : simulation.divergence.explanation}</strong>
+              <p>{liveWitnesses && simulation.generatedBy.synthesisReturned ? "It preserves the disagreement and chooses an uncertainty to test. It does not choose a home." : "The deterministic record remains complete and usable without model interpretation."}</p>
+            </div>
+            <div className="synthesis-payoff"><span>THE REAL-WORLD PAYOFF</span><strong>{simulation.experiment.title}</strong><small>{simulation.experiment.firstStep}</small></div>
+            <button onClick={() => { setExperimentOpen(true); window.setTimeout(() => document.querySelector(".experiment")?.scrollIntoView({ behavior: "smooth" }), 80); }}>Open the 14-day test <b>→</b></button>
+          </div>
         </section>}
-
-        {shock && !experimentOpen && <div className="story-next">
-          <div><span>THE MODEL SHOULD NOT CHOOSE FOR YOU</span><strong>Turn the biggest uncertainty into one small test.</strong></div>
-          <button onClick={() => { setExperimentOpen(true); window.setTimeout(() => document.querySelector(".experiment")?.scrollIntoView({ behavior: "smooth" }), 80); }}>Show me what to try <b>→</b></button>
-        </div>}
       </section>
 
       <section className={`experiment ${opened && experimentOpen ? "revealed" : ""}`}>

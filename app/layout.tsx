@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Elsewhere: Try on the lives first",
-  description: "A mobile-first decision instrument for careers, moving, relationships, education, and the life choices living in your Notes app.",
+  description: "A mobile-first decision instrument for consequential career and moving choices: rehearse the lives, find the hinge, and test it in reality.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
