@@ -252,7 +252,10 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
             <h2>What would change your mind?</h2>
             <p>Name one plausible change. Elsewhere will replay the same lives and show exactly what depends on it.</p>
             <div className="shock-ideas uncertainty-choices">
-              {shockPresets[supportedDomain].map((preset) => <button key={preset.label} className={decision.shock.label === preset.label ? "selected" : ""} onClick={() => chooseShock(preset)}><span>{preset.label}</span><b>{decision.shock.label === preset.label ? "✓" : "+"}</b></button>)}
+              {shockPresets[supportedDomain].map((preset) => {
+                const selected = decision.shock.label.startsWith(preset.label);
+                return <button key={preset.label} className={selected ? "selected" : ""} onClick={() => chooseShock(preset)}><span>{preset.label}</span><b>{selected ? "✓" : "+"}</b></button>;
+              })}
             </div>
             <label className="hero-field uncertainty-label"><span>OR NAME THE CONDITION IN YOUR OWN WORDS</span><textarea aria-label="The condition to vary" value={decision.shock.label} onChange={(event) => onChange({ ...decision, shock: { ...decision.shock, label: event.target.value } })} /></label>
             {decision.domain === "moving" && /remote work|office/i.test(decision.shock.label) && <div className="days-change"><label><span>NOW</span><input aria-label="Current days on site" type="number" min="0" max="7" value={decision.baselineDaysPerWeek} onChange={(event) => onChange({ ...decision, baselineDaysPerWeek: Number(event.target.value) })} /></label><i>→</i><label><span>COULD BECOME</span><input aria-label="Possible days on site" type="number" min="0" max="7" value={decision.pressureDaysPerWeek} onChange={(event) => onChange({ ...decision, pressureDaysPerWeek: Number(event.target.value) })} /></label><small>days on site each week</small></div>}

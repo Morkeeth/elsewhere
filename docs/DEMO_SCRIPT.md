@@ -21,9 +21,9 @@ Use the scene arrow once to open **Dinner-party test**.
 
 ## 0:20–0:34 — what changes the answer
 
-Click **Choose one condition**, choose the office-days change, then **Replay these lives**. The product returns directly to the turning point.
+Click **Choose one condition**. The office-days change is already checked and grounded from three days to five; click **Replay with this change**. The product returns directly to the turning point while the original live analysis keeps running.
 
-> “Change office attendance from four days to five and the calculated fit crosses from Montreuil to Central Paris. Elsewhere found the exact assumption keeping this decision open.”
+> “Change office attendance from three days to five and the calculated fit crosses from Montreuil to Central Paris. Elsewhere found the exact assumption keeping this decision open.”
 
 Say “calculated fit,” never “winner.” The starting value weights are visible beneath the result. Do not open the full sweep.
 

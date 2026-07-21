@@ -109,6 +109,16 @@ export default function Home() {
   async function runDecision(startPressured = false) {
     const validated = decisionSchema.parse(decision);
     if (validated.contextLenses.length > 0 && !window.confirm("Selected user-authored perspective text will be sent to OpenAI to generate qualitative interpretations. It remains stored in this browser. Continue?")) return;
+    const unchangedApartmentDemo = demoMode && JSON.stringify(validated) === JSON.stringify(decisionSchema.parse(makeStory("apartments")));
+    if (unchangedApartmentDemo) {
+      setStudioOpen(false);
+      setShock(startPressured);
+      setExperimentOpen(false);
+      setExperimentStarted(false);
+      setCalibrationOpen(false);
+      window.setTimeout(() => document.querySelector(".observatory")?.scrollIntoView({ behavior: "smooth" }), 100);
+      return;
+    }
     const requestId = ++requestIdRef.current;
     reveal(validated, startPressured);
 
