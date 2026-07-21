@@ -13,34 +13,34 @@ Click **Try the apartment decision**.
 
 > “A smaller apartment in Central Paris, or twenty-six more square metres in Montreuil? Elsewhere lets me enter both lives before I choose.”
 
-## 0:08–0:20 — the ordinary life
+## 0:08–0:20 — feel the ordinary life
 
-Click **An ordinary week**.
+Use the scene arrow once to open **Dinner-party test**.
 
-> “Montreuil buys twenty-six square metres and saves six hundred and fifty euros a month. Central Paris returns nineteen recurring travel hours. These are the lives behind the listings.”
+> “Montreuil fits the dinner table. Central Paris makes a last-minute yes easier. Elsewhere separates the dream of having space from the guess that people will actually cross town to use it.”
 
 ## 0:20–0:34 — what changes the answer
 
-Click **Show what changes**. The product jumps directly to the turning point.
+Click **Choose one condition**, choose the office-days change, then **Replay these lives**. The product returns directly to the turning point.
 
 > “Change office attendance from four days to five and the calculated fit crosses from Montreuil to Central Paris. Elsewhere found the exact assumption keeping this decision open.”
 
 Say “calculated fit,” never “winner.” The starting value weights are visible beneath the result. Do not open the full sweep.
 
-## 0:34–0:49 — witnesses and synthesis
+## 0:34–0:49 — four lenses, one at a time
 
-Scroll once to the witness matrix and synthesis card.
+Scroll once to **Read these lives through one lens**. Tap **Money**, then **People**.
 
-> “Four independent GPT-5.6 witnesses read the same futures through money, belonging, reversibility, and regret. The fifth response preserves their disagreement and selects what is most useful to test. None can move the calculation or choose the home.”
+> “The calculation stays fixed. Four independent GPT-5.6 calls now read the same lives through money, people, freedom, and regret. I can feel one tension at a time; the fifth response turns their disagreement into one useful test.”
 
-Hold long enough for **THE FIFTH RESPONSE / SYNTHESIS** to be visible. If live interpretation is unavailable, stop the take; do not present the deterministic fallback as a live model result.
+Hold long enough for the selected live scene and synthesis to be visible. If live interpretation is unavailable, stop the take; do not present the deterministic fallback as a live model result. The call architecture remains available under **How the model worked** for a judge who asks.
 
 ## 0:49–1:00 — leave the model
 
-Frame **THE REAL-WORLD PAYOFF**, then click **Open the 14-day test**. Hold on **ASK SOMEONE WHO KNOWS YOU** and the first physical step.
+Click **Turn this into a real test**, then **Start this test**. Hold on the three-step route: **Do this first → Notice one thing → Come back**.
 
-> “The answer is a two-week rush-hour commute trial, one physical first step, and one honest question for someone who knows me. Elsewhere gets the model out of the way and sends me back to reality.”
+> “The answer is a two-week rush-hour commute trial with one thing to notice. I come back with an observation, not seven controls. Elsewhere helps me rehearse the decision, then sends me into the real world to disprove it.”
 
 ## Mobile insert
 
-Repeat only the turning point → witness matrix → synthesis/payoff sequence at 390×844. The detailed sweep remains collapsed.
+Repeat only the turning point → People lens → synthesis → test route at 390×844. The calculation proof remains collapsed.

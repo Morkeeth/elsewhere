@@ -14,8 +14,6 @@ type Props = {
   initialStep?: number;
 };
 
-const setupSteps = ["Name the lives", "Ground everyday life"];
-
 const jurisdictions = [
   "France",
   "United Kingdom",
@@ -48,6 +46,7 @@ function visibleJurisdiction(option: DecisionOption) {
 
 export function DecisionStudio({ decision, open, running, onClose, onChange, onRun, initialStep = 0 }: Props) {
   const [step, setStep] = useState(initialStep);
+  const [groundingIndex, setGroundingIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -123,13 +122,17 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
   function finish() {
     const startPressured = step === 3;
     setStep(0);
+    setGroundingIndex(0);
     onRun(startPressured);
   }
 
   const canContinue = decision.options.every((option) => option.title.trim().length > 0);
   const supportedDomain = decision.domain === "moving" ? "moving" : "career";
   const scenarioEditor = step === 3;
-  const setupIndex = step === 2 ? 1 : 0;
+  const setupSteps = ["Name the lives", ...decision.options.map((_, index) => `Ground life ${String.fromCharCode(65 + index)}`)];
+  const setupIndex = step === 2 ? groundingIndex + 1 : 0;
+  const groundingOption = decision.options[groundingIndex] ?? decision.options[0];
+  const lastGroundingStep = groundingIndex === decision.options.length - 1;
 
   return (
     <aside className={`studio journey ${open ? "open" : ""}`} aria-hidden={!open}>
@@ -190,12 +193,14 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
 
         {step === 2 && (
           <section className="journey-screen grounding-step">
-            <p className="journey-kicker">STEP 2 · GROUND THE RECURRING LIFE</p>
-            <h2>{decision.domain === "career" ? "What does each working week actually contain?" : "Where does your life happen each week?"}</h2>
-            <p>{decision.domain === "career" ? "Give Elsewhere the recurring facts it cannot safely guess: hours, travel, pay, and place." : "Give Elsewhere the recurring facts it cannot safely guess: rent, travel, income, and place."}</p>
+            <p className="journey-kicker">LIFE {String.fromCharCode(65 + groundingIndex)} · {groundingOption.title.toUpperCase()}</p>
+            <h2>Make this life real.</h2>
+            <p>{decision.domain === "career" ? "Only the recurring facts: where, pay, hours, and travel. Elsewhere will make the scene vivid afterward." : "Only the recurring facts: place, rent, space, and travel. Elsewhere will make the scene vivid afterward."}</p>
             <div className="loaded-assumptions"><span>STARTING ESTIMATES</span><strong>VISIBLE + EDITABLE</strong><small>These are scenario inputs, not facts Elsewhere discovered about you.</small></div>
             <div className="reality-cards focused">
-              {decision.options.map((option, index) => (
+              {[groundingOption].map((option) => {
+                const index = groundingIndex;
+                return (
                 <article key={option.id} style={{ "--accent": option.accent } as React.CSSProperties}>
                   <header><span>{String.fromCharCode(65 + index)}</span><strong>{option.title}</strong></header>
                   <div className="fact-grid essential-facts">
@@ -230,13 +235,14 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
                     </div>
                   </details>
                 </article>
-              ))}
+                );
+              })}
             </div>
-            {decision.domain === "moving" && <div className="life-frequency"><span>HOW OFTEN THESE PLACES ENTER YOUR WEEK</span><div><label><b>Office</b><input aria-label="Office days each week" type="number" min="0" max="7" value={decision.baselineDaysPerWeek} onChange={(event) => onChange({ ...decision, baselineDaysPerWeek: Number(event.target.value) })} /><small>days / week</small></label><label><b>Friends</b><input aria-label="Social trips each week" type="number" min="0" max="14" value={decision.socialTripsPerWeek} onChange={(event) => onChange({ ...decision, socialTripsPerWeek: Number(event.target.value) })} /><small>trips / week</small></label><label><b>Usual places</b><input aria-label="Usual place trips each week" type="number" min="0" max="21" value={decision.dailyLifeTripsPerWeek} onChange={(event) => onChange({ ...decision, dailyLifeTripsPerWeek: Number(event.target.value) })} /><small>trips / week</small></label><label><b>Nature</b><input aria-label="Nature trips each week" type="number" min="0" max="14" value={decision.natureTripsPerWeek} onChange={(event) => onChange({ ...decision, natureTripsPerWeek: Number(event.target.value) })} /><small>trips / week</small></label></div></div>}
-            <details className="runway-details">
+            {decision.domain === "moving" && lastGroundingStep && <div className="life-frequency"><span>HOW OFTEN THESE PLACES ENTER YOUR WEEK</span><div><label><b>Office</b><input aria-label="Office days each week" type="number" min="0" max="7" value={decision.baselineDaysPerWeek} onChange={(event) => onChange({ ...decision, baselineDaysPerWeek: Number(event.target.value) })} /><small>days / week</small></label><label><b>Friends</b><input aria-label="Social trips each week" type="number" min="0" max="14" value={decision.socialTripsPerWeek} onChange={(event) => onChange({ ...decision, socialTripsPerWeek: Number(event.target.value) })} /><small>trips / week</small></label><label><b>Usual places</b><input aria-label="Usual place trips each week" type="number" min="0" max="21" value={decision.dailyLifeTripsPerWeek} onChange={(event) => onChange({ ...decision, dailyLifeTripsPerWeek: Number(event.target.value) })} /><small>trips / week</small></label><label><b>Nature</b><input aria-label="Nature trips each week" type="number" min="0" max="14" value={decision.natureTripsPerWeek} onChange={(event) => onChange({ ...decision, natureTripsPerWeek: Number(event.target.value) })} /><small>trips / week</small></label></div></div>}
+            {lastGroundingStep && <details className="runway-details">
               <summary>Add my current safety buffer <span>OPTIONAL</span><b>+</b></summary>
               <label className="savings-field"><span>CURRENT SAVINGS</span><div><i>€</i><input aria-label="Current savings" type="number" value={decision.startingSavingsEur} onChange={(event) => onChange({ ...decision, startingSavingsEur: Number(event.target.value) })} /></div></label>
-            </details>
+            </details>}
           </section>
         )}
 
@@ -267,9 +273,10 @@ export function DecisionStudio({ decision, open, running, onClose, onChange, onR
 
       {step >= 0 && (
         <footer className="journey-footer">
-          <button className="back" onClick={() => scenarioEditor ? onClose() : moveTo(step === 2 ? 0 : -1)}>← {scenarioEditor ? "Results" : step === 0 ? "Work or place" : "Back"}</button>
+          <button className="back" onClick={() => scenarioEditor ? onClose() : step === 2 && groundingIndex > 0 ? setGroundingIndex(groundingIndex - 1) : moveTo(step === 2 ? 0 : -1)}>← {scenarioEditor ? "Results" : step === 0 ? "Work or place" : groundingIndex > 0 ? `Life ${String.fromCharCode(64 + groundingIndex)}` : "Names"}</button>
           {step === 0 && <button className="next" onClick={() => moveTo(2)} disabled={!canContinue}>Ground everyday life<b>↗</b></button>}
-          {step === 2 && <button className="next" onClick={finish} disabled={running || !canContinue}>{running ? "Opening…" : `Walk into ${decision.options.length} lives`}<b>↘</b></button>}
+          {step === 2 && !lastGroundingStep && <button className="next" onClick={() => { setGroundingIndex(groundingIndex + 1); window.requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })); }}>Next · life {String.fromCharCode(66 + groundingIndex)}<b>↗</b></button>}
+          {step === 2 && lastGroundingStep && <button className="next" onClick={finish} disabled={running || !canContinue}>{running ? "Opening…" : `Walk into ${decision.options.length} lives`}<b>↘</b></button>}
           {step === 3 && <button className="next" onClick={finish} disabled={running || !canContinue}>{running ? "Replaying…" : "Replay with this change"}<b>↘</b></button>}
         </footer>
       )}
