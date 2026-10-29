@@ -1,11 +1,27 @@
 # Elsewhere
 
-**Elsewhere lets you visit two to four grounded versions of your next twelve months before a big career or location decision, instead of asking an AI what to choose.**
+## TLDR
 
+Explore grounded career and location scenarios before making a consequential choice.<br>
+For people comparing what changes across possible futures and uncertain assumptions.<br>
+The product ends with a reversible experiment; its calculations and model witnesses are decision aids.
+
+## The problem and approach
+
+**Elsewhere lets you visit two to four grounded versions of your next twelve months before a big career or location decision, instead of asking an AI what to choose.**
 Most decision tools collapse uncertainty into advice, and the disagreement that should inform the choice disappears.
-For anyone weighing a job, a move or an apartment with real money and a real life attached.
 A deterministic engine computes salary, taxes (France and UK 2026 payroll), rent, savings, energy, belonging and optionality; four GPT witnesses read the same immutable record through different lenses; a shock reruns every life; a breakpoint sweep shows where each future turns fragile.
 It ends with one reversible fourteen-day experiment, never a verdict. Live: https://the-unfair-advantage-build-on-this.vercel.app or run it with `pnpm install && pnpm dev`.
+
+## Review and pick up the work
+
+[Agent guide](AGENTS.md)
+
+Start with the linked source, setup and evidence. Recorded demos and sample data keep their original scope; use the repository instructions for a fresh run.
+
+**Don’t ask AI what to choose. Visit the futures first.**
+
+Elsewhere is an open-source Personal Decision Lab for consequential career and location choices. It unfolds two to four grounded twelve-month paths, introduces a real-world shock with explicit causal effects, finds the assumption each future depends on, and ends with one low-cost fourteen-day experiment.
 
 ## Why it is different
 
@@ -104,3 +120,7 @@ GPT-5.6 supplies the independent qualitative witness passes and constrained synt
 4. Confirm `/api/health`, then run `pnpm verify:openai` against the production configuration.
 
 Read `SECURITY.md` before accepting real sensitive decisions. Licensed under MIT.
+
+## License and data boundaries
+
+Code terms: [LICENSE](LICENSE). Data, provider responses, media, fonts and other third-party assets may have separate terms. Repository access alone does not grant rights to those materials. 
