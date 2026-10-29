@@ -1,8 +1,11 @@
 # Elsewhere
 
-**Don’t ask AI what to choose. Visit the futures first.**
+**Elsewhere lets you visit two to four grounded versions of your next twelve months before a big career or location decision, instead of asking an AI what to choose.**
 
-Elsewhere is an open-source Personal Decision Lab for consequential career and location choices. It unfolds two to four grounded twelve-month paths, introduces a real-world shock with explicit causal effects, finds the assumption each future depends on, and ends with one low-cost fourteen-day experiment.
+Most decision tools collapse uncertainty into advice, and the disagreement that should inform the choice disappears.
+For anyone weighing a job, a move or an apartment with real money and a real life attached.
+A deterministic engine computes salary, taxes (France and UK 2026 payroll), rent, savings, energy, belonging and optionality; four GPT witnesses read the same immutable record through different lenses; a shock reruns every life; a breakpoint sweep shows where each future turns fragile.
+It ends with one reversible fourteen-day experiment, never a verdict. Live: https://the-unfair-advantage-build-on-this.vercel.app or run it with `pnpm install && pnpm dev`.
 
 ## Why it is different
 
